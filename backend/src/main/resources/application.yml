@@ -1,0 +1,55 @@
+server:
+  port: 8989
+
+spring:
+  application:
+    name: training-system
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/training_system?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 12345678
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 使用update模式，不会删除现有数据
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: false
+    defer-datasource-initialization: true  # 允许在JPA初始化后执行SQL
+
+  sql:
+    init:
+      mode: never  # 不执行SQL初始化，避免重复插入数据
+      schema-locations: classpath:schema.sql  # 建表语句
+      data-locations: classpath:data.sql      # 演示数据
+      continue-on-error: true  # 遇到错误时继续执行，避免重复数据导致启动失败
+
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+# JWT配置
+jwt:
+  secret: 8Zz5tw0Ionm3XPZZfN0NOml3z9FMfmpgXwovR9fp6ryDIoGRM8EPHAB6iHsc0fbA
+  expiration: 86400000 # 24小时
+
+# 文件上传配置
+file:
+  upload-dir: ./uploads/
+  allowed-types: jpg,jpeg,png,gif,mp4,avi,mov
+  max-size: 100MB
+
+# 日志配置
+logging:
+  level:
+    com.training: ERROR
+    org.springframework.security: ERROR
+    org.springframework.web: ERROR
+    org.hibernate: ERROR
+    org.springframework.boot: ERROR
+    root: ERROR
