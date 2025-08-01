@@ -203,10 +203,10 @@ main() {
     create_user
     
     # 执行建表脚本
-    execute_sql_script "../src/main/resources/schema.sql" "建表脚本"
+    execute_sql_script "database_schema.sql" "建表脚本"
     
     # 执行数据脚本
-    execute_sql_script "../src/main/resources/data.sql" "演示数据脚本"
+    execute_sql_script "database_data.sql" "演示数据脚本"
     
     # 验证初始化
     verify_initialization
