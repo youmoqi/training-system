@@ -7,7 +7,9 @@
           <div class="user-info">
             <span>管理员：{{ currentUser?.realName }}</span>
             <el-dropdown @command="handleCommand">
-              <el-avatar :src="currentUser?.facePhotoUrl" />
+              <el-avatar :src="currentUser?.facePhotoUrl">
+                {{ currentUser?.realName?.charAt(0) || currentUser?.username?.charAt(0) }}
+              </el-avatar>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -18,7 +20,7 @@
         </div>
       </el-header>
       
-      <el-container>
+      <el-container class="main-container">
         <el-aside width="200px" class="sidebar">
           <el-menu
             :default-active="$route.path"
@@ -32,6 +34,10 @@
             <el-menu-item index="/admin/question-banks">
               <el-icon><Document /></el-icon>
               <span>题库管理</span>
+            </el-menu-item>
+            <el-menu-item index="/admin/exam-papers">
+              <el-icon><Edit /></el-icon>
+              <span>试卷管理</span>
             </el-menu-item>
             <el-menu-item index="/admin/statistics">
               <el-icon><PieChart /></el-icon>
@@ -98,12 +104,15 @@ export default {
 <style scoped>
 .admin {
   height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
-  background: #fff;
-  border-bottom: 1px solid #e6e6e6;
-  padding: 0 20px;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-light);
+  padding: 0 var(--spacing-lg);
+  box-shadow: var(--shadow-light);
 }
 
 .header-content {
@@ -115,26 +124,123 @@ export default {
 
 .header-content h2 {
   margin: 0;
-  color: #333;
+  color: var(--text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--spacing-sm);
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
+}
+
+.main-container {
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar {
-  background: #fff;
-  border-right: 1px solid #e6e6e6;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-light);
+  box-shadow: var(--shadow-light);
+  height: calc(100vh - 60px); /* 减去头部高度 */
+  overflow-y: auto; /* 如果内容过多，允许滚动 */
 }
 
 .sidebar-menu {
   border-right: none;
+  height: 100%;
+  overflow-y: auto; /* 菜单可以滚动 */
+}
+
+.sidebar-menu .el-menu-item {
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  margin: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-base);
+  height: 45px; /* 稍微减小高度 */
+  line-height: 45px;
+}
+
+.sidebar-menu .el-menu-item:hover {
+  background: var(--bg-extra-light);
+  color: var(--primary-color);
+}
+
+.sidebar-menu .el-menu-item.is-active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.sidebar-menu .el-menu-item .el-icon {
+  margin-right: var(--spacing-sm);
+  font-size: var(--font-size-base);
 }
 
 .main-content {
-  background: #f5f5f5;
-  padding: 20px;
+  background: var(--bg-page);
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header-content h2 {
+    font-size: var(--font-size-lg);
+  }
+  
+  .sidebar {
+    width: 60px !important;
+  }
+  
+  .sidebar-menu .el-menu-item span {
+    display: none;
+  }
+  
+  .sidebar-menu .el-menu-item {
+    text-align: center;
+    padding: var(--spacing-sm);
+  }
+  
+  .sidebar-menu .el-menu-item .el-icon {
+    margin-right: 0;
+  }
+}
+
+/* 自定义样式覆盖 */
+:deep(.el-header) {
+  height: 60px;
+  line-height: 60px;
+}
+
+:deep(.el-aside) {
+  background: var(--bg-white);
+}
+
+:deep(.el-main) {
+  padding: var(--spacing-lg);
+}
+
+:deep(.el-menu) {
+  background: transparent;
+}
+
+:deep(.el-menu-item) {
+  height: 50px;
+  line-height: 50px;
+}
+
+:deep(.el-dropdown) {
+  cursor: pointer;
+}
+
+:deep(.el-avatar) {
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
 }
 </style> 

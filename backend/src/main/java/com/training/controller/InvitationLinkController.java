@@ -6,6 +6,9 @@ import com.training.dto.JoinRequestDto;
 import com.training.entity.InvitationLink;
 import com.training.service.InvitationLinkService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +23,21 @@ public class InvitationLinkController {
 
     @Autowired
     private InvitationLinkService invitationLinkService;
+
+    // 分页获取邀请链接列表
+    @GetMapping("/page")
+    public ResponseEntity<ApiResponse<Page<InvitationLink>>> getInvitationLinksWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<InvitationLink> links = invitationLinkService.findInvitationLinksWithPagination(pageable, keyword);
+            return ResponseEntity.ok(ApiResponse.success("获取邀请链接列表成功", links));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取邀请链接列表失败: " + e.getMessage()));
+        }
+    }
 
     // Admin: Get all links
     @GetMapping

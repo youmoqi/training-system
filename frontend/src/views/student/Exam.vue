@@ -42,8 +42,8 @@
         <!-- 单选题 -->
         <div v-if="currentQuestion.type === 'SINGLE_CHOICE'" class="question-options">
           <el-radio-group v-model="currentQuestion.userAnswers[0]">
-            <el-radio 
-              v-for="option in currentQuestion.options" 
+            <el-radio
+              v-for="option in currentQuestion.options"
               :key="option"
               :label="option"
               class="option-item"
@@ -56,8 +56,8 @@
         <!-- 多选题 -->
         <div v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'" class="question-options">
           <el-checkbox-group v-model="currentQuestion.userAnswers">
-            <el-checkbox 
-              v-for="option in currentQuestion.options" 
+            <el-checkbox
+              v-for="option in currentQuestion.options"
               :key="option"
               :label="option"
               class="option-item"
@@ -98,7 +98,7 @@
             </el-button>
           </div>
         </template>
-        
+
         <div class="question-list">
           <el-button
             v-for="(question, index) in questions"
@@ -144,7 +144,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Clock, Loading } from '@element-plus/icons-vue'
-import api from '../api'
+import api from '../../api'
 
 export default {
   name: 'Exam',
@@ -156,7 +156,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
-    
+
     const questionBankId = route.params.questionBankId
     const questions = ref([])
     const questionBank = ref(null)
@@ -164,7 +164,7 @@ export default {
     const loading = ref(true)
     const submitting = ref(false)
     const exitDialogVisible = ref(false)
-    
+
     // 考试时间设置（分钟）
     const timeLimit = ref(60)
     const remainingTime = ref(timeLimit.value * 60) // 转换为秒
@@ -178,28 +178,28 @@ export default {
     const loadExam = async () => {
       try {
         loading.value = true
-        
+
         // 加载题库信息
         const questionBankResponse = await api.get(`/question-banks/${questionBankId}`)
         questionBank.value = questionBankResponse.data.data
-        
+
         // 加载考试题目
         const questionsResponse = await api.get(`/questions/exam/${questionBankId}`)
         const examQuestions = questionsResponse.data.data
-        
+
         // 初始化题目答案
         questions.value = examQuestions.map(q => ({
           ...q,
           userAnswers: q.type === 'MULTIPLE_CHOICE' ? [] : ['']
         }))
-        
+
         // 设置时间限制
         timeLimit.value = questionBank.value.timeLimit || 60
         remainingTime.value = timeLimit.value * 60
-        
+
         // 开始计时
         startTimer()
-        
+
       } catch (error) {
         ElMessage.error('加载考试失败：' + (error.response?.data?.message || '未知错误'))
         router.push('/dashboard/exams')
@@ -225,7 +225,7 @@ export default {
       const hours = Math.floor(seconds / 3600)
       const minutes = Math.floor((seconds % 3600) / 60)
       const secs = seconds % 60
-      
+
       if (hours > 0) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
       }
@@ -289,7 +289,7 @@ export default {
         )
 
         submitting.value = true
-        
+
         // 准备答案数据
         const answers = questions.value.map(q => ({
           questionId: q.id,
@@ -300,7 +300,7 @@ export default {
         const userId = store.getters.currentUser?.id
         const response = await api.post(`/questions/exam/${questionBankId}/submit?userId=${userId}`, answers)
         const examResult = response.data.data
-        
+
         // 保存考试结果
         try {
           await api.post('/exam-results', examResult, {
@@ -309,15 +309,15 @@ export default {
         } catch (error) {
           console.warn('保存考试结果失败：', error)
         }
-        
+
         // 停止计时
         if (timer) {
           clearInterval(timer)
         }
-        
+
         // 跳转到结果页面
         router.push(`/dashboard/exam-result/${questionBankId}`)
-        
+
       } catch (error) {
         if (error !== 'cancel') {
           ElMessage.error('提交考试失败：' + (error.response?.data?.message || '未知错误'))
@@ -542,16 +542,16 @@ export default {
   .exam-content {
     grid-template-columns: 1fr;
   }
-  
+
   .exam-header {
     flex-direction: column;
     gap: 15px;
     align-items: flex-start;
   }
-  
+
   .header-right {
     width: 100%;
     justify-content: space-between;
   }
 }
-</style> 
+</style>

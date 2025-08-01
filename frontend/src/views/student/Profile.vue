@@ -3,7 +3,7 @@
     <div class="page-header">
       <h3>个人资料</h3>
     </div>
-    
+
     <el-row :gutter="20">
       <el-col :span="8">
         <el-card class="profile-card">
@@ -16,7 +16,7 @@
             <h4>{{ currentUser?.realName }}</h4>
             <p>{{ getRoleText(currentUser?.role) }}</p>
           </div>
-          
+
           <div class="user-stats">
             <div class="stat-item">
               <span class="stat-label">缴费额度</span>
@@ -33,13 +33,13 @@
           </div>
         </el-card>
       </el-col>
-      
+
       <el-col :span="16">
         <el-card class="info-card">
           <template #header>
             <span>基本信息</span>
           </template>
-          
+
           <el-descriptions :column="2" border>
             <el-descriptions-item label="用户名">
               {{ currentUser?.username }}
@@ -73,12 +73,12 @@
             </el-descriptions-item>
           </el-descriptions>
         </el-card>
-        
+
         <el-card class="courses-card" style="margin-top: 20px;">
           <template #header>
             <span>我的课程</span>
           </template>
-          
+
           <el-table :data="userCourses" style="width: 100%">
             <el-table-column prop="course.title" label="课程名称" />
             <el-table-column prop="enrollTime" label="选课时间">
@@ -112,20 +112,20 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
-import api from '../api'
+import api from '../../api'
 
 export default {
   name: 'Profile',
   setup() {
     const store = useStore()
     const userCourses = ref([])
-    
+
     const currentUser = computed(() => store.getters.currentUser)
-    
+
     const completedCourses = computed(() => {
       return userCourses.value.filter(course => course.isCompleted)
     })
-    
+
     const loadUserCourses = async () => {
       try {
         const response = await api.get(`/courses/user/${currentUser.value.id}`)
@@ -134,7 +134,7 @@ export default {
         ElMessage.error('加载课程信息失败')
       }
     }
-    
+
     const getRoleText = (role) => {
       const roleMap = {
         'SUPER_ADMIN': '超级管理员',
@@ -144,16 +144,16 @@ export default {
       }
       return roleMap[role] || '未知角色'
     }
-    
+
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       return new Date(dateString).toLocaleString('zh-CN')
     }
-    
+
     onMounted(() => {
       loadUserCourses()
     })
-    
+
     return {
       currentUser,
       userCourses,
@@ -231,4 +231,4 @@ export default {
 .courses-card {
   margin-top: 20px;
 }
-</style> 
+</style>

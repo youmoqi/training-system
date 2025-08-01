@@ -8,6 +8,9 @@ import com.training.dto.QuestionImportDto;
 import com.training.entity.Question;
 import com.training.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +23,23 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+
+    // 通用题目查询接口
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<QuestionDto>>> getQuestions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Long questionBankId) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<QuestionDto> questions = questionService.findQuestions(pageable, keyword, type, questionBankId);
+            return ResponseEntity.ok(ApiResponse.success("获取题目成功", questions));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 
     // 题目管理接口
     @GetMapping("/question-bank/{questionBankId}")

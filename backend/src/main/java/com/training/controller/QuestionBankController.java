@@ -4,10 +4,12 @@ import com.training.dto.ApiResponse;
 import com.training.dto.UserQuestionBankDto;
 import com.training.entity.QuestionBank;
 import com.training.entity.User;
-import com.training.entity.UserQuestionBank;
 import com.training.service.QuestionBankService;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +25,21 @@ public class QuestionBankController {
 
     @Autowired
     private UserService userService;
+
+    // 分页获取题库列表
+    @GetMapping("/page")
+    public ResponseEntity<ApiResponse<Page<QuestionBank>>> getQuestionBanksWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<QuestionBank> questionBanks = questionBankService.findQuestionBanksWithPagination(pageable, keyword);
+            return ResponseEntity.ok(ApiResponse.success("获取题库列表成功", questionBanks));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取题库列表失败: " + e.getMessage()));
+        }
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<QuestionBank>>> getAllQuestionBanks() {
@@ -84,7 +101,7 @@ public class QuestionBankController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             QuestionBank questionBank = questionBankService.findById(id)
                     .orElseThrow(() -> new RuntimeException("题库不存在"));
 
@@ -100,7 +117,7 @@ public class QuestionBankController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             List<UserQuestionBankDto> userQuestionBanks = questionBankService.getUserQuestionBankDtos(user);
             return ResponseEntity.ok(ApiResponse.success("获取用户题库成功", userQuestionBanks));
         } catch (Exception e) {
@@ -121,7 +138,6 @@ public class QuestionBankController {
             System.out.println("purchasedQuestionBanks.size=" + purchasedQuestionBanks.size());
             return ResponseEntity.ok(ApiResponse.success("获取已购买题库成功", purchasedQuestionBanks));
         } catch (Exception e) {
-            e.printStackTrace();
             // 返回空列表而不是400
             return ResponseEntity.ok(ApiResponse.success("发生异常，返回空列表", new java.util.ArrayList<>()));
         }
@@ -135,7 +151,7 @@ public class QuestionBankController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             QuestionBank questionBank = questionBankService.findById(id)
                     .orElseThrow(() -> new RuntimeException("题库不存在"));
 
@@ -145,4 +161,4 @@ public class QuestionBankController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
-} 
+}

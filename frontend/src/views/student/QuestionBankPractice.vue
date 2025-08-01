@@ -189,7 +189,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
-import api from '../api'
+import api from '../../api'
 import { Loading } from '@element-plus/icons-vue'
 
 export default {
@@ -294,11 +294,11 @@ export default {
     const getQuestionButtonType = (index) => {
       const question = questions.value[index]
       if (!question) return 'default'
-      
+
       if (index === currentQuestionIndex.value) {
         return 'primary'
       }
-      
+
       const answer = userAnswers.value[question.id]
       if (Array.isArray(answer)) {
         return answer.length > 0 ? 'success' : 'default'
@@ -337,13 +337,13 @@ export default {
     const confirmSubmit = async () => {
       try {
         stopTimer()
-        
+
         const answers = Object.keys(userAnswers.value).map(questionId => {
           const answer = userAnswers.value[questionId]
           return {
             questionId: parseInt(questionId),
-            userAnswers: Array.isArray(answer) 
-              ? answer 
+            userAnswers: Array.isArray(answer)
+              ? answer
               : [answer.toString()]
           }
         }).filter(item => {
@@ -683,4 +683,4 @@ export default {
   justify-content: center;
   align-items: center;
 }
-</style> 
+</style>

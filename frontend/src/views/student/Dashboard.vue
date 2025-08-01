@@ -18,7 +18,7 @@
           </div>
         </div>
       </el-header>
-      
+
       <el-container>
         <el-aside width="200px" class="sidebar">
           <el-menu
@@ -38,6 +38,10 @@
               <el-icon><Document /></el-icon>
               <span>题库练习</span>
             </el-menu-item>
+            <el-menu-item index="/dashboard/exam-papers">
+              <el-icon><EditPen /></el-icon>
+              <span>试卷考试</span>
+            </el-menu-item>
             <!-- <el-menu-item index="/dashboard/exams">
               <el-icon><EditPen /></el-icon>
               <span>我的考试</span>
@@ -48,7 +52,7 @@
             </el-menu-item>
           </el-menu>
         </el-aside>
-        
+
         <el-main class="main-content">
           <router-view />
         </el-main>
@@ -76,10 +80,10 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-    
+
     const currentUser = computed(() => store.getters.currentUser)
     const userRole = computed(() => store.getters.userRole)
-    
+
     const handleCommand = (command) => {
       if (command === 'logout') {
         store.dispatch('logout')
@@ -89,7 +93,7 @@ export default {
         router.push('/dashboard/profile')
       }
     }
-    
+
     return {
       currentUser,
       handleCommand,
@@ -129,16 +133,31 @@ export default {
 }
 
 .sidebar {
-  background: #fff;
-  border-right: 1px solid #e6e6e6;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-light);
+  box-shadow: var(--shadow-light);
+  height: calc(100vh - 60px); /* 减去头部高度 */
+  overflow-y: auto; /* 如果内容过多，允许滚动 */
 }
 
 .sidebar-menu {
   border-right: none;
+  height: 100%;
+  overflow-y: auto; /* 菜单可以滚动 */
+}
+
+.sidebar-menu .el-menu-item {
+  color: var(--text-regular);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  margin: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-base);
+  height: 45px; /* 稍微减小高度 */
+  line-height: 45px;
 }
 
 .main-content {
   background: #f5f5f5;
   padding: 20px;
 }
-</style> 
+</style>

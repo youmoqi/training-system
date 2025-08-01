@@ -5,7 +5,7 @@
         <h2>使用邀请链接加入课程</h2>
         <p>请输入有效的邀请码和密码以加入新课程</p>
       </div>
-      
+
       <el-form :model="formData" :rules="formRules" ref="joinForm" label-position="top" @submit.prevent="handleJoin">
         <el-form-item label="邀请码" prop="linkCode">
           <el-input v-model="formData.linkCode" placeholder="请输入邀请码" size="large" />
@@ -17,7 +17,7 @@
           <el-button type="primary" @click="handleJoin" :loading="loading" class="join-button">立即加入</el-button>
         </el-form-item>
       </el-form>
-      
+
       <div class="back-link">
         <router-link to="/dashboard/courses">返回我的课程</router-link>
       </div>
@@ -29,7 +29,7 @@
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import api from '../api';
+import api from '../../api';
 
 const router = useRouter();
 const joinForm = ref(null);
@@ -105,4 +105,4 @@ const handleJoin = async () => {
   color: #409eff;
   text-decoration: none;
 }
-</style> 
+</style>

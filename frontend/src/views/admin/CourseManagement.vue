@@ -1,113 +1,126 @@
 <template>
-  <div class="course-management">
+  <div class="page-container">
     <div class="page-header">
-      <h3>课程管理</h3>
-      <el-button type="primary" @click="showCreateDialog = true">
-        创建课程
-      </el-button>
+      <h3 class="page-title">课程管理</h3>
+      <div class="page-actions">
+        <el-button type="primary" @click="showCreateDialog">
+          <el-icon><Plus /></el-icon>
+          创建课程
+        </el-button>
+      </div>
     </div>
-    
-    <el-table :data="courses" style="width: 100%">
-      <el-table-column prop="title" label="课程名称" />
-      <el-table-column prop="description" label="课程描述" />
-      <el-table-column prop="price" label="价格">
-        <template #default="scope">
-          ¥{{ scope.row.price }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="isOnline" label="状态">
-        <template #default="scope">
-          <el-tag :type="scope.row.isOnline ? 'success' : 'danger'">
-            {{ scope.row.isOnline ? '已上线' : '已下线' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createTime" label="创建时间">
-        <template #default="scope">
-          {{ formatDate(scope.row.createTime) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="200">
-        <template #default="scope">
-          <el-button size="small" @click="editCourse(scope.row)">
-            编辑
-          </el-button>
-          <el-button
-            size="small"
-            type="danger"
-            @click="deleteCourse(scope.row.id)"
+
+    <div class="card">
+      <div class="card-body">
+        <!-- 搜索栏 -->
+        <div class="search-section">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索课程..."
+            class="search-input"
+            clearable
+            @input="handleSearch"
           >
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </div>
+
+        <!-- 课程列表 -->
+        <div class="table-container">
+          <el-table :data="courses" style="width: 100%" v-loading="loading">
+            <el-table-column prop="title" label="课程名称" min-width="200" />
+            <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
+            <el-table-column prop="duration" label="时长(分钟)" width="120" />
+            <el-table-column prop="chapterCount" label="章节数" width="100" />
+            <el-table-column label="状态" width="100">
+              <template #default="scope">
+                <el-tag :type="scope.row.isOnline ? 'success' : 'info'">
+                  {{ scope.row.isOnline ? '已上线' : '未上线' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="创建时间" width="180">
+              <template #default="scope">
+                {{ formatDateTime(scope.row.createTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="250" fixed="right">
+              <template #default="scope">
+                <el-button size="small" @click="viewCourse(scope.row)">查看</el-button>
+                <el-button size="small" type="primary" @click="editCourse(scope.row)">
+                  编辑
+                </el-button>
+                <el-button size="small" type="warning" @click="manageChapters(scope.row)">
+                  管理章节
+                </el-button>
+                <el-button size="small" type="danger" @click="deleteCourse(scope.row)">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination-container">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </div>
+
+        <!-- 空状态 -->
+        <el-empty v-if="!loading && courses.length === 0" description="暂无课程数据" />
+      </div>
+    </div>
+
     <!-- 创建/编辑课程对话框 -->
     <el-dialog
-      v-model="showCreateDialog"
-      :title="editingCourse ? '编辑课程' : '创建课程'"
+      v-model="dialogVisible"
+      :title="isEdit ? '编辑课程' : '创建课程'"
       width="600px"
+      class="dialog-container"
     >
-      <el-form
-        ref="courseForm"
-        :model="courseForm"
-        :rules="courseRules"
-        label-width="100px"
-      >
-        <el-form-item label="课程名称" prop="title">
-          <el-input v-model="courseForm.title" placeholder="请输入课程名称" />
-        </el-form-item>
-        
-        <el-form-item label="课程描述" prop="description">
-          <el-input
-            v-model="courseForm.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入课程描述"
-          />
-        </el-form-item>
-        
-        <el-form-item label="封面图片" prop="coverImageUrl">
-          <el-input v-model="courseForm.coverImageUrl" placeholder="请输入封面图片URL" />
-          <div class="image-preview" v-if="courseForm.coverImageUrl">
-            <img :src="courseForm.coverImageUrl" alt="封面预览" style="max-width: 200px; max-height: 120px; margin-top: 10px;" />
-          </div>
-        </el-form-item>
-        
-        <el-form-item label="视频链接" prop="videoUrl">
-          <el-input v-model="courseForm.videoUrl" placeholder="请输入视频链接" />
-        </el-form-item>
-        
-        <el-form-item label="课程价格" prop="price">
-          <el-input-number
-            v-model="courseForm.price"
-            :min="0"
-            :precision="2"
-            style="width: 100%"
-            placeholder="请输入课程价格"
-          />
-        </el-form-item>
-        
-        <el-form-item label="上线状态" prop="isOnline">
-          <el-switch v-model="courseForm.isOnline" />
-        </el-form-item>
-        
-        <el-form-item label="可见角色" prop="visibleRoles">
-          <el-checkbox-group v-model="courseForm.visibleRoles">
-            <el-checkbox label="EXPLOSIVE_USER">易制爆人员</el-checkbox>
-            <el-checkbox label="BLAST_USER">爆破三大员</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-      </el-form>
-      
+      <div class="dialog-body">
+        <el-form :model="courseForm" :rules="rules" ref="courseFormRef" label-width="100px">
+          <el-form-item label="课程名称" prop="title">
+            <el-input v-model="courseForm.title" placeholder="请输入课程名称" />
+          </el-form-item>
+          <el-form-item label="课程描述" prop="description">
+            <el-input
+              v-model="courseForm.description"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入课程描述"
+            />
+          </el-form-item>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="课程时长" prop="duration">
+                <el-input-number v-model="courseForm.duration" :min="1" :max="1000" />
+                <span style="margin-left: 10px">分钟</span>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="是否上线" prop="isOnline">
+                <el-switch v-model="courseForm.isOnline" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="showCreateDialog = false">取消</el-button>
-          <el-button type="primary" @click="saveCourse">
-            {{ editingCourse ? '更新' : '创建' }}
-          </el-button>
-        </span>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitCourse">确定</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -115,69 +128,122 @@
 
 <script>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import api from '../../api'
+import { Plus, Search } from '@element-plus/icons-vue'
+import api from '@/api'
 
 export default {
   name: 'CourseManagement',
+  components: {
+    Plus,
+    Search
+  },
   setup() {
+    const router = useRouter()
+
     const courses = ref([])
-    const showCreateDialog = ref(false)
-    const editingCourse = ref(null)
-    const courseForm = ref(null)
-    
-    const formData = reactive({
+    const loading = ref(false)
+    const dialogVisible = ref(false)
+    const isEdit = ref(false)
+    const courseFormRef = ref(null)
+    const searchKeyword = ref('')
+    const currentPage = ref(1)
+    const pageSize = ref(20)
+    const total = ref(0)
+
+    const courseForm = reactive({
+      id: null,
       title: '',
       description: '',
-      coverImageUrl: '',
-      videoUrl: '',
-      price: 0,
-      isOnline: true,
-      visibleRoles: []
+      duration: 60,
+      isOnline: true
     })
-    
-    const courseRules = {
+
+    const rules = {
       title: [
         { required: true, message: '请输入课程名称', trigger: 'blur' }
       ],
       description: [
         { required: true, message: '请输入课程描述', trigger: 'blur' }
       ],
-      coverImageUrl: [
-        { required: true, message: '请输入封面图片URL', trigger: 'blur' }
-      ],
-      videoUrl: [
-        { required: true, message: '请输入视频链接', trigger: 'blur' }
-      ],
-      price: [
-        { required: true, message: '请输入课程价格', trigger: 'blur' }
+      duration: [
+        { required: true, message: '请输入课程时长', trigger: 'blur' }
       ]
     }
-    
+
     const loadCourses = async () => {
+      loading.value = true
       try {
-        const response = await api.get('/courses')
-        courses.value = response.data.data
+        const params = {
+          page: currentPage.value - 1,
+          size: pageSize.value,
+          keyword: searchKeyword.value
+        }
+        const response = await api.get('/courses/page', { params })
+        if (response.data.success) {
+          courses.value = response.data.data.content
+          total.value = response.data.data.totalElements
+        }
       } catch (error) {
         ElMessage.error('加载课程失败')
+      } finally {
+        loading.value = false
       }
     }
-    
-    const editCourse = (course) => {
-      editingCourse.value = course
-      Object.assign(formData, course)
-      showCreateDialog.value = true
+
+    const showCreateDialog = () => {
+      isEdit.value = false
+      Object.assign(courseForm, {
+        id: null,
+        title: '',
+        description: '',
+        duration: 60,
+        isOnline: true
+      })
+      dialogVisible.value = true
     }
-    
-    const deleteCourse = async (id) => {
+
+    const editCourse = (course) => {
+      isEdit.value = true
+      Object.assign(courseForm, {
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        duration: course.duration,
+        isOnline: course.isOnline
+      })
+      dialogVisible.value = true
+    }
+
+    const submitCourse = async () => {
+      try {
+        await courseFormRef.value.validate()
+
+        if (isEdit.value) {
+          await api.put(`/courses/${courseForm.id}`, courseForm)
+          ElMessage.success('更新成功')
+        } else {
+          await api.post('/courses', courseForm)
+          ElMessage.success('创建成功')
+        }
+
+        dialogVisible.value = false
+        loadCourses()
+      } catch (error) {
+        ElMessage.error('操作失败')
+      }
+    }
+
+    const deleteCourse = async (course) => {
       try {
         await ElMessageBox.confirm('确定要删除这个课程吗？', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         })
-        
-        await api.delete(`/courses/${id}`)
+
+        await api.delete(`/courses/${course.id}`)
         ElMessage.success('删除成功')
         loadCourses()
       } catch (error) {
@@ -186,78 +252,66 @@ export default {
         }
       }
     }
-    
-    const saveCourse = async () => {
-      try {
-        await courseForm.value.validate()
-        
-        if (editingCourse.value) {
-          await api.put(`/courses/${editingCourse.value.id}`, formData)
-          ElMessage.success('更新成功')
-        } else {
-          await api.post('/courses', formData)
-          ElMessage.success('创建成功')
-        }
-        
-        showCreateDialog.value = false
-        resetForm()
-        loadCourses()
-      } catch (error) {
-        ElMessage.error(error.response?.data?.message || '操作失败')
-      }
+
+    const viewCourse = (course) => {
+      router.push(`/admin/courses/${course.id}`)
     }
-    
-    const resetForm = () => {
-      editingCourse.value = null
-      Object.assign(formData, {
-        title: '',
-        description: '',
-        coverImageUrl: '',
-        videoUrl: '',
-        price: 0,
-        isOnline: true,
-        visibleRoles: []
-      })
+
+    const manageChapters = (course) => {
+      router.push(`/admin/courses/${course.id}/chapters`)
     }
-    
-    const formatDate = (dateString) => {
-      return new Date(dateString).toLocaleString('zh-CN')
+
+    const handleSearch = () => {
+      currentPage.value = 1
+      loadCourses()
     }
-    
+
+    const handleSizeChange = (size) => {
+      pageSize.value = size
+      currentPage.value = 1
+      loadCourses()
+    }
+
+    const handleCurrentChange = (page) => {
+      currentPage.value = page
+      loadCourses()
+    }
+
+    const formatDateTime = (dateTime) => {
+      return new Date(dateTime).toLocaleString()
+    }
+
     onMounted(() => {
       loadCourses()
     })
-    
+
     return {
       courses,
-      showCreateDialog,
-      editingCourse,
+      loading,
+      dialogVisible,
+      isEdit,
       courseForm,
-      courseForm: formData,
-      courseRules,
+      courseFormRef,
+      rules,
+      loadCourses,
+      showCreateDialog,
       editCourse,
+      submitCourse,
       deleteCourse,
-      saveCourse,
-      formatDate
+      viewCourse,
+      manageChapters,
+      searchKeyword,
+      currentPage,
+      pageSize,
+      total,
+      handleSearch,
+      handleSizeChange,
+      handleCurrentChange,
+      formatDateTime
     }
   }
 }
 </script>
 
 <style scoped>
-.course-management {
-  padding: 20px;
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.page-header h3 {
-  margin: 0;
-  color: #333;
-}
-</style> 
+</style>

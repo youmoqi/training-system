@@ -6,7 +6,7 @@
         选择课程
       </el-button>
     </div>
-    
+
     <el-row :gutter="20">
       <el-col
         v-for="userCourse in userCourses"
@@ -15,8 +15,8 @@
       >
         <el-card class="course-card" shadow="hover">
           <div class="course-image">
-            <img 
-              :src="userCourse.course.coverImageUrl || '/course-placeholder.svg'" 
+            <img
+              :src="userCourse.course.coverImageUrl || '/course-placeholder.svg'"
               :alt="userCourse.course.title"
               @error="handleImageError"
             />
@@ -28,11 +28,11 @@
               />
             </div>
           </div>
-          
+
           <div class="course-info">
             <h4>{{ userCourse.course.title }}</h4>
             <p>{{ userCourse.course.description }}</p>
-            
+
             <div class="course-meta">
               <span class="enroll-time">
                 选课时间：{{ formatDate(userCourse.enrollTime) }}
@@ -44,7 +44,7 @@
                 {{ userCourse.isCompleted ? '已完成' : '学习中' }}
               </el-tag>
             </div>
-            
+
             <div class="course-actions">
               <el-button
                 type="primary"
@@ -73,7 +73,7 @@
         </el-card>
       </el-col>
     </el-row>
-    
+
     <!-- 课程选择对话框 -->
     <el-dialog
       v-model="showCourseSelection"
@@ -94,7 +94,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showCourseSelection = false">取消</el-button>
@@ -116,19 +116,19 @@ import { ref, onMounted, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import api from '../api'
+import api from '../../api'
 
 export default {
   name: 'Courses',
   setup() {
     const store = useStore()
     const router = useRouter()
-    
+
     const userCourses = ref([])
     const availableCourses = ref([])
     const selectedCourses = ref([])
     const showCourseSelection = ref(false)
-    
+
     const userRole = computed(() => store.getters.userRole)
 
     const loadUserCourses = async () => {
@@ -139,7 +139,7 @@ export default {
         ElMessage.error('加载课程失败')
       }
     }
-    
+
     const loadAvailableCourses = async () => {
       try {
         const response = await api.get('/courses/online')
@@ -148,11 +148,11 @@ export default {
         ElMessage.error('加载可用课程失败')
       }
     }
-    
+
     const handleSelectionChange = (selection) => {
       selectedCourses.value = selection
     }
-    
+
     const enrollCourses = async () => {
       try {
         for (const course of selectedCourses.value) {
@@ -167,11 +167,11 @@ export default {
         ElMessage.error(error.response?.data?.message || '选课失败')
       }
     }
-    
+
     const watchCourse = (course) => {
       router.push(`/dashboard/course/${course.id}`)
     }
-    
+
     const markAsCompleted = async (userCourse) => {
       try {
         await api.put(`/courses/${userCourse.course.id}/progress`, null, {
@@ -186,15 +186,15 @@ export default {
         ElMessage.error('操作失败')
       }
     }
-    
+
     const formatDate = (dateString) => {
       return new Date(dateString).toLocaleDateString('zh-CN')
     }
-    
+
     const handleImageError = () => {
       // Handle image loading error
     }
-    
+
     const unenroll = async (courseId) => {
       try {
         await ElMessageBox.confirm('您确定要退出这门课程吗？此操作不可逆！', '确认退课', {
@@ -202,7 +202,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning',
         });
-        
+
         await api.delete(`/courses/unenroll/${courseId}`);
         ElMessage.success('成功退出课程');
         loadUserCourses(); // Refresh the list
@@ -212,12 +212,12 @@ export default {
         }
       }
     };
-    
+
     onMounted(() => {
       loadUserCourses()
       loadAvailableCourses()
     })
-    
+
     return {
       userCourses,
       availableCourses,
@@ -314,4 +314,4 @@ export default {
   display: flex;
   gap: 10px;
 }
-</style> 
+</style>

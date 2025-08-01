@@ -8,6 +8,8 @@ import com.training.repository.QuestionBankRepository;
 import com.training.repository.UserQuestionBankRepository;
 import com.training.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,16 @@ public class QuestionBankService {
     
     @Autowired
     private UserRepository userRepository;
+
+    // 分页查询题库
+    public Page<QuestionBank> findQuestionBanksWithPagination(Pageable pageable, String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return questionBankRepository.findByTitleContainingOrDescriptionContaining(
+                keyword, keyword, pageable);
+        } else {
+            return questionBankRepository.findAll(pageable);
+        }
+    }
 
     public QuestionBank createQuestionBank(QuestionBank questionBank) {
         return questionBankRepository.save(questionBank);

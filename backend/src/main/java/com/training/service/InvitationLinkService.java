@@ -8,6 +8,8 @@ import com.training.repository.CourseRepository;
 import com.training.repository.InvitationLinkRepository;
 import com.training.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,16 @@ public class InvitationLinkService {
     private UserRepository userRepository;
     @Autowired
     private CourseService courseService;
+
+    // 分页查询邀请链接
+    public Page<InvitationLink> findInvitationLinksWithPagination(Pageable pageable, String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return invitationLinkRepository.findByTitleContainingOrDescriptionContaining(
+                keyword, keyword, pageable);
+        } else {
+            return invitationLinkRepository.findAll(pageable);
+        }
+    }
 
     public List<InvitationLink> getAllInvitationLinks() {
         return invitationLinkRepository.findAll();

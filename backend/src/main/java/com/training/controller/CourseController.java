@@ -7,6 +7,9 @@ import com.training.entity.UserCourse;
 import com.training.service.CourseService;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +27,21 @@ public class CourseController {
 
     @Autowired
     private UserService userService;
+
+    // 分页获取课程列表
+    @GetMapping("/page")
+    public ResponseEntity<ApiResponse<Page<Course>>> getCoursesWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Course> courses = courseService.findCoursesWithPagination(pageable, keyword);
+            return ResponseEntity.ok(ApiResponse.success("获取课程列表成功", courses));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取课程列表失败: " + e.getMessage()));
+        }
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Course>>> getAllCourses() {

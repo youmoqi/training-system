@@ -48,21 +48,21 @@
           <div class="card-header">
             <span>题目详情</span>
             <div class="filter-buttons">
-              <el-button 
+              <el-button
                 :type="filterType === 'all' ? 'primary' : 'default'"
                 size="small"
                 @click="filterType = 'all'"
               >
                 全部
               </el-button>
-              <el-button 
+              <el-button
                 :type="filterType === 'correct' ? 'primary' : 'default'"
                 size="small"
                 @click="filterType = 'correct'"
               >
                 正确
               </el-button>
-              <el-button 
+              <el-button
                 :type="filterType === 'incorrect' ? 'primary' : 'default'"
                 size="small"
                 @click="filterType = 'incorrect'"
@@ -74,8 +74,8 @@
         </template>
 
         <div class="questions-list">
-          <div 
-            v-for="(question, index) in filteredQuestions" 
+          <div
+            v-for="(question, index) in filteredQuestions"
             :key="question.questionId"
             class="question-item"
             :class="{ 'correct': question.isCorrect, 'incorrect': !question.isCorrect }"
@@ -100,8 +100,8 @@
 
             <!-- 选项（选择题） -->
             <div v-if="question.type !== 'SUBJECTIVE'" class="question-options">
-              <div 
-                v-for="option in getQuestionOptions(question)" 
+              <div
+                v-for="option in getQuestionOptions(question)"
                 :key="option"
                 class="option-item"
                 :class="getOptionClass(question, option)"
@@ -164,7 +164,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import { Loading, Check, Close } from '@element-plus/icons-vue'
-import api from '../api'
+import api from '../../api'
 
 export default {
   name: 'ExamResult',
@@ -177,7 +177,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
-    
+
     const questionBankId = route.params.questionBankId
     const examResult = ref(null)
     const loading = ref(true)
@@ -185,7 +185,7 @@ export default {
 
     const filteredQuestions = computed(() => {
       if (!examResult.value?.questionResults) return []
-      
+
       switch (filterType.value) {
         case 'correct':
           return examResult.value.questionResults.filter(q => q.isCorrect)
@@ -204,7 +204,7 @@ export default {
           ElMessage.error('用户信息获取失败')
           return
         }
-        
+
         const response = await api.get(`/exam-results/${questionBankId}?userId=${userId}`)
         examResult.value = response.data.data
       } catch (error) {
@@ -279,7 +279,7 @@ export default {
       const optionLetter = option.charAt(0)
       const isCorrect = question.correctAnswers?.includes(optionLetter)
       const isUserAnswer = question.userAnswers?.includes(optionLetter)
-      
+
       if (isCorrect) return 'correct-option'
       if (isUserAnswer && !isCorrect) return 'incorrect-option'
       return ''
@@ -603,18 +603,18 @@ export default {
     gap: 20px;
     text-align: center;
   }
-  
+
   .score-info {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .question-header {
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     align-items: center;
@@ -627,4 +627,4 @@ export default {
     display: none;
   }
 }
-</style> 
+</style>

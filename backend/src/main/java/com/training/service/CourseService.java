@@ -6,6 +6,8 @@ import com.training.entity.UserCourse;
 import com.training.repository.CourseRepository;
 import com.training.repository.UserCourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,16 @@ public class CourseService {
     
     @Autowired
     private UserCourseRepository userCourseRepository;
+
+    // 分页查询课程
+    public Page<Course> findCoursesWithPagination(Pageable pageable, String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return courseRepository.findByTitleContainingOrDescriptionContaining(
+                keyword, keyword, pageable);
+        } else {
+            return courseRepository.findAll(pageable);
+        }
+    }
 
     public Course createCourse(Course course) {
         return courseRepository.save(course);

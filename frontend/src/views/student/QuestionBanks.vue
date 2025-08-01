@@ -6,7 +6,7 @@
         选择题库
       </el-button>
     </div>
-    
+
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
       <el-icon class="is-loading"><Loading /></el-icon>
@@ -30,7 +30,7 @@
           <div class="question-bank-info">
             <h4>{{ userQuestionBank.questionBankTitle }}</h4>
             <p>{{ userQuestionBank.questionBankDescription }}</p>
-            
+
             <div class="question-bank-meta">
               <span class="purchase-time">
                 购买时间：{{ formatDate(userQuestionBank.purchaseTime) }}
@@ -42,11 +42,11 @@
                 {{ userQuestionBank.isCompleted ? '已完成' : '未完成' }}
               </el-tag>
             </div>
-            
+
             <div v-if="userQuestionBank.score !== null" class="score-info">
               <span>得分：{{ userQuestionBank.score }}分</span>
             </div>
-            
+
             <div class="question-bank-actions">
               <el-button
                 type="primary"
@@ -60,7 +60,7 @@
         </el-card>
       </el-col>
     </el-row>
-    
+
     <!-- 购买题库对话框 -->
     <el-dialog
       v-model="showPurchaseDialog"
@@ -81,7 +81,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showPurchaseDialog = false">取消</el-button>
@@ -103,7 +103,7 @@ import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import api from '../api'
+import api from '../../api'
 import { Loading } from '@element-plus/icons-vue'
 
 export default {
@@ -114,13 +114,13 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-    
+
     const userQuestionBanks = ref([])
     const availableQuestionBanks = ref([])
     const selectedQuestionBanks = ref([])
     const showPurchaseDialog = ref(false)
     const loading = ref(false)
-    
+
     const loadUserQuestionBanks = async () => {
       loading.value = true
       try {
@@ -132,7 +132,7 @@ export default {
         loading.value = false
       }
     }
-    
+
     const loadAvailableQuestionBanks = async () => {
       try {
         const response = await api.get('/question-banks/online', {
@@ -143,11 +143,11 @@ export default {
         ElMessage.error('加载可用题库失败')
       }
     }
-    
+
     const handleSelectionChange = (selection) => {
       selectedQuestionBanks.value = selection
     }
-    
+
     const purchaseQuestionBanks = async () => {
       try {
         for (const questionBank of selectedQuestionBanks.value) {
@@ -162,20 +162,20 @@ export default {
         ElMessage.error(error.response?.data?.message || '购买失败')
       }
     }
-    
+
     const startPractice = (userQuestionBank) => {
       router.push(`/dashboard/question-bank/${userQuestionBank.questionBankId}`)
     }
-    
+
     const formatDate = (dateString) => {
       return new Date(dateString).toLocaleDateString('zh-CN')
     }
-    
+
     onMounted(() => {
       loadUserQuestionBanks()
       loadAvailableQuestionBanks()
     })
-    
+
     return {
       userQuestionBanks,
       availableQuestionBanks,
@@ -281,4 +281,4 @@ export default {
   align-items: center;
   height: 200px;
 }
-</style> 
+</style>

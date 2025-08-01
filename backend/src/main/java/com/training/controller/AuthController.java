@@ -67,7 +67,8 @@ public class AuthController {
             //     throw new RuntimeException("密码错误");
             // }
 
-            String token = jwtUtil.generateToken(user.getUsername());
+            // 使用新的token生成方法，包含userId
+            String token = jwtUtil.generateToken(user.getUsername(), user.getId());
             
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);

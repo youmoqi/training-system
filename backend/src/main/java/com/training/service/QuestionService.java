@@ -12,6 +12,8 @@ import com.training.repository.QuestionRepository;
 import com.training.repository.QuestionBankRepository;
 import com.training.repository.UserQuestionBankRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,45 @@ public class QuestionService {
     
     @Autowired
     private UserQuestionBankRepository userQuestionBankRepository;
+
+    // 分页查询题目
+    public Page<QuestionDto> findQuestions(Pageable pageable, String keyword, String type, Long questionBankId) {
+        Page<Question> questions;
+        
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 按关键词搜索
+            if (type != null && !type.trim().isEmpty()) {
+                if (questionBankId != null) {
+                    questions = questionRepository.findByContentContainingAndTypeAndQuestionBankId(keyword, type, questionBankId, pageable);
+                } else {
+                    questions = questionRepository.findByContentContainingAndType(keyword, type, pageable);
+                }
+            } else {
+                if (questionBankId != null) {
+                    questions = questionRepository.findByContentContainingAndQuestionBankId(keyword, questionBankId, pageable);
+                } else {
+                    questions = questionRepository.findByContentContaining(keyword, pageable);
+                }
+            }
+        } else {
+            // 不按关键词搜索
+            if (type != null && !type.trim().isEmpty()) {
+                if (questionBankId != null) {
+                    questions = questionRepository.findByTypeAndQuestionBankId(type, questionBankId, pageable);
+                } else {
+                    questions = questionRepository.findByType(type, pageable);
+                }
+            } else {
+                if (questionBankId != null) {
+                    questions = questionRepository.findByQuestionBankId(questionBankId, pageable);
+                } else {
+                    questions = questionRepository.findAll(pageable);
+                }
+            }
+        }
+        
+        return questions.map(this::convertToDto);
+    }
 
     // 题目管理功能
     public Question createQuestion(QuestionDto questionDto) {
@@ -210,6 +251,7 @@ public class QuestionService {
         QuestionDto dto = new QuestionDto();
         dto.setId(question.getId());
         dto.setQuestionBankId(question.getQuestionBank().getId());
+        dto.setQuestionBankTitle(question.getQuestionBank().getTitle());
         dto.setContent(question.getContent());
         dto.setType(question.getType());
         dto.setExplanation(question.getExplanation());
@@ -222,6 +264,7 @@ public class QuestionService {
         QuestionDto dto = new QuestionDto();
         dto.setId(question.getId());
         dto.setQuestionBankId(question.getQuestionBank().getId());
+        dto.setQuestionBankTitle(question.getQuestionBank().getTitle());
         dto.setContent(question.getContent());
         dto.setType(question.getType());
         dto.setExplanation(question.getExplanation());

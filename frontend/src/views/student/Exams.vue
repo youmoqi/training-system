@@ -20,12 +20,12 @@
       </div>
 
       <el-row v-else :gutter="20">
-        <el-col 
-          v-for="questionBank in questionBanks" 
-          :key="questionBank.id" 
-          :xs="24" 
-          :sm="12" 
-          :md="8" 
+        <el-col
+          v-for="questionBank in questionBanks"
+          :key="questionBank.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
           :lg="6"
         >
           <el-card class="exam-card" shadow="hover">
@@ -43,14 +43,14 @@
                 </span>
               </div>
               <div class="exam-actions">
-                <el-button 
-                  type="primary" 
+                <el-button
+                  type="primary"
                   @click="startExam(questionBank.id)"
                   :loading="startingExam === questionBank.id"
                 >
                   开始考试
                 </el-button>
-                <el-button 
+                <el-button
                   @click="viewHistory(questionBank.id)"
                   size="small"
                 >
@@ -79,7 +79,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Document, Clock, Loading } from '@element-plus/icons-vue'
-import api from '../api'
+import api from '../../api'
 
 export default {
   name: 'Exams',
@@ -116,7 +116,7 @@ export default {
     const startExam = async (questionBankId) => {
       try {
         startingExam.value = questionBankId
-        
+
         // 确认开始考试
         await ElMessageBox.confirm(
           '确定要开始考试吗？开始后计时器将启动，请确保有足够的时间完成考试。',
@@ -261,4 +261,4 @@ export default {
   display: flex;
   gap: 10px;
 }
-</style> 
+</style>

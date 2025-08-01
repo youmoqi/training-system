@@ -4,6 +4,9 @@ import com.training.dto.ApiResponse;
 import com.training.entity.User;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +19,21 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    // 分页获取用户列表
+    @GetMapping("/page")
+    public ResponseEntity<ApiResponse<Page<User>>> getUsersWithPagination(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<User> users = userService.findUsersWithPagination(pageable, keyword);
+            return ResponseEntity.ok(ApiResponse.success("获取用户列表成功", users));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取用户列表失败: " + e.getMessage()));
+        }
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {

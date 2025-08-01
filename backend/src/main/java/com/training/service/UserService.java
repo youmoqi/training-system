@@ -4,6 +4,8 @@ import com.training.dto.UserRegistrationDto;
 import com.training.entity.User;
 import com.training.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +22,16 @@ public class UserService {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    // 分页查询用户
+    public Page<User> findUsersWithPagination(Pageable pageable, String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            return userRepository.findByUsernameContainingOrRealNameContainingOrPhoneContaining(
+                keyword, keyword, keyword, pageable);
+        } else {
+            return userRepository.findAll(pageable);
+        }
+    }
 
     public User registerUser(UserRegistrationDto registrationDto, String facePhotoUrl) {
         // 检查用户名是否已存在

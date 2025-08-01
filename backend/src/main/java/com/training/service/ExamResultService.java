@@ -12,6 +12,8 @@ import com.training.repository.QuestionBankRepository;
 import com.training.repository.UserRepository;
 import com.training.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +40,26 @@ public class ExamResultService {
     
     @Autowired
     private QuestionRepository questionRepository;
+    
+    // 分页查询考试结果
+    public Page<ExamResultDto> findExamResultsWithPagination(Pageable pageable, String keyword, Long userId) {
+        Page<ExamResult> examResults;
+        
+        if (userId != null) {
+            // 按用户ID查询
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+            examResults = examResultRepository.findByUser(user, pageable);
+        } else if (keyword != null && !keyword.trim().isEmpty()) {
+            // 按关键词搜索
+            examResults = examResultRepository.findByQuestionBankTitleContaining(keyword, pageable);
+        } else {
+            // 查询所有
+            examResults = examResultRepository.findAll(pageable);
+        }
+        
+        return examResults.map(this::convertToDto);
+    }
     
     public ExamResult saveExamResult(ExamResultDto examResultDto, Long userId) {
         User user = userRepository.findById(userId)

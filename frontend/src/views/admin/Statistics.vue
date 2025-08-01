@@ -1,18 +1,13 @@
 <template>
-  <div class="statistics-page">
+  <div class="page-container">
     <div class="page-header">
-      <div class="header-left">
-        <el-button @click="goBack" icon="ArrowLeft">返回管理</el-button>
-        <h3>统计分析</h3>
-      </div>
+      <h3 class="page-title">统计分析</h3>
     </div>
 
     <!-- 系统整体统计 -->
-    <el-card class="system-stats" shadow="hover">
+    <el-card class="card">
       <template #header>
-        <div class="card-header">
-          <span>系统整体统计</span>
-        </div>
+        <h3 class="page-title">系统整体统计</h3>
       </template>
       <el-row :gutter="20">
         <el-col :span="6">
@@ -43,147 +38,149 @@
     </el-card>
 
     <!-- 题库选择 -->
-    <el-card class="question-bank-select" shadow="hover">
+    <el-card class="card" style="margin-top: 20px">
       <template #header>
-        <div class="card-header">
-          <span>题库详细统计</span>
-          <el-select v-model="selectedQuestionBankId" placeholder="选择题库" @change="loadQuestionBankStats" clearable>
-            <el-option
+        <h3 class="page-title" style="margin-bottom: 3px">题库详细统计</h3>
+        <el-select v-model="selectedQuestionBankId" placeholder="选择题库" @change="loadQuestionBankStats" clearable>
+          <el-option
               v-for="questionBank in questionBanks"
               :key="questionBank.id"
               :label="questionBank.title"
               :value="questionBank.id"
-            />
-          </el-select>
-        </div>
+          />
+        </el-select>
       </template>
+      <div class="card-body">
+        <!-- 加载状态 -->
+        <div v-if="loadingStats" class="loading-stats">
+          <el-icon class="is-loading">
+            <Loading/>
+          </el-icon>
+          <p>正在加载题库统计...</p>
+        </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loadingStats" class="loading-stats">
-        <el-icon class="is-loading"><Loading /></el-icon>
-        <p>正在加载题库统计...</p>
+        <!-- 题库统计内容 -->
+        <div v-else-if="questionBankStats" class="question-bank-stats">
+          <!-- 基础统计 -->
+          <el-row :gutter="20" class="stats-row">
+            <el-col :span="6">
+              <div class="stat-card">
+                <div class="stat-number">{{ questionBankStats.totalQuestions || 0 }}</div>
+                <div class="stat-label">题目数量</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-card">
+                <div class="stat-number">{{ questionBankStats.totalUsers || 0 }}</div>
+                <div class="stat-label">购买用户</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-card">
+                <div class="stat-number">{{ questionBankStats.completedUsers || 0 }}</div>
+                <div class="stat-label">完成用户</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="stat-card">
+                <div class="stat-number">{{ (questionBankStats.averageScore || 0).toFixed(1) }}</div>
+                <div class="stat-label">平均分</div>
+              </div>
+            </el-col>
+          </el-row>
+
+          <!-- 完成率 -->
+          <el-row :gutter="20" class="stats-row">
+            <el-col :span="12">
+              <div class="completion-rate">
+                <div class="rate-title">完成率</div>
+                <el-progress
+                    :percentage="questionBankStats.completionRate || 0"
+                    :color="getProgressColor(questionBankStats.completionRate || 0)"
+                    :stroke-width="20"
+                />
+                <div class="rate-text">{{ (questionBankStats.completionRate || 0).toFixed(1) }}%</div>
+              </div>
+            </el-col>
+          </el-row>
+
+          <!-- 分数分布 -->
+          <el-row :gutter="20" class="stats-row">
+            <el-col :span="24">
+              <div class="score-distribution">
+                <h4>分数分布</h4>
+                <el-table :data="questionBankStats.scoreDistribution" style="width: 100%">
+                  <el-table-column prop="range" label="分数区间" width="120"/>
+                  <el-table-column prop="count" label="人数" width="100"/>
+                  <el-table-column prop="percentage" label="占比" width="120">
+                    <template #default="scope">
+                      {{ (scope.row.percentage || 0).toFixed(1) }}%
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="分布图">
+                    <template #default="scope">
+                      <el-progress
+                          :percentage="scope.row.percentage || 0"
+                          :color="getScoreRangeColor(scope.row.range)"
+                          :show-text="false"
+                          :stroke-width="20"
+                      />
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </el-col>
+          </el-row>
+
+          <!-- 题目统计 -->
+          <el-row :gutter="20" class="stats-row">
+            <el-col :span="24">
+              <div class="question-stats">
+                <h4>题目统计</h4>
+                <el-table :data="questionBankStats.questionStatistics" style="width: 100%">
+                  <el-table-column prop="questionId" label="题目ID" width="80"/>
+                  <el-table-column prop="content" label="题目内容" show-overflow-tooltip/>
+                  <el-table-column prop="type" label="类型" width="100">
+                    <template #default="scope">
+                      <el-tag :type="getQuestionTypeTag(scope.row.type)" size="small">
+                        {{ getQuestionTypeText(scope.row.type) }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="totalAttempts" label="答题次数" width="100"/>
+                  <el-table-column prop="correctAttempts" label="正确次数" width="100"/>
+                  <el-table-column prop="correctRate" label="正确率" width="120">
+                    <template #default="scope">
+                      {{ (scope.row.correctRate || 0).toFixed(1) }}%
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 空状态 -->
+        <div v-else-if="selectedQuestionBankId" class="empty-stats">
+          <el-empty description="暂无统计数据"/>
+        </div>
+
+        <!-- 默认状态 -->
+        <div v-else class="default-stats">
+          <el-empty description="请选择题库查看详细统计"/>
+        </div>
       </div>
 
-      <!-- 题库统计内容 -->
-      <div v-else-if="questionBankStats" class="question-bank-stats">
-        <!-- 基础统计 -->
-        <el-row :gutter="20" class="stats-row">
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-number">{{ questionBankStats.totalQuestions || 0 }}</div>
-              <div class="stat-label">题目数量</div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-number">{{ questionBankStats.totalUsers || 0 }}</div>
-              <div class="stat-label">购买用户</div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-number">{{ questionBankStats.completedUsers || 0 }}</div>
-              <div class="stat-label">完成用户</div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-number">{{ (questionBankStats.averageScore || 0).toFixed(1) }}</div>
-              <div class="stat-label">平均分</div>
-            </div>
-          </el-col>
-        </el-row>
-
-        <!-- 完成率 -->
-        <el-row :gutter="20" class="stats-row">
-          <el-col :span="12">
-            <div class="completion-rate">
-              <div class="rate-title">完成率</div>
-              <el-progress
-                :percentage="questionBankStats.completionRate || 0"
-                :color="getProgressColor(questionBankStats.completionRate || 0)"
-                :stroke-width="20"
-              />
-              <div class="rate-text">{{ (questionBankStats.completionRate || 0).toFixed(1) }}%</div>
-            </div>
-          </el-col>
-        </el-row>
-
-        <!-- 分数分布 -->
-        <el-row :gutter="20" class="stats-row">
-          <el-col :span="24">
-            <div class="score-distribution">
-              <h4>分数分布</h4>
-              <el-table :data="questionBankStats.scoreDistribution" style="width: 100%">
-                <el-table-column prop="range" label="分数区间" width="120" />
-                <el-table-column prop="count" label="人数" width="100" />
-                <el-table-column prop="percentage" label="占比" width="120">
-                  <template #default="scope">
-                    {{ (scope.row.percentage || 0).toFixed(1) }}%
-                  </template>
-                </el-table-column>
-                <el-table-column label="分布图">
-                  <template #default="scope">
-                    <el-progress
-                      :percentage="scope.row.percentage || 0"
-                      :color="getScoreRangeColor(scope.row.range)"
-                      :show-text="false"
-                      :stroke-width="20"
-                    />
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </el-col>
-        </el-row>
-
-        <!-- 题目统计 -->
-        <el-row :gutter="20" class="stats-row">
-          <el-col :span="24">
-            <div class="question-stats">
-              <h4>题目统计</h4>
-              <el-table :data="questionBankStats.questionStatistics" style="width: 100%">
-                <el-table-column prop="questionId" label="题目ID" width="80" />
-                <el-table-column prop="content" label="题目内容" show-overflow-tooltip />
-                <el-table-column prop="type" label="类型" width="100">
-                  <template #default="scope">
-                    <el-tag :type="getQuestionTypeTag(scope.row.type)" size="small">
-                      {{ getQuestionTypeText(scope.row.type) }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="totalAttempts" label="答题次数" width="100" />
-                <el-table-column prop="correctAttempts" label="正确次数" width="100" />
-                <el-table-column prop="correctRate" label="正确率" width="120">
-                  <template #default="scope">
-                    {{ (scope.row.correctRate || 0).toFixed(1) }}%
-                  </template>
-                </el-table-column>
-              </el-table>
-            </div>
-          </el-col>
-        </el-row>
-      </div>
-
-      <!-- 空状态 -->
-      <div v-else-if="selectedQuestionBankId" class="empty-stats">
-        <el-empty description="暂无统计数据" />
-      </div>
-
-      <!-- 默认状态 -->
-      <div v-else class="default-stats">
-        <el-empty description="请选择题库查看详细统计" />
-      </div>
     </el-card>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import {ref, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
 import api from '../../api'
-import { Loading } from '@element-plus/icons-vue'
+import {Loading} from '@element-plus/icons-vue'
 
 export default {
   name: 'Statistics',
@@ -197,7 +194,7 @@ export default {
       completedExams: 0,
       averageScore: 0
     })
-    
+
     const questionBanks = ref([])
     const selectedQuestionBankId = ref(null)
     const questionBankStats = ref(null)
@@ -252,11 +249,11 @@ export default {
           averageScore: 0.0,
           completionRate: 0.0,
           scoreDistribution: [
-            { range: '0-60', count: 0, percentage: 0.0 },
-            { range: '60-70', count: 0, percentage: 0.0 },
-            { range: '70-80', count: 0, percentage: 0.0 },
-            { range: '80-90', count: 0, percentage: 0.0 },
-            { range: '90-100', count: 0, percentage: 0.0 }
+            {range: '0-60', count: 0, percentage: 0.0},
+            {range: '60-70', count: 0, percentage: 0.0},
+            {range: '70-80', count: 0, percentage: 0.0},
+            {range: '80-90', count: 0, percentage: 0.0},
+            {range: '90-100', count: 0, percentage: 0.0}
           ],
           questionStatistics: []
         }
@@ -336,19 +333,6 @@ export default {
 </script>
 
 <style scoped>
-.statistics-page {
-  padding: 20px;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
 
 .header-left h3 {
   margin: 0;
@@ -358,12 +342,6 @@ export default {
 
 .system-stats {
   margin-bottom: 20px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .stat-card {
@@ -462,4 +440,4 @@ export default {
   align-items: center;
   padding: 40px;
 }
-</style> 
+</style>
