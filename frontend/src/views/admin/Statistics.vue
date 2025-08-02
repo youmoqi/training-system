@@ -287,7 +287,9 @@ export default {
       const typeMap = {
         'SINGLE_CHOICE': '单选题',
         'MULTIPLE_CHOICE': '多选题',
-        'SUBJECTIVE': '主观题'
+        'FILL_BLANK': '填空题',
+        'TRUE_FALSE': '判断题',
+        'SHORT_ANSWER': '简答题',
       }
       return typeMap[type] || type
     }
@@ -297,7 +299,9 @@ export default {
       const tagMap = {
         'SINGLE_CHOICE': 'primary',
         'MULTIPLE_CHOICE': 'success',
-        'SUBJECTIVE': 'warning'
+        'FILL_BLANK': 'warning',
+        'TRUE_FALSE': 'danger',
+        'SHORT_ANSWER': 'info'
       }
       return tagMap[type] || 'info'
     }

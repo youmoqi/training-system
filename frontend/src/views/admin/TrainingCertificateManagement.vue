@@ -59,10 +59,10 @@
         <!-- 证书列表 -->
         <div class="table-container">
           <el-table
-            :data="certificates"
-            style="width: 100%"
-            v-loading="loading"
-            @selection-change="handleSelectionChange"
+              :data="certificates"
+              style="width: 100%"
+              v-loading="loading"
+              @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55"/>
             <el-table-column prop="certificateNumber" label="证书编号" min-width="180"/>
@@ -123,41 +123,113 @@
     </div>
 
     <!-- 生成证书对话框 -->
-    <el-dialog v-model="showGenerateDialog" title="生成培训证明" width="500px" class="dialog-container">
-      <el-form :model="generateForm" :rules="generateRules" ref="generateFormRef" label-width="100px">
-        <el-form-item label="用户" prop="userId">
-          <el-select v-model="generateForm.userId" placeholder="选择用户" filterable>
-            <el-option
-                v-for="user in users"
-                :key="user.id"
-                :label="`${user.realName} (${user.username})`"
-                :value="user.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="课程" prop="courseId">
-          <el-select v-model="generateForm.courseId" placeholder="选择课程" filterable>
-            <el-option
-                v-for="course in courses"
-                :key="course.id"
-                :label="course.title"
-                :value="course.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="收费类型" prop="isPaid">
-          <el-radio-group v-model="generateForm.isPaid">
-            <el-radio :label="true">收费</el-radio>
-            <el-radio :label="false">免费</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="showGenerateDialog" title="生成培训证明" width="1000px" class="dialog-container">
+      <!-- 搜索栏 -->
+      <div class="search-section">
+        <el-row :gutter="20" style="width: 100%;">
+          <el-col :span="8">
+            <el-input
+                v-model="searchKeyword"
+                placeholder="搜索用户名或真实姓名..."
+                clearable
+                @input="handleDialogSearch"
+            >
+              <template #prefix>
+                <el-icon>
+                  <Search/>
+                </el-icon>
+              </template>
+            </el-input>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="filterCourse" placeholder="选择课程" clearable @change="handleDialogSearch">
+              <el-option
+                  v-for="course in courses"
+                  :key="course.id"
+                  :label="course.title"
+                  :value="course.id"
+              />
+            </el-select>
+          </el-col>
+          <el-col :span="6">
+            <el-select v-model="filterStatus" placeholder="完成状态" clearable @change="handleDialogSearch">
+              <el-option label="已完成" value="COMPLETED"/>
+              <el-option label="未完成" value="INCOMPLETE"/>
+            </el-select>
+          </el-col>
+          <el-col :span="4">
+            <el-button type="primary" @click="loadUserCourses">查询</el-button>
+          </el-col>
+        </el-row>
+      </div>
+
+      <!-- 用户课程表格 -->
+      <div class="table-section">
+        <el-table
+            :data="userCourses"
+            style="width: 100%"
+            v-loading="tableLoading"
+            @selection-change="handleUserCourseSelectionChange"
+            stripe
+        >
+          <el-table-column type="selection" width="55"/>
+          <el-table-column prop="username" label="用户名" min-width="120"/>
+          <el-table-column prop="realName" label="真实姓名" min-width="100"/>
+          <el-table-column prop="courseTitle" label="课程名称" min-width="200"/>
+          <el-table-column prop="isCompleted" label="完成状态" width="120">
+            <template #default="scope">
+              <el-tag :type="scope.row.isCompleted ? 'success' : 'warning'">
+                {{ scope.row.isCompleted ? '已完成' : '未完成' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="completedTime" label="完成时间" width="180">
+            <template #default="scope">
+              {{ scope.row.completedTime ? formatDate(scope.row.completedTime) : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120" fixed="right">
+            <template #default="scope">
+              <el-button
+                  size="small"
+                  type="primary"
+                  @click="generateSingleCertificate(scope.row)"
+                  :disabled="!scope.row.isCompleted"
+              >
+                生成证书
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <div class="pagination-container">
+          <el-pagination
+              v-model:current-page="dialogCurrentPage"
+              v-model:page-size="dialogPageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="dialogTotal"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleDialogSizeChange"
+              @current-change="handleDialogCurrentChange"
+          />
+        </div>
+      </div>
+
+      <!-- 批量操作 -->
+      <div class="batch-actions">
+        <el-button
+            type="success"
+            @click="generateBatchCertificates"
+            :disabled="selectedUserCourses.length === 0"
+        >
+          批量生成证书 ({{ selectedUserCourses.length }})
+        </el-button>
+      </div>
+
       <template #footer>
         <div class="dialog-footer">
-          <el-button @click="showGenerateDialog = false">取消</el-button>
-          <el-button type="primary" @click="generateCertificate" :loading="generating">
-            生成证书
-          </el-button>
+          <el-button @click="showGenerateDialog = false">关闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -180,7 +252,10 @@
               {{ selectedCertificate.isPaid ? '收费' : '免费' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="完成时间">{{ formatDate(selectedCertificate.completeDate) }}</el-descriptions-item>
+          <el-descriptions-item label="完成时间">{{
+              formatDate(selectedCertificate.completeDate)
+            }}
+          </el-descriptions-item>
           <el-descriptions-item label="颁发时间">{{ formatDate(selectedCertificate.issueDate) }}</el-descriptions-item>
         </el-descriptions>
       </div>
@@ -197,9 +272,9 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Search } from '@element-plus/icons-vue'
+import {ref, reactive, onMounted} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {Plus, Download, Search} from '@element-plus/icons-vue'
 import api from '@/api'
 
 export default {
@@ -212,39 +287,35 @@ export default {
   setup() {
     const loading = ref(false)
     const generating = ref(false)
+    const tableLoading = ref(false)
     const certificates = ref([])
     const users = ref([])
     const courses = ref([])
+    const userCourses = ref([])
     const selectedCertificates = ref([])
     const selectedCertificate = ref(null)
+    const selectedUserCourses = ref([])
 
     // 分页
     const currentPage = ref(1)
     const pageSize = ref(10)
     const total = ref(0)
 
+    // 对话框分页
+    const dialogCurrentPage = ref(1)
+    const dialogPageSize = ref(10)
+    const dialogTotal = ref(0)
+
     // 筛选
     const filterType = ref('')
     const filterPayment = ref('')
     const searchKeyword = ref('')
+    const filterCourse = ref('')
+    const filterStatus = ref('')
 
     // 对话框
     const showGenerateDialog = ref(false)
     const showCertificateDialog = ref(false)
-
-    // 生成证书表单
-    const generateFormRef = ref()
-    const generateForm = reactive({
-      userId: '',
-      courseId: '',
-      isPaid: true
-    })
-
-    const generateRules = {
-      userId: [{ required: true, message: '请选择用户', trigger: 'change' }],
-      courseId: [{ required: true, message: '请选择课程', trigger: 'change' }],
-      isPaid: [{ required: true, message: '请选择收费类型', trigger: 'change' }]
-    }
 
     // 加载证书列表
     const loadCertificates = async () => {
@@ -268,7 +339,7 @@ export default {
           params.searchKeyword = searchKeyword.value
         }
 
-        const response = await api.get('/certificates', { params })
+        const response = await api.get('/certificates', {params})
         const data = response.data.data
 
         certificates.value = data.certificates || []
@@ -301,30 +372,91 @@ export default {
       }
     }
 
-    // 生成证书
-    const generateCertificate = async () => {
+    // 加载用户课程数据
+    const loadUserCourses = async () => {
+      tableLoading.value = true
       try {
-        await generateFormRef.value.validate()
+        const params = {
+          page: dialogCurrentPage.value - 1,
+          size: dialogPageSize.value
+        }
+
+        // 添加筛选参数
+        if (searchKeyword.value && searchKeyword.value.trim()) {
+          params.searchKeyword = searchKeyword.value.trim()
+        }
+
+        if (filterCourse.value) {
+          params.courseId = filterCourse.value
+        }
+
+        if (filterStatus.value) {
+          params.completionStatus = filterStatus.value
+        }
+
+        console.log('Request params:', params) // 添加请求参数调试日志
+        const response = await api.get('/user-courses', {params})
+        const data = response.data.data
+
+        console.log('API Response:', data) // 添加调试日志
+        userCourses.value = data.content || []
+        dialogTotal.value = data.totalElements || 0
+      } catch (error) {
+        ElMessage.error('加载用户课程数据失败')
+        console.error(error)
+      } finally {
+        tableLoading.value = false
+      }
+    }
+
+    // 生成单个证书
+    const generateSingleCertificate = async (userCourse) => {
+      try {
         generating.value = true
 
         const response = await api.post('/certificates/generate', null, {
           params: {
-            userId: generateForm.userId,
-            courseId: generateForm.courseId,
-            isPaid: generateForm.isPaid
+            userId: userCourse.userId,
+            courseId: userCourse.courseId,
+            isPaid: true // 默认收费
           }
         })
 
         ElMessage.success('证书生成成功')
-        showGenerateDialog.value = false
-        loadCertificates()
-
-        // 重置表单
-        generateForm.userId = ''
-        generateForm.courseId = ''
-        generateForm.isPaid = true
+        loadCertificates() // 刷新证书列表
       } catch (error) {
         ElMessage.error(error.response?.data?.message || '生成证书失败')
+      } finally {
+        generating.value = false
+      }
+    }
+
+    // 批量生成证书
+    const generateBatchCertificates = async () => {
+      if (selectedUserCourses.value.length === 0) {
+        ElMessage.warning('请选择要生成证书的用户课程')
+        return
+      }
+
+      try {
+        generating.value = true
+
+        const requests = selectedUserCourses.value.map(userCourse =>
+            api.post('/certificates/generate', null, {
+              params: {
+                userId: userCourse.userId,
+                courseId: userCourse.courseId,
+                isPaid: true
+              }
+            })
+        )
+
+        await Promise.all(requests)
+        ElMessage.success(`成功生成 ${selectedUserCourses.value.length} 个证书`)
+        selectedUserCourses.value = []
+        loadCertificates() // 刷新证书列表
+      } catch (error) {
+        ElMessage.error('批量生成证书失败')
       } finally {
         generating.value = false
       }
@@ -408,6 +540,15 @@ export default {
     // 显示生成证书对话框
     const showGenerateDialogHandler = () => {
       showGenerateDialog.value = true
+      // 重置对话框数据
+      dialogCurrentPage.value = 1
+      dialogPageSize.value = 10
+      searchKeyword.value = ''
+      filterCourse.value = ''
+      filterStatus.value = ''
+      selectedUserCourses.value = []
+      // 加载用户课程数据
+      loadUserCourses()
     }
 
     // 处理选择变化
@@ -425,6 +566,29 @@ export default {
     const handleSearch = () => {
       currentPage.value = 1
       loadCertificates()
+    }
+
+    // 处理对话框搜索
+    const handleDialogSearch = () => {
+      dialogCurrentPage.value = 1
+      loadUserCourses()
+    }
+
+    // 对话框分页处理
+    const handleDialogSizeChange = (val) => {
+      dialogPageSize.value = val
+      dialogCurrentPage.value = 1
+      loadUserCourses()
+    }
+
+    const handleDialogCurrentChange = (val) => {
+      dialogCurrentPage.value = val
+      loadUserCourses()
+    }
+
+    // 处理用户课程选择变化
+    const handleUserCourseSelectionChange = (selection) => {
+      selectedUserCourses.value = selection
     }
 
     // 重置筛选
@@ -487,32 +651,43 @@ export default {
     return {
       loading,
       generating,
+      tableLoading,
       certificates,
       users,
       courses,
+      userCourses,
       selectedCertificates,
       selectedCertificate,
+      selectedUserCourses,
       currentPage,
       pageSize,
       total,
+      dialogCurrentPage,
+      dialogPageSize,
+      dialogTotal,
       filterType,
       filterPayment,
       searchKeyword,
+      filterCourse,
+      filterStatus,
       showGenerateDialog,
       showCertificateDialog,
-      generateFormRef,
-      generateForm,
-      generateRules,
       loadCertificates,
-      generateCertificate,
+      loadUserCourses,
+      generateSingleCertificate,
+      generateBatchCertificates,
       downloadCertificate,
       downloadBatchCertificates,
       deleteCertificate,
       viewCertificate,
       showGenerateDialogHandler,
       handleSelectionChange,
+      handleUserCourseSelectionChange,
       handleFilter,
       handleSearch,
+      handleDialogSearch,
+      handleDialogSizeChange,
+      handleDialogCurrentChange,
       resetFilter,
       handleSizeChange,
       handleCurrentChange,
@@ -581,5 +756,34 @@ export default {
 
 .dialog-footer {
   text-align: right;
+}
+
+.search-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.table-section {
+  margin-bottom: 20px;
+}
+
+.batch-actions {
+  text-align: center;
+  padding: 15px 0;
+  border-top: 1px solid #e4e7ed;
+}
+
+.dialog-container .el-dialog__body {
+  padding: 20px;
+}
+
+.dialog-container .el-table {
+  margin-bottom: 15px;
+}
+
+.dialog-container .pagination-container {
+  margin-top: 15px;
 }
 </style>

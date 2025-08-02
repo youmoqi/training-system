@@ -1,17 +1,17 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : local_mysql
+ Source Server         : LOCAL_MYSQL
  Source Server Type    : MySQL
- Source Server Version : 80040 (8.0.40)
+ Source Server Version : 80023 (8.0.23)
  Source Host           : localhost:3306
  Source Schema         : training_system
 
  Target Server Type    : MySQL
- Target Server Version : 80040 (8.0.40)
+ Target Server Version : 80023 (8.0.23)
  File Encoding         : 65001
 
- Date: 02/08/2025 21:17:02
+ Date: 03/08/2025 01:10:06
 */
 
 SET NAMES utf8mb4;
@@ -109,7 +109,7 @@ CREATE TABLE `exam_paper_history`  (
                                        CONSTRAINT `FK4v8w6tfnqbxu8ok0nwux653hx` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                        CONSTRAINT `FKemp2n27xkwmfbwvvbr2alknsm` FOREIGN KEY (`exam_paper_result_id`) REFERENCES `exam_paper_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                        CONSTRAINT `FKiw6r5etco59xnewyjwe2rv04h` FOREIGN KEY (`exam_paper_id`) REFERENCES `exam_papers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for exam_paper_question_results
@@ -235,7 +235,7 @@ CREATE TABLE `exam_results`  (
                                  INDEX `FKt2jcn29o332cpiv7s7h3o877e`(`user_id` ASC) USING BTREE,
                                  CONSTRAINT `FKmwbdklnv7ohk7wpi7qngmsjbb` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                  CONSTRAINT `FKt2jcn29o332cpiv7s7h3o877e` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '考试结果表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '考试结果表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for invitation_courses
@@ -297,7 +297,7 @@ CREATE TABLE `question_answers`  (
                                      PRIMARY KEY (`id`) USING BTREE,
                                      INDEX `FKrms3u35c10orgjqyw03ajd7x7`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `FKrms3u35c10orgjqyw03ajd7x7` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for question_bank_question_results
@@ -384,10 +384,10 @@ CREATE TABLE `question_options`  (
                                      `option_content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '选项内容',
                                      `option_order` int NOT NULL COMMENT '选项顺序',
                                      PRIMARY KEY (`id`) USING BTREE,
-                                     INDEX `idx_question_id`(`question_id` ASC) USING BTREE,
                                      UNIQUE INDEX `uk_question_option_label`(`question_id` ASC, `option_label` ASC) USING BTREE,
+                                     INDEX `idx_question_id`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `question_options_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 131 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目选项表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 141 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目选项表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for question_result_answers
@@ -398,7 +398,7 @@ CREATE TABLE `question_result_answers`  (
                                             `answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                             INDEX `FKlgck2a5ja0pfcoo2hqvw95kll`(`question_result_id` ASC) USING BTREE,
                                             CONSTRAINT `FKlgck2a5ja0pfcoo2hqvw95kll` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for question_result_correct_answers
@@ -409,7 +409,18 @@ CREATE TABLE `question_result_correct_answers`  (
                                                     `answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                                     INDEX `FKn3xwnluf13wqnjhlsjwv9x96q`(`question_result_id` ASC) USING BTREE,
                                                     CONSTRAINT `FKn3xwnluf13wqnjhlsjwv9x96q` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for question_result_user_answers
+-- ----------------------------
+DROP TABLE IF EXISTS `question_result_user_answers`;
+CREATE TABLE `question_result_user_answers`  (
+                                                 `question_result_id` bigint NOT NULL,
+                                                 `user_answer` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+                                                 INDEX `FK1vbf3kg73t0vnte7sp8o2klq7`(`question_result_id` ASC) USING BTREE,
+                                                 CONSTRAINT `FK1vbf3kg73t0vnte7sp8o2klq7` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for question_results
@@ -426,7 +437,7 @@ CREATE TABLE `question_results`  (
                                      INDEX `FKklak3v8y8oniosgx9cj8yqq2`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `FKdfnvqtu823qpi32575hx2g6dv` FOREIGN KEY (`exam_result_id`) REFERENCES `exam_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                      CONSTRAINT `FKklak3v8y8oniosgx9cj8yqq2` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for questions
@@ -443,7 +454,32 @@ CREATE TABLE `questions`  (
                               INDEX `idx_question_bank_id`(`question_bank_id` ASC) USING BTREE,
                               INDEX `idx_type`(`type` ASC) USING BTREE,
                               CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 384 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 389 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for training_certificates
+-- ----------------------------
+DROP TABLE IF EXISTS `training_certificates`;
+CREATE TABLE `training_certificates`  (
+                                          `id` bigint NOT NULL AUTO_INCREMENT COMMENT '证书ID',
+                                          `user_id` bigint NOT NULL COMMENT '用户ID',
+                                          `course_id` bigint NOT NULL COMMENT '课程ID',
+                                          `certificate_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书编号',
+                                          `issue_date` timestamp NOT NULL COMMENT '颁发日期',
+                                          `complete_date` timestamp NOT NULL COMMENT '完成日期',
+                                          `is_paid` tinyint(1) NOT NULL COMMENT '是否收费',
+                                          `certificate_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书类型',
+                                          `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                          `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                          PRIMARY KEY (`id`) USING BTREE,
+                                          UNIQUE INDEX `certificate_number`(`certificate_number` ASC) USING BTREE,
+                                          INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+                                          INDEX `idx_course_id`(`course_id` ASC) USING BTREE,
+                                          INDEX `idx_certificate_type`(`certificate_type` ASC) USING BTREE,
+                                          INDEX `idx_is_paid`(`is_paid` ASC) USING BTREE,
+                                          CONSTRAINT `training_certificates_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+                                          CONSTRAINT `training_certificates_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '培训证明表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_courses
@@ -499,31 +535,6 @@ CREATE TABLE `user_question_banks`  (
                                         CONSTRAINT `user_question_banks_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
                                         CONSTRAINT `user_question_banks_ibfk_2` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 203 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户题库关系表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for training_certificates
--- ----------------------------
-DROP TABLE IF EXISTS `training_certificates`;
-CREATE TABLE `training_certificates`  (
-                                           `id` bigint NOT NULL AUTO_INCREMENT COMMENT '证书ID',
-                                           `user_id` bigint NOT NULL COMMENT '用户ID',
-                                           `course_id` bigint NOT NULL COMMENT '课程ID',
-                                           `certificate_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书编号',
-                                           `issue_date` timestamp NOT NULL COMMENT '颁发日期',
-                                           `complete_date` timestamp NOT NULL COMMENT '完成日期',
-                                           `is_paid` tinyint(1) NOT NULL COMMENT '是否收费',
-                                           `certificate_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书类型',
-                                           `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                           `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                           PRIMARY KEY (`id`) USING BTREE,
-                                           UNIQUE INDEX `certificate_number`(`certificate_number` ASC) USING BTREE,
-                                           INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
-                                           INDEX `idx_course_id`(`course_id` ASC) USING BTREE,
-                                           INDEX `idx_certificate_type`(`certificate_type` ASC) USING BTREE,
-                                           INDEX `idx_is_paid`(`is_paid` ASC) USING BTREE,
-                                           CONSTRAINT `training_certificates_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                           CONSTRAINT `training_certificates_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '培训证明表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for users

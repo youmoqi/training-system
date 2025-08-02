@@ -13,6 +13,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.List;
 
@@ -115,24 +118,73 @@ public class QuestionController {
         }
     }
 
-    // 题目导入导出接口
-    @GetMapping("/export/{questionBankId}")
-    public ResponseEntity<ApiResponse<List<QuestionDto>>> exportQuestions(@PathVariable Long questionBankId) {
+    /**
+     * 从Word文档导入题目
+     */
+    @PostMapping("/import/word")
+    public ResponseEntity<ApiResponse<List<QuestionDto>>> importQuestionsFromWord(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("questionBankId") Long questionBankId) {
         try {
-            List<QuestionDto> questions = questionService.exportQuestions(questionBankId);
-            return ResponseEntity.ok(ApiResponse.success("导出题目成功", questions));
+            // 验证文件格式
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || (!fileName.toLowerCase().endsWith(".doc") && !fileName.toLowerCase().endsWith(".docx"))) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("请上传.doc或.docx格式的文件"));
+            }
+
+            List<QuestionDto> questions = questionService.importQuestionsFromWord(file, questionBankId);
+            return ResponseEntity.ok(ApiResponse.success("解析Word文档成功", questions));
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("文件读取失败: " + e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
-    @PostMapping("/import")
-    public ResponseEntity<ApiResponse<Void>> importQuestions(@RequestBody QuestionImportDto importDto) {
+    /**
+     * 确认导入Word文档中的题目
+     */
+    @PostMapping("/import/word/confirm")
+    public ResponseEntity<ApiResponse<Void>> confirmImportFromWord(@RequestBody QuestionImportDto importDto) {
         try {
             questionService.importQuestions(importDto);
             return ResponseEntity.ok(ApiResponse.success("导入题目成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+        /**
+     * 导出题目为Word文档
+     */
+    @GetMapping("/export/word/{questionBankId}")
+    public ResponseEntity<byte[]> exportQuestionsToWord(@PathVariable Long questionBankId) {
+        try {
+            byte[] wordDocument = questionService.exportQuestionsToWord(questionBankId);
+            
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"questions.docx\"")
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .body(wordDocument);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * 下载Word模板
+     */
+    @GetMapping("/template/word")
+    public ResponseEntity<byte[]> downloadWordTemplate() {
+        try {
+            byte[] template = com.training.util.WordTemplateGenerator.generateTemplate();
+            
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"question_template.docx\"")
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .body(template);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 }

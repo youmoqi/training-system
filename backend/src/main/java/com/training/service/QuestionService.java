@@ -12,10 +12,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+import java.io.IOException;
 
 @Service
 @Transactional
@@ -41,6 +43,9 @@ public class QuestionService {
 
     @Autowired
     private UserQuestionBankRepository userQuestionBankRepository;
+
+    @Autowired
+    private WordDocumentService wordDocumentService;
 
     // 分页查询题目
     public Page<QuestionDto> findQuestions(Pageable pageable, String keyword, String type, Long questionBankId) {
@@ -221,7 +226,7 @@ public class QuestionService {
                     new HashSet<>(correctAnswers).containsAll(userAnswerLabels);
         }
 
-        // 主观题需要人工判分，这里暂时返回false
+        // 简答题需要人工判分，这里暂时返回false
         return false;
     }
 
@@ -233,6 +238,28 @@ public class QuestionService {
                 .collect(Collectors.toList());
     }
 
+        /**
+     * 从Word文档导入题目
+     */
+    public List<QuestionDto> importQuestionsFromWord(MultipartFile file, Long questionBankId) throws IOException {
+        // 验证题库是否存在
+        questionBankRepository.findById(questionBankId)
+                .orElseThrow(() -> new RuntimeException("题库不存在"));
+
+        // 解析Word文档
+        List<QuestionDto> questions = wordDocumentService.parseQuestionsFromWord(file);
+        
+        // 设置题库ID
+        for (QuestionDto question : questions) {
+            question.setQuestionBankId(questionBankId);
+        }
+        
+        return questions;
+    }
+
+    /**
+     * 导入题目到数据库
+     */
     public void importQuestions(QuestionImportDto importDto) {
         questionBankRepository.findById(importDto.getQuestionBankId())
                 .orElseThrow(() -> new RuntimeException("题库不存在"));
@@ -240,6 +267,19 @@ public class QuestionService {
         for (QuestionDto questionDto : importDto.getQuestions()) {
             createQuestion(questionDto);
         }
+    }
+
+    /**
+     * 导出题目为Word文档
+     */
+    public byte[] exportQuestionsToWord(Long questionBankId) throws IOException {
+        List<QuestionDto> questions = exportQuestions(questionBankId);
+        
+        // 获取题库标题
+        QuestionBank questionBank = questionBankRepository.findById(questionBankId)
+                .orElseThrow(() -> new RuntimeException("题库不存在"));
+        
+        return wordDocumentService.generateWordDocument(questions, questionBank.getTitle());
     }
 
     // 提交题库练习

@@ -1,17 +1,17 @@
 /*
  Navicat Premium Dump SQL
 
- Source Server         : local_mysql
+ Source Server         : LOCAL_MYSQL
  Source Server Type    : MySQL
- Source Server Version : 80040 (8.0.40)
+ Source Server Version : 80023 (8.0.23)
  Source Host           : localhost:3306
  Source Schema         : training_system
 
  Target Server Type    : MySQL
- Target Server Version : 80040 (8.0.40)
+ Target Server Version : 80023 (8.0.23)
  File Encoding         : 65001
 
- Date: 02/08/2025 21:17:41
+ Date: 03/08/2025 01:10:24
 */
 
 SET NAMES utf8mb4;
@@ -150,7 +150,7 @@ CREATE TABLE `exam_paper_history`  (
                                        CONSTRAINT `FK4v8w6tfnqbxu8ok0nwux653hx` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                        CONSTRAINT `FKemp2n27xkwmfbwvvbr2alknsm` FOREIGN KEY (`exam_paper_result_id`) REFERENCES `exam_paper_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                        CONSTRAINT `FKiw6r5etco59xnewyjwe2rv04h` FOREIGN KEY (`exam_paper_id`) REFERENCES `exam_papers` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of exam_paper_history
@@ -299,7 +299,7 @@ CREATE TABLE `exam_papers`  (
 -- ----------------------------
 -- Records of exam_papers
 -- ----------------------------
-INSERT INTO `exam_papers` VALUES (1, '易制爆化学品基础知识考试', '易制爆化学品基础知识综合考试，包含选择题、多选题和判断题', 100, 60, 90, 4, 1, 'GENERAL', 1, 3, 2, 4, 2, 3, 5, '2025-01-07 10:00:00', '2025-08-02 19:50:01');
+INSERT INTO `exam_papers` VALUES (1, '易制爆化学品基础知识考试', '易制爆化学品基础知识综合考试，包含选择题、多选题和判断题', 100, 60, 90, 4, 1, 'GENERAL', 1, 4, 2, 4, 2, 3, 5, '2025-01-07 10:00:00', '2025-08-03 01:06:48');
 INSERT INTO `exam_papers` VALUES (2, '爆破作业安全技术考试', '爆破作业安全技术综合考试，包含理论知识和实践操作', 100, 60, 120, 2, 1, 'GENERAL', 1, 3, 2, 4, 2, 3, 5, '2025-01-07 10:00:00', '2025-08-02 17:25:59');
 INSERT INTO `exam_papers` VALUES (19, '11', '111', 100, 60, 120, 1, 1, 'GENERAL', 1, 3, 2, 4, 2, 3, 5, '2025-08-02 21:15:37', '2025-08-02 21:15:52');
 
@@ -323,7 +323,7 @@ CREATE TABLE `exam_results`  (
                                  INDEX `FKt2jcn29o332cpiv7s7h3o877e`(`user_id` ASC) USING BTREE,
                                  CONSTRAINT `FKmwbdklnv7ohk7wpi7qngmsjbb` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                  CONSTRAINT `FKt2jcn29o332cpiv7s7h3o877e` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '考试结果表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '考试结果表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of exam_results
@@ -419,7 +419,7 @@ CREATE TABLE `question_answers`  (
                                      PRIMARY KEY (`id`) USING BTREE,
                                      INDEX `FKrms3u35c10orgjqyw03ajd7x7`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `FKrms3u35c10orgjqyw03ajd7x7` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of question_answers
@@ -551,10 +551,10 @@ CREATE TABLE `question_options`  (
                                      `option_content` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '选项内容',
                                      `option_order` int NOT NULL COMMENT '选项顺序',
                                      PRIMARY KEY (`id`) USING BTREE,
-                                     INDEX `idx_question_id`(`question_id` ASC) USING BTREE,
                                      UNIQUE INDEX `uk_question_option_label`(`question_id` ASC, `option_label` ASC) USING BTREE,
+                                     INDEX `idx_question_id`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `question_options_ibfk_1` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 131 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目选项表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 141 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目选项表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of question_options
@@ -586,6 +586,16 @@ INSERT INTO `question_options` VALUES (125, 382, 'A', '正确', 0);
 INSERT INTO `question_options` VALUES (126, 382, 'B', '错误', 1);
 INSERT INTO `question_options` VALUES (129, 383, 'A', 'e', 0);
 INSERT INTO `question_options` VALUES (130, 383, 'B', 'ttttt', 1);
+INSERT INTO `question_options` VALUES (131, 384, 'A', '具有爆炸性的物品', 0);
+INSERT INTO `question_options` VALUES (132, 384, 'B', '具有燃烧性的物品', 1);
+INSERT INTO `question_options` VALUES (133, 384, 'C', '具有毒性的物品', 2);
+INSERT INTO `question_options` VALUES (134, 384, 'D', '具有腐蚀性的物品', 3);
+INSERT INTO `question_options` VALUES (135, 385, 'A', '硝酸铵', 0);
+INSERT INTO `question_options` VALUES (136, 385, 'B', '氯酸钾', 1);
+INSERT INTO `question_options` VALUES (137, 385, 'C', '高锰酸钾', 2);
+INSERT INTO `question_options` VALUES (138, 385, 'D', '硫磺', 3);
+INSERT INTO `question_options` VALUES (139, 386, 'A', '正确', 0);
+INSERT INTO `question_options` VALUES (140, 386, 'B', '错误', 1);
 
 -- ----------------------------
 -- Table structure for question_result_answers
@@ -596,7 +606,7 @@ CREATE TABLE `question_result_answers`  (
                                             `answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                             INDEX `FKlgck2a5ja0pfcoo2hqvw95kll`(`question_result_id` ASC) USING BTREE,
                                             CONSTRAINT `FKlgck2a5ja0pfcoo2hqvw95kll` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of question_result_answers
@@ -611,10 +621,25 @@ CREATE TABLE `question_result_correct_answers`  (
                                                     `answer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
                                                     INDEX `FKn3xwnluf13wqnjhlsjwv9x96q`(`question_result_id` ASC) USING BTREE,
                                                     CONSTRAINT `FKn3xwnluf13wqnjhlsjwv9x96q` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of question_result_correct_answers
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for question_result_user_answers
+-- ----------------------------
+DROP TABLE IF EXISTS `question_result_user_answers`;
+CREATE TABLE `question_result_user_answers`  (
+                                                 `question_result_id` bigint NOT NULL,
+                                                 `user_answer` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+                                                 INDEX `FK1vbf3kg73t0vnte7sp8o2klq7`(`question_result_id` ASC) USING BTREE,
+                                                 CONSTRAINT `FK1vbf3kg73t0vnte7sp8o2klq7` FOREIGN KEY (`question_result_id`) REFERENCES `question_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of question_result_user_answers
 -- ----------------------------
 
 -- ----------------------------
@@ -632,7 +657,7 @@ CREATE TABLE `question_results`  (
                                      INDEX `FKklak3v8y8oniosgx9cj8yqq2`(`question_id` ASC) USING BTREE,
                                      CONSTRAINT `FKdfnvqtu823qpi32575hx2g6dv` FOREIGN KEY (`exam_result_id`) REFERENCES `exam_results` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                                      CONSTRAINT `FKklak3v8y8oniosgx9cj8yqq2` FOREIGN KEY (`question_id`) REFERENCES `questions` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of question_results
@@ -653,7 +678,7 @@ CREATE TABLE `questions`  (
                               INDEX `idx_question_bank_id`(`question_bank_id` ASC) USING BTREE,
                               INDEX `idx_type`(`type` ASC) USING BTREE,
                               CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 384 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 389 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题目表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of questions
@@ -672,6 +697,41 @@ INSERT INTO `questions` VALUES (11, 4, '《危险化学品安全管理条例》�
 INSERT INTO `questions` VALUES (380, 1, '324', 'SINGLE_CHOICE', '234', 'B');
 INSERT INTO `questions` VALUES (382, 1, 'tttt', 'TRUE_FALSE', '', 'A');
 INSERT INTO `questions` VALUES (383, 118, 'test', 'SINGLE_CHOICE', 'ttt', 'A');
+INSERT INTO `questions` VALUES (384, 1, '易制爆物品是指哪些物品？', 'SINGLE_CHOICE', '易制爆物品是指具有爆炸性的物品，包括炸药、雷管等。', 'A');
+INSERT INTO `questions` VALUES (385, 1, '以下哪些属于易制爆物品？', 'MULTIPLE_CHOICE', '这些都是常见的易制爆物品。', 'A,B,C,D');
+INSERT INTO `questions` VALUES (386, 1, '易制爆物品可以随意购买和使用。', 'TRUE_FALSE', '易制爆物品需要特殊许可才能购买和使用。', 'B');
+INSERT INTO `questions` VALUES (387, 1, '易制爆物品的储存要求是什么？', 'FILL_BLANK', '易制爆物品具有爆炸性，必须严格管理。', '必须储存在专用仓库中，远离火源和热源');
+INSERT INTO `questions` VALUES (388, 1, '简述易制爆物品的安全管理措施。', 'SHORT_ANSWER', '易制爆物品管理需要多方面的安全措施。', '1. 建立完善的管理制度；2. 指定专人负责；3. 定期检查；4. 建立应急预案');
+
+-- ----------------------------
+-- Table structure for training_certificates
+-- ----------------------------
+DROP TABLE IF EXISTS `training_certificates`;
+CREATE TABLE `training_certificates`  (
+                                          `id` bigint NOT NULL AUTO_INCREMENT COMMENT '证书ID',
+                                          `user_id` bigint NOT NULL COMMENT '用户ID',
+                                          `course_id` bigint NOT NULL COMMENT '课程ID',
+                                          `certificate_number` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书编号',
+                                          `issue_date` timestamp NOT NULL COMMENT '颁发日期',
+                                          `complete_date` timestamp NOT NULL COMMENT '完成日期',
+                                          `is_paid` tinyint(1) NOT NULL COMMENT '是否收费',
+                                          `certificate_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '证书类型',
+                                          `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                          `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                          PRIMARY KEY (`id`) USING BTREE,
+                                          UNIQUE INDEX `certificate_number`(`certificate_number` ASC) USING BTREE,
+                                          INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+                                          INDEX `idx_course_id`(`course_id` ASC) USING BTREE,
+                                          INDEX `idx_certificate_type`(`certificate_type` ASC) USING BTREE,
+                                          INDEX `idx_is_paid`(`is_paid` ASC) USING BTREE,
+                                          CONSTRAINT `training_certificates_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+                                          CONSTRAINT `training_certificates_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '培训证明表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of training_certificates
+-- ----------------------------
+INSERT INTO `training_certificates` VALUES (1, 4, 2, 'CERT-20250802-EX-2-4', '2025-08-02 23:19:40', '2025-08-02 23:18:48', 1, 'EXPLOSIVE_USER', '2025-08-02 23:19:40', '2025-08-02 23:19:40');
 
 -- ----------------------------
 -- Table structure for user_courses
@@ -698,8 +758,8 @@ CREATE TABLE `user_courses`  (
 -- Records of user_courses
 -- ----------------------------
 INSERT INTO `user_courses` VALUES (1, 4, 1, '2025-06-21 10:51:53', 0, NULL, 30);
-INSERT INTO `user_courses` VALUES (2, 4, 2, '2025-06-21 10:51:53', 1, NULL, 100);
-INSERT INTO `user_courses` VALUES (3, 5, 1, '2025-06-21 10:51:53', 1, NULL, 100);
+INSERT INTO `user_courses` VALUES (2, 4, 2, '2025-06-21 10:51:53', 1, '2025-08-02 23:18:48', 100);
+INSERT INTO `user_courses` VALUES (3, 5, 1, '2025-06-21 10:51:53', 1, '2025-08-02 23:35:58', 100);
 INSERT INTO `user_courses` VALUES (4, 5, 3, '2025-06-21 10:51:53', 0, NULL, 60);
 INSERT INTO `user_courses` VALUES (5, 6, 2, '2025-06-21 10:51:53', 0, NULL, 15);
 INSERT INTO `user_courses` VALUES (7, 8, 5, '2025-06-21 10:51:53', 0, NULL, 0);

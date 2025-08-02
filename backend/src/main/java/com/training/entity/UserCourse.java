@@ -2,23 +2,26 @@ package com.training.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Data
 @Entity
 @Table(name = "user_courses")
+@Data
+@EntityListeners(AuditingEntityListener.class)
 public class UserCourse {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties({"password", "createTime", "updateTime"})
     private User user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     @JsonIgnoreProperties({"createTime", "updateTime"})
     private Course course;
@@ -34,11 +37,4 @@ public class UserCourse {
 
     @Column
     private Integer watchProgress; // 观看进度百分比
-
-    @PrePersist
-    protected void onCreate() {
-        enrollTime = LocalDateTime.now();
-        isCompleted = false;
-        watchProgress = 0;
-    }
 }

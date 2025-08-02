@@ -41,37 +41,32 @@ const routes = [
             {
                 path: 'question-banks',
                 name: 'QuestionBanks',
-                component: () => import('../views/student/QuestionBanks.vue')
+                component: () => import('../views/student/QuestionBank/QuestionBanks.vue')
             },
             {
                 path: 'question-bank/:questionBankId',
                 name: 'QuestionBankPractice',
-                component: () => import('../views/student/QuestionBankPractice.vue')
-            },
-            {
-                path: 'exam-result/:questionBankId',
-                name: 'ExamResult',
-                component: () => import('../views/student/ExamResult.vue')
+                component: () => import('../views/student/QuestionBank/QuestionBankPractice.vue')
             },
             {
                 path: 'exam-papers',
                 name: 'ExamPapers',
-                component: () => import('../views/student/ExamPapers.vue')
+                component: () => import('../views/student/Exam/ExamPapers.vue')
             },
             {
                 path: 'exam-papers/:id',
                 name: 'ExamPaperDetail',
-                component: () => import('../views/student/ExamPaperDetail.vue')
+                component: () => import('../views/student/Exam/ExamPaperDetail.vue')
             },
             {
                 path: 'exam-papers/:id/exam',
                 name: 'ExamPaperExam',
-                component: () => import('../views/student/ExamPaperExam.vue')
+                component: () => import('../views/student/Exam/ExamPaperExam.vue')
             },
             {
                 path: 'exam-papers/:id/results/:resultId',
                 name: 'ExamPaperResult',
-                component: () => import('../views/student/ExamPaperResult.vue')
+                component: () => import('../views/student/Exam/ExamPaperResult.vue')
             },
             {
                 path: 'profile',
@@ -86,22 +81,22 @@ const routes = [
             {
                 path: 'exam-paper-history',
                 name: 'ExamPaperHistory',
-                component: () => import('../views/student/ExamPaperHistory.vue')
+                component: () => import('../views/student/Exam/ExamPaperHistory.vue')
             },
             {
                 path: 'exam-papers/:examPaperId/results/:resultId',
                 name: 'ExamPaperResult',
-                component: () => import('../views/student/ExamPaperResult.vue')
+                component: () => import('../views/student/Exam/ExamPaperResult.vue')
             },
             {
                 path: 'question-bank-history',
                 name: 'QuestionBankHistory',
-                component: () => import('../views/student/QuestionBankHistory.vue')
+                component: () => import('../views/student/QuestionBank/QuestionBankHistory.vue')
             },
             {
                 path: 'question-bank-results/:resultId',
                 name: 'QuestionBankResult',
-                component: () => import('../views/student/QuestionBankResult.vue')
+                component: () => import('../views/student/QuestionBank/QuestionBankResult.vue')
             }
         ]
     },
@@ -133,27 +128,22 @@ const routes = [
             {
                 path: 'exam-papers',
                 name: 'AdminExamPapers',
-                component: () => import('../views/admin/ExamPaperManagement.vue')
+                component: () => import('../views/admin/Exam/ExamPaperManagement.vue')
             },
             {
                 path: 'exam-papers/:id/auto-generate',
                 name: 'AdminExamPaperAutoGenerate',
-                component: () => import('../views/admin/ExamPaperAutoGenerate.vue')
+                component: () => import('../views/admin/Exam/ExamPaperAutoGenerate.vue')
             },
             {
                 path: 'exam-papers/:id/questions',
                 name: 'AdminExamPaperQuestions',
-                component: () => import('../views/admin/ExamPaperQuestionsManagement.vue')
-            },
-            {
-                path: 'exam-papers/:id/edit',
-                name: 'AdminExamPaperEdit',
-                component: () => import('../views/admin/ExamPaperEdit.vue')
+                component: () => import('../views/admin/Exam/ExamPaperQuestionsManagement.vue')
             },
             {
                 path: 'exam-papers/:id',
                 name: 'AdminExamPaperDetail',
-                component: () => import('../views/admin/ExamPaperDetail.vue')
+                component: () => import('../views/admin/Exam/ExamPaperDetail.vue')
             },
             {
                 path: 'statistics',

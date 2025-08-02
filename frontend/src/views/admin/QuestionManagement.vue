@@ -8,7 +8,7 @@
       </div>
       <div class="header-actions">
         <el-button @click="showImportDialog = true">导入题目</el-button>
-        <el-button @click="exportQuestions">导出题目</el-button>
+        <el-button @click="exportQuestionsToWord">导出Word</el-button>
         <el-button type="warning" @click="batchDelete" :disabled="selectedQuestions.length === 0">
           批量删除 ({{ selectedQuestions.length }})
         </el-button>
@@ -23,10 +23,11 @@
             style="width: 100%"
             v-loading="loading"
             @selection-change="handleSelectionChange"
+            stripe
         >
           <el-table-column type="selection" width="55"/>
           <el-table-column prop="id" label="ID" width="80"/>
-          <el-table-column prop="content" label="题目内容" show-overflow-tooltip/>
+          <el-table-column prop="content" label="题目内容" show-overflow-tooltip min-width="400"/>
           <el-table-column prop="type" label="题目类型" width="140">
             <template #default="scope">
               <el-tag :type="getQuestionTypeTag(scope.row.type)">
@@ -84,7 +85,7 @@
             <el-option label="多选题" value="MULTIPLE_CHOICE"/>
             <el-option label="判断题" value="TRUE_FALSE"/>
             <el-option label="填空题" value="FILL_BLANK"/>
-            <el-option label="主观题" value="SHORT_ANSWER"/>
+            <el-option label="简答题" value="SHORT_ANSWER"/>
           </el-select>
         </el-form-item>
 
@@ -226,46 +227,74 @@
     </el-dialog>
 
     <!-- 导入题目对话框 -->
-    <el-dialog v-model="showImportDialog" title="导入题目" width="600px">
-      <el-form label-width="100px">
-        <el-form-item label="导入文件">
-          <el-upload
-              ref="uploadRef"
-              :auto-upload="false"
-              :on-change="handleFileChange"
-              :show-file-list="false"
-              accept=".json,.xlsx,.xls"
-          >
-            <el-button type="primary">选择文件</el-button>
-            <template #tip>
-              <div class="el-upload__tip">
-                支持 JSON、Excel 格式文件，请确保文件格式正确
-              </div>
-            </template>
-          </el-upload>
-        </el-form-item>
+    <el-dialog v-model="showImportDialog" title="导入题目" width="900px">
+      <el-tabs v-model="importTab" type="card">
+        <!-- Word文档导入 -->
+        <el-tab-pane label="Word文档导入" name="word">
+          <el-form label-width="100px">
+            <el-form-item label="Word文档">
+              <el-upload
+                  ref="wordUploadRef"
+                  :auto-upload="false"
+                  :on-change="handleWordFileChange"
+                  :show-file-list="false"
+                  accept=".doc,.docx"
+              >
+                <el-button type="primary">选择Word文档</el-button>
+                <template #tip>
+                                       <div class="el-upload__tip">
+                       支持 .doc、.docx 格式文件
+                       <br>
+                       <el-button type="text" @click="downloadTemplate" class="template-link">
+                         下载Word模板
+                       </el-button>
+                     </div>
+                </template>
+              </el-upload>
+            </el-form-item>
 
-        <el-form-item v-if="importData" label="预览数据">
-          <div class="import-preview">
-            <p>将导入 {{ importData.questions.length }} 道题目</p>
-            <el-table :data="importData.questions.slice(0, 5)" size="small">
-              <el-table-column prop="content" label="题目内容" show-overflow-tooltip/>
-              <el-table-column prop="type" label="类型" width="100"/>
-            </el-table>
-            <p v-if="importData.questions.length > 5" class="preview-tip">
-              仅显示前5道题目，共 {{ importData.questions.length }} 道
-            </p>
-          </div>
-        </el-form-item>
-      </el-form>
+            <el-form-item v-if="wordImportData" label="预览数据">
+              <div class="import-preview">
+                <div class="preview-header">
+                  <el-tag type="success" size="large">
+                    将导入 {{ wordImportData.length }} 道题目
+                  </el-tag>
+                </div>
+                <el-table :data="wordImportData.slice(0, 5)" size="small" stripe>
+                  <el-table-column prop="content" label="题目内容" show-overflow-tooltip min-width="350"/>
+                  <el-table-column prop="type" label="类型" width="120" align="center">
+                    <template #default="scope">
+                      <el-tag :type="getQuestionTypeTag(scope.row.type)" size="small">
+                        {{ getQuestionTypeText(scope.row.type) }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                </el-table>
+                <p v-if="wordImportData.length > 5" class="preview-tip">
+                  仅显示前5道题目，共 {{ wordImportData.length }} 道
+                </p>
+              </div>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
 
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showImportDialog = false">取消</el-button>
           <el-button
+              v-if="importTab === 'json'"
               type="primary"
               :disabled="!importData"
               @click="confirmImport"
+          >
+            确认导入
+          </el-button>
+          <el-button
+              v-if="importTab === 'word'"
+              type="primary"
+              :disabled="!wordImportData"
+              @click="confirmWordImport"
           >
             确认导入
           </el-button>
@@ -294,6 +323,8 @@ export default {
     const editingQuestion = ref(null)
     const questionFormRef = ref(null)
     const importData = ref(null)
+    const wordImportData = ref(null)
+    const importTab = ref('word')
     const loading = ref(false)
     const currentPage = ref(1)
     const pageSize = ref(20)
@@ -667,6 +698,52 @@ export default {
       }
     }
 
+    const exportQuestionsToWord = async () => {
+      try {
+        const response = await api.get(`/questions/export/word/${questionBankId.value}`, {
+          responseType: 'blob'
+        })
+
+        // 创建下载链接
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${questionBankTitle.value}_题目.docx`
+        link.click()
+        window.URL.revokeObjectURL(url)
+
+        ElMessage.success('导出Word文档成功')
+      } catch (error) {
+        ElMessage.error('导出Word文档失败')
+      }
+    }
+
+    const downloadTemplate = async () => {
+      try {
+        const response = await api.get('/questions/template/word', {
+          responseType: 'blob'
+        })
+
+        // 创建下载链接
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'question_template.docx'
+        link.click()
+        window.URL.revokeObjectURL(url)
+
+        ElMessage.success('模板下载成功')
+      } catch (error) {
+        ElMessage.error('模板下载失败')
+      }
+    }
+
     const handleFileChange = (file) => {
       const reader = new FileReader()
       reader.onload = (e) => {
@@ -684,6 +761,29 @@ export default {
       reader.readAsText(file.raw)
     }
 
+    const handleWordFileChange = async (file) => {
+      try {
+        const formData = new FormData()
+        formData.append('file', file.raw)
+        formData.append('questionBankId', questionBankId.value)
+
+        const response = await api.post('/questions/import/word', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        if (response.data.success) {
+          wordImportData.value = response.data.data
+          ElMessage.success(`成功解析 ${wordImportData.value.length} 道题目`)
+        } else {
+          ElMessage.error(response.data.message || '解析失败')
+        }
+      } catch (error) {
+        ElMessage.error(error.response?.data?.message || '文件解析失败')
+      }
+    }
+
     const confirmImport = async () => {
       try {
         const importDto = {
@@ -695,6 +795,23 @@ export default {
         ElMessage.success('导入成功')
         showImportDialog.value = false
         importData.value = null
+        loadQuestions()
+      } catch (error) {
+        ElMessage.error(error.response?.data?.message || '导入失败')
+      }
+    }
+
+    const confirmWordImport = async () => {
+      try {
+        const importDto = {
+          questionBankId: questionBankId.value,
+          questions: wordImportData.value
+        }
+
+        await api.post('/questions/import/word/confirm', importDto)
+        ElMessage.success('导入成功')
+        showImportDialog.value = false
+        wordImportData.value = null
         loadQuestions()
       } catch (error) {
         ElMessage.error(error.response?.data?.message || '导入失败')
@@ -776,6 +893,8 @@ export default {
       editingQuestion,
       questionFormRef,
       importData,
+      wordImportData,
+      importTab,
       formData,
       questionRules,
       isChoiceQuestion,
@@ -791,8 +910,12 @@ export default {
       removeOption,
       saveQuestion,
       exportQuestions,
+      exportQuestionsToWord,
+      downloadTemplate,
       handleFileChange,
+      handleWordFileChange,
       confirmImport,
+      confirmWordImport,
       goBack,
       handleTypeChange,
       selectedQuestions,
@@ -923,11 +1046,44 @@ export default {
   border-radius: 4px;
 }
 
+.import-preview .el-table {
+  margin-top: 10px;
+}
+
+.import-preview .el-table .el-table__cell {
+  padding: 8px 12px;
+}
+
+.import-preview .el-table .cell {
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.preview-header {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.preview-header .el-tag {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 .preview-tip {
   text-align: center;
   color: #666;
   font-size: 12px;
   margin-top: 10px;
+}
+
+.template-link {
+  color: #409eff;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.template-link:hover {
+  text-decoration: underline;
 }
 
 .answer-group {
@@ -1050,6 +1206,20 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+/* 表格内容优化 */
+.card .el-table .el-table__cell {
+  padding: 12px 16px;
+}
+
+.card .el-table .cell {
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.card .el-table .el-table__row:hover {
+  background-color: #f5f7fa;
 }
 
 .question-text {

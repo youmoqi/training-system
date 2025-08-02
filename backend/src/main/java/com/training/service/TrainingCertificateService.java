@@ -80,7 +80,12 @@ public class TrainingCertificateService {
         certificate.setCourse(course);
         certificate.setCertificateNumber(certificateNumber);
         certificate.setIssueDate(LocalDateTime.now());
-        certificate.setCompleteDate(userCourseOpt.get().getCompleteTime());
+        // 设置完成时间，如果用户课程的完成时间为空，则使用当前时间
+        LocalDateTime completeTime = userCourseOpt.get().getCompleteTime();
+        if (completeTime == null) {
+            completeTime = LocalDateTime.now();
+        }
+        certificate.setCompleteDate(completeTime);
         certificate.setIsPaid(isPaid);
         certificate.setCertificateType(user.getRole().name());
 
@@ -128,20 +133,20 @@ public class TrainingCertificateService {
     // 分页查询证书
     public Map<String, Object> getCertificatesWithPagination(int page, int size, String certificateType, Boolean isPaid, String searchKeyword) {
         Pageable pageable = PageRequest.of(page, size);
-        
+
         // 构建查询条件
         Specification<TrainingCertificate> spec = Specification.where(null);
-        
+
         if (certificateType != null && !certificateType.isEmpty()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("certificateType"), certificateType));
         }
-        
+
         if (isPaid != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("isPaid"), isPaid));
         }
-        
+
         if (searchKeyword != null && !searchKeyword.isEmpty()) {
-            spec = spec.and((root, query, cb) -> 
+            spec = spec.and((root, query, cb) ->
                 cb.or(
                     cb.like(root.get("certificateNumber"), "%" + searchKeyword + "%"),
                     cb.like(root.get("user").get("username"), "%" + searchKeyword + "%"),
@@ -149,20 +154,20 @@ public class TrainingCertificateService {
                 )
             );
         }
-        
+
         Page<TrainingCertificate> certificatePage = certificateRepository.findAll(spec, pageable);
-        
+
         List<TrainingCertificateDto> certificates = certificatePage.getContent().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
-        
+
         Map<String, Object> result = new HashMap<>();
         result.put("certificates", certificates);
         result.put("total", certificatePage.getTotalElements());
         result.put("totalPages", certificatePage.getTotalPages());
         result.put("currentPage", page);
         result.put("size", size);
-        
+
         return result;
     }
 
