@@ -1,9 +1,6 @@
 package com.training.controller;
 
-import com.training.dto.ApiResponse;
-import com.training.dto.ExamPaperDto;
-import com.training.dto.ExamPaperQuestionDto;
-import com.training.dto.PurchaseStatusDto;
+import com.training.dto.*;
 import com.training.service.ExamPaperService;
 import com.training.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,231 +19,212 @@ public class ExamPaperController {
 
     @Autowired
     private ExamPaperService examPaperService;
-
     @Autowired
     private JwtUtil jwtUtil;
 
-    // 分页获取所有试卷
+    // 分页查询试卷
     @GetMapping("/page")
     public ResponseEntity<ApiResponse<Page<ExamPaperDto>>> getExamPapersWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Boolean isOnline) {
-        try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<ExamPaperDto> examPapers = examPaperService.getExamPapersWithPagination(pageable, keyword, isOnline);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPapers));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExamPaperDto> examPapers = examPaperService.getExamPapersWithPagination(pageable, keyword, isOnline);
+        return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 
     // 获取所有试卷
     @GetMapping
     public ResponseEntity<ApiResponse<List<ExamPaperDto>>> getAllExamPapers() {
-        try {
-            List<ExamPaperDto> examPapers = examPaperService.getAllExamPapers();
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPapers));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+        List<ExamPaperDto> examPapers = examPaperService.getAllExamPapers();
+        return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 
     // 根据角色获取试卷
     @GetMapping("/role/{role}")
     public ResponseEntity<ApiResponse<List<ExamPaperDto>>> getExamPapersByRole(@PathVariable String role) {
-        try {
-            List<ExamPaperDto> examPapers = examPaperService.getExamPapersByRole(role);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPapers));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+        List<ExamPaperDto> examPapers = examPaperService.getExamPapersByRole(role);
+        return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 
-    // 分页获取用户可用试卷
+    // 分页查询用户已购买的试卷
     @GetMapping("/available/page")
     public ResponseEntity<ApiResponse<Page<ExamPaperDto>>> getAvailableExamPapersWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = jwtUtil.getUserIdFromHeader(authorizationHeader);
-            Pageable pageable = PageRequest.of(page, size);
-            Page<ExamPaperDto> examPapers = examPaperService.getAvailableExamPapersWithPagination(pageable, keyword, userId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPapers));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+            @RequestParam Long userId) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExamPaperDto> examPapers = examPaperService.getAvailableExamPapersWithPagination(pageable, keyword, userId);
+        return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 
-    // 分页获取用户可购买的试卷
+    // 分页查询用户可购买的试卷
     @GetMapping("/purchasable/page")
     public ResponseEntity<ApiResponse<Page<ExamPaperDto>>> getPurchasableExamPapersWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = jwtUtil.getUserIdFromHeader(authorizationHeader);
-            Pageable pageable = PageRequest.of(page, size);
-            Page<ExamPaperDto> examPapers = examPaperService.getPurchasableExamPapersWithPagination(pageable, keyword, userId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPapers));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+            @RequestParam Long userId) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ExamPaperDto> examPapers = examPaperService.getPurchasableExamPapersWithPagination(pageable, keyword, userId);
+        return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 
     // 获取试卷详情
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ExamPaperDto>> getExamPaperById(@PathVariable Long id) {
-        try {
-            ExamPaperDto examPaper = examPaperService.getExamPaperById(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", examPaper));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+        ExamPaperDto examPaper = examPaperService.getExamPaperById(id);
+        return ResponseEntity.ok(ApiResponse.success(examPaper));
     }
 
     // 获取试卷题目列表
     @GetMapping("/{id}/questions")
     public ResponseEntity<ApiResponse<List<ExamPaperQuestionDto>>> getExamPaperQuestions(@PathVariable Long id) {
-        try {
-            List<ExamPaperQuestionDto> questions = examPaperService.getExamPaperQuestions(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", questions));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
-    }
-
-    // 创建试卷
-    @PostMapping
-    public ResponseEntity<ApiResponse<ExamPaperDto>> createExamPaper(@RequestBody ExamPaperDto examPaperDto) {
-        try {
-            ExamPaperDto createdExamPaper = examPaperService.createExamPaper(examPaperDto);
-            return ResponseEntity.ok(new ApiResponse<>(true, "创建成功", createdExamPaper));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "创建失败: " + e.getMessage(), null));
-        }
-    }
-
-    // 更新试卷
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ExamPaperDto>> updateExamPaper(@PathVariable Long id, @RequestBody ExamPaperDto examPaperDto) {
-        try {
-            ExamPaperDto updatedExamPaper = examPaperService.updateExamPaper(id, examPaperDto);
-            return ResponseEntity.ok(new ApiResponse<>(true, "更新成功", updatedExamPaper));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "更新失败: " + e.getMessage(), null));
-        }
+        List<ExamPaperQuestionDto> questions = examPaperService.getExamPaperQuestions(id);
+        return ResponseEntity.ok(ApiResponse.success(questions));
     }
 
     // 删除试卷
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteExamPaper(@PathVariable Long id) {
-        try {
-            examPaperService.deleteExamPaper(id);
-            return ResponseEntity.ok(new ApiResponse<>(true, "删除成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "删除失败: " + e.getMessage(), null));
-        }
+    public ResponseEntity<ApiResponse<String>> deleteExamPaper(@PathVariable Long id) {
+        examPaperService.deleteExamPaper(id);
+        return ResponseEntity.ok(ApiResponse.success("删除成功"));
     }
 
     // 添加题目到试卷
     @PostMapping("/{examPaperId}/questions/{questionId}")
-    public ResponseEntity<ApiResponse<Void>> addQuestionToExamPaper(
+    public ResponseEntity<ApiResponse<String>> addQuestionToExamPaper(
             @PathVariable Long examPaperId,
             @PathVariable Long questionId,
-            @RequestParam Integer score,
-            @RequestParam Integer order) {
-        try {
-            examPaperService.addQuestionToExamPaper(examPaperId, questionId, score, order);
-            return ResponseEntity.ok(new ApiResponse<>(true, "添加成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "添加失败: " + e.getMessage(), null));
-        }
+            @RequestParam(defaultValue = "5") Integer score,
+            @RequestParam(required = false) Integer order) {
+
+        int questionOrder = order != null ? order : examPaperService.getExamPaperQuestions(examPaperId).size() + 1;
+        examPaperService.addQuestionToExamPaper(examPaperId, questionId, score, questionOrder);
+        return ResponseEntity.ok(ApiResponse.success("添加成功"));
     }
 
     // 批量添加题目到试卷
     @PostMapping("/{examPaperId}/questions/batch")
-    public ResponseEntity<ApiResponse<Void>> addQuestionsToExamPaper(
+    public ResponseEntity<ApiResponse<String>> addQuestionsToExamPaper(
             @PathVariable Long examPaperId,
             @RequestBody List<Long> questionIds,
             @RequestParam(defaultValue = "5") Integer defaultScore) {
-        try {
-            examPaperService.addQuestionsToExamPaper(examPaperId, questionIds, defaultScore);
-            return ResponseEntity.ok(new ApiResponse<>(true, "批量添加成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "批量添加失败: " + e.getMessage(), null));
-        }
+
+        examPaperService.addQuestionsToExamPaper(examPaperId, questionIds, defaultScore);
+        return ResponseEntity.ok(ApiResponse.success("批量添加成功"));
     }
 
     // 从试卷移除题目
     @DeleteMapping("/{examPaperId}/questions/{questionId}")
-    public ResponseEntity<ApiResponse<Void>> removeQuestionFromExamPaper(
+    public ResponseEntity<ApiResponse<String>> removeQuestionFromExamPaper(
             @PathVariable Long examPaperId,
             @PathVariable Long questionId) {
-        try {
-            examPaperService.removeQuestionFromExamPaper(examPaperId, questionId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "移除成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "移除失败: " + e.getMessage(), null));
-        }
+
+        examPaperService.removeQuestionFromExamPaper(examPaperId, questionId);
+        return ResponseEntity.ok(ApiResponse.success("移除成功"));
     }
 
     // 更新题目分值
     @PutMapping("/{examPaperId}/questions/{questionId}/score")
-    public ResponseEntity<ApiResponse<Void>> updateQuestionScore(
+    public ResponseEntity<ApiResponse<String>> updateQuestionScore(
             @PathVariable Long examPaperId,
             @PathVariable Long questionId,
-            @RequestBody Integer score) {
-        try {
-            examPaperService.updateQuestionScore(examPaperId, questionId, score);
-            return ResponseEntity.ok(new ApiResponse<>(true, "更新成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "更新失败: " + e.getMessage(), null));
-        }
+            @RequestParam Integer score) {
+        examPaperService.updateQuestionScore(examPaperId, questionId, score);
+        return ResponseEntity.ok(ApiResponse.success("更新成功"));
     }
 
     // 更新题目顺序
     @PutMapping("/{examPaperId}/questions/order")
-    public ResponseEntity<ApiResponse<Void>> updateQuestionOrder(
+    public ResponseEntity<ApiResponse<String>> updateQuestionOrder(
             @PathVariable Long examPaperId,
             @RequestBody List<Long> questionIds) {
-        try {
-            examPaperService.updateQuestionOrder(examPaperId, questionIds);
-            return ResponseEntity.ok(new ApiResponse<>(true, "更新成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "更新失败: " + e.getMessage(), null));
-        }
+        examPaperService.updateQuestionOrder(examPaperId, questionIds);
+        return ResponseEntity.ok(ApiResponse.success("更新成功"));
     }
 
-    // 检查购买状态
+    // 检查用户购买状态
     @GetMapping("/{examPaperId}/purchase-status")
     public ResponseEntity<ApiResponse<PurchaseStatusDto>> checkPurchaseStatus(
             @PathVariable Long examPaperId,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = jwtUtil.getUserIdFromHeader(authorizationHeader);
-            PurchaseStatusDto status = examPaperService.checkPurchaseStatus(userId, examPaperId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "获取成功", status));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "获取失败: " + e.getMessage(), null));
-        }
+            @RequestParam Long userId) {
+
+        PurchaseStatusDto status = examPaperService.checkPurchaseStatus(userId, examPaperId);
+        return ResponseEntity.ok(ApiResponse.success(status));
     }
 
     // 用户购买试卷
     @PostMapping("/{examPaperId}/purchase")
-    public ResponseEntity<ApiResponse<Void>> purchaseExamPaper(
-            @PathVariable Long examPaperId,
-            @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = jwtUtil.getUserIdFromHeader(authorizationHeader);
-            examPaperService.purchaseExamPaper(userId, examPaperId);
-            return ResponseEntity.ok(new ApiResponse<>(true, "购买成功", null));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "购买失败: " + e.getMessage(), null));
-        }
+    public ResponseEntity<ApiResponse<String>> purchaseExamPaper(@PathVariable Long examPaperId, @RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserIdFromHeader(authorization);
+        examPaperService.purchaseExamPaper(userId, examPaperId);
+        return ResponseEntity.ok(ApiResponse.success("购买成功"));
+    }
+
+    // 提交试卷考试
+    @PostMapping("/submit")
+    public ResponseEntity<ApiResponse<ExamPaperResultDto>> submitExamPaper(@RequestBody ExamPaperSubmitDto submitDto, @RequestHeader("Authorization") String authorization) {
+        Long userId = jwtUtil.getUserIdFromHeader(authorization);
+        ApiResponse<ExamPaperResultDto> response = examPaperService.submitExamPaper(userId, submitDto.getExamPaperId(), submitDto.getAnswers(), submitDto.getTimeTaken());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping
+    public ApiResponse<ExamPaperDto> createExamPaper(@RequestBody ExamPaperDto examPaperDto) {
+        return examPaperService.createExamPaper(examPaperDto);
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<ExamPaperDto> updateExamPaper(@PathVariable Long id,
+                                                     @RequestBody ExamPaperDto examPaperDto) {
+        return examPaperService.updateExamPaper(id, examPaperDto);
+    }
+
+    @PostMapping("/{id}/auto-generate")
+    public ApiResponse<String> autoGenerateExamPaper(@PathVariable Long id) {
+        return examPaperService.autoGenerateExamPaper(id);
+    }
+
+    @GetMapping("/category/{category}")
+    public ApiResponse<List<ExamPaperDto>> getExamPapersByCategory(@PathVariable String category) {
+        return examPaperService.getExamPapersByCategory(category);
+    }
+
+    @GetMapping("/{examPaperId}/can-retake/{userId}")
+    public ApiResponse<Boolean> canUserRetakeExam(@PathVariable Long examPaperId, @PathVariable Long userId) {
+        return examPaperService.canUserRetakeExam(userId, examPaperId);
+    }
+
+    @GetMapping("/{examPaperId}/next-attempt/{userId}")
+    public ApiResponse<Integer> getUserNextAttemptNumber(@PathVariable Long examPaperId, @PathVariable Long userId) {
+        return examPaperService.getUserNextAttemptNumber(userId, examPaperId);
+    }
+
+    // 自动组卷规则管理
+    @GetMapping("/{examPaperId}/auto-rules")
+    public ApiResponse<List<ExamPaperAutoRuleDto>> getAutoRules(@PathVariable Long examPaperId) {
+        return examPaperService.getAutoRules(examPaperId);
+    }
+
+    @PostMapping("/{examPaperId}/auto-rules")
+    public ApiResponse<ExamPaperAutoRuleDto> createAutoRule(@PathVariable Long examPaperId,
+                                                            @RequestBody ExamPaperAutoRuleDto ruleDto) {
+        return examPaperService.createAutoRule(examPaperId, ruleDto);
+    }
+
+    @PutMapping("/{examPaperId}/auto-rules/{ruleId}")
+    public ApiResponse<ExamPaperAutoRuleDto> updateAutoRule(@PathVariable Long examPaperId,
+                                                            @PathVariable Long ruleId,
+                                                            @RequestBody ExamPaperAutoRuleDto ruleDto) {
+        return examPaperService.updateAutoRule(examPaperId, ruleId, ruleDto);
+    }
+
+    @DeleteMapping("/{examPaperId}/auto-rules/{ruleId}")
+    public ApiResponse<String> deleteAutoRule(@PathVariable Long examPaperId, @PathVariable Long ruleId) {
+        return examPaperService.deleteAutoRule(examPaperId, ruleId);
     }
 }

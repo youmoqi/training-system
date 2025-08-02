@@ -51,6 +51,10 @@
               <el-icon><Link /></el-icon>
               <span>邀请链接</span>
             </el-menu-item>
+            <el-menu-item index="/admin/certificates">
+              <el-icon><Document /></el-icon>
+              <span>培训证明</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
         

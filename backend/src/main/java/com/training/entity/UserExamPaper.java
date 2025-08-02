@@ -1,11 +1,15 @@
 package com.training.entity;
 
 import javax.persistence.*;
+
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author YIZ
+ */
 @Data
 @Entity
 @Table(name = "user_exam_papers")
@@ -25,16 +29,4 @@ public class UserExamPaper {
     @CreationTimestamp
     @Column(name = "purchase_time", nullable = false, updatable = false)
     private LocalDateTime purchaseTime;
-
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted = false;
-
-    @Column(name = "complete_time")
-    private LocalDateTime completeTime;
-
-    @Column(name = "score")
-    private Integer score;
-
-    @Column(name = "attempt_count", nullable = false)
-    private Integer attemptCount = 0;
-} 
+}

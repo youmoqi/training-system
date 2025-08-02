@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <div class="header-left">
-        <el-button @click="goBack" icon="ArrowLeft">返回题库管理</el-button>
+        <el-button @click="goBack" icon="ArrowLeft">返回</el-button>
         <h3>题目管理 - {{ questionBankTitle }}</h3>
         <el-tag type="info">共 {{ questions.length }} 道题目</el-tag>
       </div>
@@ -12,7 +12,7 @@
         <el-button type="warning" @click="batchDelete" :disabled="selectedQuestions.length === 0">
           批量删除 ({{ selectedQuestions.length }})
         </el-button>
-        <el-button type="primary" @click="showCreateDialog = true">添加题目</el-button>
+        <el-button type="primary" @click="addQuestion">添加题目</el-button>
       </div>
     </div>
 
@@ -27,19 +27,14 @@
           <el-table-column type="selection" width="55"/>
           <el-table-column prop="id" label="ID" width="80"/>
           <el-table-column prop="content" label="题目内容" show-overflow-tooltip/>
-          <el-table-column prop="type" label="题目类型" width="120">
+          <el-table-column prop="type" label="题目类型" width="140">
             <template #default="scope">
               <el-tag :type="getQuestionTypeTag(scope.row.type)">
                 {{ getQuestionTypeText(scope.row.type) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="options" label="选项数量" width="100">
-            <template #default="scope">
-              {{ scope.row.options ? scope.row.options.length : 0 }}
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="200">
+          <el-table-column label="操作" width="150">
             <template #default="scope">
               <el-button size="small" @click="editQuestion(scope.row)">编辑</el-button>
               <el-button
@@ -87,7 +82,9 @@
           <el-select v-model="formData.type" placeholder="请选择题型" @change="handleTypeChange">
             <el-option label="单选题" value="SINGLE_CHOICE"/>
             <el-option label="多选题" value="MULTIPLE_CHOICE"/>
-            <el-option label="主观题" value="SUBJECTIVE"/>
+            <el-option label="判断题" value="TRUE_FALSE"/>
+            <el-option label="填空题" value="FILL_BLANK"/>
+            <el-option label="主观题" value="SHORT_ANSWER"/>
           </el-select>
         </el-form-item>
 
@@ -101,59 +98,110 @@
         </el-form-item>
 
         <el-form-item
-            v-if="isChoiceQuestion"
+            v-if="isChoiceQuestion || isTrueFalseQuestion"
             label="选项"
             prop="options"
         >
-          <div v-for="(option, index) in formData.options" :key="index" class="option-item">
-            <el-input
-                v-model="formData.options[index]"
-                :placeholder="`选项 ${String.fromCharCode(65 + index)}`"
-                style="width: 80%"
-            />
+          <div class="options-container">
+            <div class="options-grid">
+              <div v-for="(option, index) in formData.options" :key="index" class="option-item">
+                <div class="option-label">
+                  {{ String.fromCharCode(65 + index) }}.
+                </div>
+                <el-input
+                    v-model="formData.options[index]"
+                    :placeholder="`请输入选项${String.fromCharCode(65 + index)}的内容`"
+                    style="flex: 1"
+                    :disabled="isTrueFalseQuestion"
+                    @focus="handleOptionFocus"
+                />
+                <el-button
+                    v-if="!isTrueFalseQuestion"
+                    type="danger"
+                    size="small"
+                    @click="removeOption(index)"
+                    :disabled="formData.options.length <= 2"
+                    class="remove-btn"
+                >
+                  删除
+                </el-button>
+              </div>
+            </div>
             <el-button
-                type="danger"
+                v-if="!isTrueFalseQuestion"
+                type="primary"
                 size="small"
-                @click="removeOption(index)"
-                :disabled="formData.options.length <= 2"
+                @click="addOption"
+                class="add-option-btn"
+                icon="Plus"
             >
-              删除
+              添加选项
             </el-button>
           </div>
-          <el-button type="primary" size="small" @click="addOption">添加选项</el-button>
         </el-form-item>
 
         <el-form-item label="正确答案" prop="answers">
+          <!-- 多选题 -->
           <el-checkbox-group
               v-if="formData.type === 'MULTIPLE_CHOICE'"
               v-model="formData.answers"
+              class="answer-group"
           >
-            <el-checkbox
-                v-for="(option, index) in formData.options"
-                :key="index"
-                :label="option"
-            >
-              {{ option }}
-            </el-checkbox>
+            <div class="answers-grid">
+              <div v-for="(option, index) in formData.options" :key="index" class="answer-item">
+                <el-checkbox :label="option">
+                  <span class="answer-label">{{ String.fromCharCode(65 + index) }}.</span>
+                  <span class="answer-content">{{ option }}</span>
+                </el-checkbox>
+              </div>
+            </div>
           </el-checkbox-group>
+
+          <!-- 单选题 -->
           <el-radio-group
               v-else-if="formData.type === 'SINGLE_CHOICE'"
               v-model="formData.answers"
+              class="answer-group"
           >
-            <el-radio
-                v-for="(option, index) in formData.options"
-                :key="index"
-                :label="option"
-            >
-              {{ option }}
-            </el-radio>
+            <div class="answers-grid">
+              <div v-for="(option, index) in formData.options" :key="index" class="answer-item">
+                <el-radio :label="option">
+                  <span class="answer-label">{{ String.fromCharCode(65 + index) }}.</span>
+                  <span class="answer-content">{{ option }}</span>
+                </el-radio>
+              </div>
+            </div>
           </el-radio-group>
+
+          <!-- 判断题 -->
+          <el-radio-group
+              v-else-if="formData.type === 'TRUE_FALSE'"
+              v-model="formData.answers"
+              class="answer-group"
+          >
+            <div class="answers-grid">
+              <div class="answer-item">
+                <el-radio label="正确">
+                  <span class="answer-label">A.</span>
+                  <span class="answer-content">正确</span>
+                </el-radio>
+              </div>
+              <div class="answer-item">
+                <el-radio label="错误">
+                  <span class="answer-label">B.</span>
+                  <span class="answer-content">错误</span>
+                </el-radio>
+              </div>
+            </div>
+          </el-radio-group>
+
+          <!-- 填空题和简答题 -->
           <el-input
               v-else
               v-model="formData.answers"
               type="textarea"
               :rows="3"
-              placeholder="请输入正确答案"
+              :placeholder="formData.type === 'FILL_BLANK' ? '请输入填空题答案' : '请输入简答题答案'"
           />
         </el-form-item>
 
@@ -228,7 +276,7 @@
 </template>
 
 <script>
-import {ref, reactive, computed, onMounted} from 'vue'
+import {ref, reactive, computed, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import api from '../../api'
@@ -268,7 +316,46 @@ export default {
         {required: true, message: '请输入题目内容', trigger: 'blur'}
       ],
       options: [
-        {required: true, message: '请至少添加两个选项', trigger: 'blur'}
+        {
+          validator: (rule, value, callback) => {
+            if (isChoiceQuestion.value || isTrueFalseQuestion.value) {
+              if (!value || value.length < 2) {
+                callback(new Error('请至少添加两个选项'))
+              } else if (value.some(option => !option.trim())) {
+                callback(new Error('请填写所有选项内容'))
+              } else if (value.some(option => option.trim().length < 1)) {
+                callback(new Error('选项内容不能为空'))
+              } else {
+                callback()
+              }
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ],
+      answers: [
+        {
+          validator: (rule, value, callback) => {
+            if (isChoiceQuestion.value || isTrueFalseQuestion.value) {
+              if (!value || (Array.isArray(value) && value.length === 0)) {
+                callback(new Error('请选择正确答案'))
+              } else if (Array.isArray(value) && value.some(answer => !answer.trim())) {
+                callback(new Error('请选择有效的答案'))
+              } else {
+                callback()
+              }
+            } else {
+              if (!value || !value.trim()) {
+                callback(new Error('请输入正确答案'))
+              } else {
+                callback()
+              }
+            }
+          },
+          trigger: 'blur'
+        }
       ]
     }
 
@@ -318,13 +405,38 @@ export default {
       return ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(formData.value.type)
     })
 
+    const isTrueFalseQuestion = computed(() => {
+      return formData.value.type === 'TRUE_FALSE'
+    })
+
+    const isFillBlankQuestion = computed(() => {
+      return formData.value.type === 'FILL_BLANK'
+    })
+
+    const isShortAnswerQuestion = computed(() => {
+      return formData.value.type === 'SHORT_ANSWER'
+    })
+
     // 监听题目类型变化，重置答案
     const handleTypeChange = () => {
-      if (formData.value.type === 'SUBJECTIVE') {
-        formData.value.answers = ''
-        formData.value.options = ['', '']
-      } else {
-        formData.value.answers = []
+      const type = formData.value.type
+
+      // 根据题目类型设置默认值
+      switch (type) {
+        case 'SINGLE_CHOICE':
+        case 'MULTIPLE_CHOICE':
+          formData.value.options = ['选项A', '选项B']
+          formData.value.answers = type === 'SINGLE_CHOICE' ? '' : []
+          break
+        case 'TRUE_FALSE':
+          formData.value.options = ['正确', '错误']
+          formData.value.answers = ''
+          break
+        case 'FILL_BLANK':
+        case 'SHORT_ANSWER':
+          formData.value.options = []
+          formData.value.answers = ''
+          break
       }
     }
 
@@ -332,7 +444,9 @@ export default {
       const typeMap = {
         'SINGLE_CHOICE': '单选题',
         'MULTIPLE_CHOICE': '多选题',
-        'SUBJECTIVE': '主观题'
+        'TRUE_FALSE': '判断题',
+        'FILL_BLANK': '填空题',
+        'SHORT_ANSWER': '简答题'
       }
       return typeMap[type] || type
     }
@@ -341,18 +455,61 @@ export default {
       const tagMap = {
         'SINGLE_CHOICE': 'primary',
         'MULTIPLE_CHOICE': 'success',
-        'SUBJECTIVE': 'warning'
+        'TRUE_FALSE': 'warning',
+        'FILL_BLANK': 'info',
+        'SHORT_ANSWER': 'danger'
       }
       return tagMap[type] || 'info'
     }
 
+    const addQuestion = () => {
+      editingQuestion.value = null
+      resetForm()
+      showCreateDialog.value = true
+    }
+
     const editQuestion = (question) => {
       editingQuestion.value = question
+
+      // 处理选项，确保有足够的选项
+      let options = question.options || []
+      if (question.type === 'TRUE_FALSE') {
+        options = ['正确', '错误']
+      } else if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTIPLE_CHOICE') {
+        while (options.length < 2) options.push('')
+      }
+
+      // 处理答案 - 将答案标签转换为选项内容
+      let answers = question.answers
+      if (question.type === 'SINGLE_CHOICE' || question.type === 'MULTIPLE_CHOICE' || question.type === 'TRUE_FALSE') {
+        if (Array.isArray(answers)) {
+          // 多选题：将答案标签转换为选项内容
+          answers = answers.map(answerLabel => {
+            const index = answerLabel.charCodeAt(0) - 65 // A=0, B=1, C=2...
+            return options[index] || answerLabel
+          })
+        } else if (answers) {
+          // 单选题和判断题：将答案标签转换为选项内容
+          const index = answers.charCodeAt(0) - 65 // A=0, B=1, C=2...
+          answers = options[index] || answers
+        }
+
+        // 确保答案格式正确
+        if (question.type === 'MULTIPLE_CHOICE') {
+          answers = Array.isArray(answers) ? answers : [answers]
+        } else {
+          answers = Array.isArray(answers) ? (answers.length > 0 ? answers[0] : '') : (answers || '')
+        }
+      } else {
+        // 填空题和简答题：直接使用答案内容
+        answers = Array.isArray(answers) ? (answers.length > 0 ? answers[0] : '') : (answers || '')
+      }
+
       Object.assign(formData.value, {
         type: question.type,
         content: question.content,
-        options: question.options || ['', ''],
-        answers: question.type === 'SUBJECTIVE' ? (question.answers && question.answers.length > 0 ? question.answers[0] : '') : (question.answers || []),
+        options,
+        answers,
         explanation: question.explanation || ''
       })
       showCreateDialog.value = true
@@ -377,16 +534,55 @@ export default {
     }
 
     const addOption = () => {
-      formData.value.options.push('')
+      const newIndex = formData.value.options.length
+      const defaultContent = `选项${String.fromCharCode(65 + newIndex)}`
+      formData.value.options.push(defaultContent)
+      ElMessage.success(`已添加选项${String.fromCharCode(65 + newIndex)}`)
     }
 
-    const removeOption = (index) => {
-      formData.value.options.splice(index, 1)
-      // 更新答案
-      if (Array.isArray(formData.value.answers)) {
-        formData.value.answers = formData.value.answers.filter(answer =>
-            formData.value.options.includes(answer)
+    const handleOptionFocus = (event) => {
+      // 自动选中输入框内容，方便编辑
+      event.target.select()
+    }
+
+    const removeOption = async (index) => {
+      try {
+        await ElMessageBox.confirm(
+            `确定要删除选项${String.fromCharCode(65 + index)}吗？`,
+            '提示',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
         )
+
+        formData.value.options.splice(index, 1)
+
+        // 更新答案
+        if (Array.isArray(formData.value.answers)) {
+          formData.value.answers = formData.value.answers.filter(answer =>
+              formData.value.options.includes(answer)
+          )
+        } else if (formData.value.answers === formData.value.options[index]) {
+          formData.value.answers = ''
+        }
+
+        // 重新设置选项内容，确保字母标识正确
+        if (formData.value.type === 'SINGLE_CHOICE' || formData.value.type === 'MULTIPLE_CHOICE') {
+          formData.value.options = formData.value.options.map((option, idx) => {
+            if (option.startsWith('选项')) {
+              return `选项${String.fromCharCode(65 + idx)}`
+            }
+            return option
+          })
+        }
+
+        ElMessage.success('选项删除成功')
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error('删除选项失败')
+        }
       }
     }
 
@@ -394,13 +590,34 @@ export default {
       try {
         await questionFormRef.value.validate()
 
+        // 根据题目类型处理答案格式
+        let answers
+        if (formData.value.type === 'MULTIPLE_CHOICE') {
+          // 多选题：答案数组
+          answers = Array.isArray(formData.value.answers) ? formData.value.answers : [formData.value.answers]
+        } else if (formData.value.type === 'SINGLE_CHOICE' || formData.value.type === 'TRUE_FALSE') {
+          // 单选题和判断题：单个答案
+          answers = [formData.value.answers]
+        } else {
+          // 填空题和简答题：单个答案
+          answers = [formData.value.answers]
+        }
+
+        // 将选项内容转换为答案标签
+        if (formData.value.type === 'SINGLE_CHOICE' || formData.value.type === 'MULTIPLE_CHOICE' || formData.value.type === 'TRUE_FALSE') {
+          answers = answers.map(answerContent => {
+            const index = formData.value.options.indexOf(answerContent)
+            return index >= 0 ? String.fromCharCode(65 + index) : answerContent
+          })
+        }
+
         const questionData = {
           questionBankId: questionBankId.value,
           type: formData.value.type,
-          content: formData.value.content,
-          options: isChoiceQuestion.value ? formData.value.options : null,
-          answers: formData.value.type === 'SUBJECTIVE' ? [formData.value.answers] : (Array.isArray(formData.value.answers) ? formData.value.answers : [formData.value.answers]),
-          explanation: formData.value.explanation
+          content: formData.value.content.trim(),
+          options: (isChoiceQuestion.value || isTrueFalseQuestion.value) ? formData.value.options : null,
+          answers: answers,
+          explanation: formData.value.explanation.trim()
         }
 
         if (editingQuestion.value) {
@@ -424,8 +641,8 @@ export default {
       Object.assign(formData.value, {
         type: 'SINGLE_CHOICE',
         content: '',
-        options: ['', ''],
-        answers: [],
+        options: ['选项A', '选项B'],
+        answers: '',
         explanation: ''
       })
     }
@@ -530,6 +747,26 @@ export default {
       loadQuestions()
     })
 
+    // 监听选项变化，自动更新答案
+    watch(() => formData.value.options, (newOptions, oldOptions) => {
+      if (!oldOptions) return // 初始化时不处理
+
+      const type = formData.value.type
+      if (type === 'SINGLE_CHOICE' || type === 'TRUE_FALSE') {
+        // 单选题和判断题：如果当前答案不在新选项中，清空答案
+        if (formData.value.answers && !newOptions.includes(formData.value.answers)) {
+          formData.value.answers = ''
+        }
+      } else if (type === 'MULTIPLE_CHOICE') {
+        // 多选题：过滤掉不在新选项中的答案
+        if (Array.isArray(formData.value.answers)) {
+          formData.value.answers = formData.value.answers.filter(answer =>
+              newOptions.includes(answer)
+          )
+        }
+      }
+    }, {deep: true})
+
     return {
       questionBankId,
       questionBankTitle,
@@ -542,8 +779,12 @@ export default {
       formData,
       questionRules,
       isChoiceQuestion,
+      isTrueFalseQuestion,
+      isFillBlankQuestion,
+      isShortAnswerQuestion,
       getQuestionTypeText,
       getQuestionTypeTag,
+      addQuestion,
       editQuestion,
       deleteQuestion,
       addOption,
@@ -562,7 +803,8 @@ export default {
       pageSize,
       total,
       handleSizeChange,
-      handleCurrentChange
+      handleCurrentChange,
+      handleOptionFocus
     }
   }
 }
@@ -590,11 +832,87 @@ export default {
   margin-left: 0;
 }
 
+.options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
 .option-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.option-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
+}
+
+.option-label {
+  width: 35px;
+  text-align: center;
+  padding: 6px 10px;
+  background: linear-gradient(135deg, #409eff 0%, #36a3f7 100%);
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 13px;
+  min-width: 35px;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.remove-btn {
+  margin-left: 12px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+  transform: scale(1.05);
+}
+
+.add-option-btn {
+  align-self: flex-start;
+  background: linear-gradient(135deg, #409eff 0%, #36a3f7 100%);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 5px;
+}
+
+.add-option-btn:hover {
+  background: linear-gradient(135deg, #36a3f7 0%, #2d8cf0 100%);
+  box-shadow: 0 4px 8px rgba(64, 158, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.add-option-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.2);
 }
 
 .import-preview {
@@ -610,5 +928,151 @@ export default {
   color: #666;
   font-size: 12px;
   margin-top: 10px;
+}
+
+.answer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.answers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.answer-item:hover {
+  background-color: #f0f9ff;
+  border-color: #409eff;
+  box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
+}
+
+.answer-label {
+  font-weight: bold;
+  color: #409eff;
+  min-width: 30px;
+  margin-right: 10px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #409eff 0%, #36a3f7 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.answer-content {
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .options-grid,
+  .answers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .option-item,
+  .answer-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .option-label,
+  .answer-label {
+    align-self: flex-start;
+  }
+
+  .remove-btn {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+}
+
+/* 题目列表中的选项显示 */
+.options-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.options-count {
+  font-weight: 500;
+  color: #409eff;
+  font-size: 12px;
+}
+
+.options-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-preview {
+  font-size: 11px;
+  color: #666;
+  background-color: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.more-options {
+  font-size: 10px;
+  color: #999;
+  font-style: italic;
+}
+
+.question-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.question-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.5;
+  word-break: break-word;
+  max-height: 60px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.question-explanation {
+  margin-top: 3px;
+}
+
+.question-explanation .el-tag {
+  font-size: 11px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

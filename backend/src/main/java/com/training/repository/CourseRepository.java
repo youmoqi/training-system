@@ -11,8 +11,12 @@ import java.util.List;
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByIsOnlineTrue();
     List<Course> findByIsOnlineTrueAndVisibleRolesContaining(String role);
-    
+
     // 分页查询方法
     Page<Course> findByTitleContainingOrDescriptionContaining(
         String title, String description, Pageable pageable);
-} 
+
+    // 支持角色过滤的分页查询方法
+    Page<Course> findByIsOnlineTrue(Pageable pageable);
+    Page<Course> findByIsOnlineTrueAndVisibleRolesContaining(String role, Pageable pageable);
+}

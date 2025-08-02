@@ -58,7 +58,19 @@
 - 详细记录每道题的答题情况
 - 支持考试结果分析和统计
 
-### 5. 试卷管理模块
+### 5. 题库练习结果模块
+
+**核心表：**
+- `question_bank_results` - 题库练习结果表
+- `question_bank_question_results` - 题库练习题目答题记录表
+
+**功能说明：**
+- 记录用户题库练习的详细结果
+- 支持多次练习，无次数限制
+- 详细记录每道题的答题情况和正确答案
+- 支持练习结果分析和统计
+
+### 6. 试卷管理模块
 
 **核心表：**
 - `exam_papers` - 试卷信息表
@@ -73,7 +85,7 @@
 - 支持随机出题功能
 - 详细记录试卷考试结果
 
-### 6. 邀请管理模块
+### 7. 邀请管理模块
 
 **核心表：**
 - `invitation_links` - 邀请链接表
@@ -98,6 +110,11 @@ users (1) ←→ (N) user_exam_papers ←→ (1) exam_papers
 ```
 question_banks (1) ←→ (N) questions (1) ←→ (N) question_options
 question_banks (1) ←→ (N) questions (1) ←→ (N) question_answers
+```
+
+### 题库练习结果相关关系
+```
+question_banks (1) ←→ (N) question_bank_results (1) ←→ (N) question_bank_question_results
 ```
 
 ### 考试相关关系

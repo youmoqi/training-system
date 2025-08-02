@@ -2,9 +2,9 @@ package com.training.controller;
 
 import com.training.dto.ApiResponse;
 import com.training.dto.QuestionDto;
-import com.training.dto.QuestionAnswerDto;
-import com.training.dto.ExamResultDto;
 import com.training.dto.QuestionImportDto;
+import com.training.dto.QuestionBankResultDto;
+import com.training.dto.QuestionAnswerDto;
 import com.training.entity.Question;
 import com.training.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,14 +100,16 @@ public class QuestionController {
         }
     }
 
+    // 提交题库练习
     @PostMapping("/exam/{questionBankId}/submit")
-    public ResponseEntity<ApiResponse<ExamResultDto>> submitExam(
+    public ResponseEntity<ApiResponse<QuestionBankResultDto>> submitQuestionBankExam(
             @PathVariable Long questionBankId,
+            @RequestBody List<QuestionAnswerDto> answers,
             @RequestParam Long userId,
-            @RequestBody List<QuestionAnswerDto> answers) {
+            @RequestParam(defaultValue = "0") Integer timeTaken) {
         try {
-            ExamResultDto result = questionService.submitExam(questionBankId, userId, answers);
-            return ResponseEntity.ok(ApiResponse.success("提交考试成功", result));
+            QuestionBankResultDto result = questionService.submitQuestionBankExam(userId, questionBankId, answers, timeTaken);
+            return ResponseEntity.ok(ApiResponse.success("提交练习成功", result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -133,4 +135,4 @@ public class QuestionController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
-} 
+}

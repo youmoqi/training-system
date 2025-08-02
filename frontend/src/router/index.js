@@ -49,16 +49,6 @@ const routes = [
                 component: () => import('../views/student/QuestionBankPractice.vue')
             },
             {
-                path: 'exams',
-                name: 'Exams',
-                component: () => import('../views/student/Exams.vue')
-            },
-            {
-                path: 'exam/:questionBankId',
-                name: 'Exam',
-                component: () => import('../views/student/Exam.vue')
-            },
-            {
                 path: 'exam-result/:questionBankId',
                 name: 'ExamResult',
                 component: () => import('../views/student/ExamResult.vue')
@@ -76,12 +66,12 @@ const routes = [
             {
                 path: 'exam-papers/:id/exam',
                 name: 'ExamPaperExam',
-                component: () => import('../views/ExamPaperExam.vue')
+                component: () => import('../views/student/ExamPaperExam.vue')
             },
             {
                 path: 'exam-papers/:id/results/:resultId',
                 name: 'ExamPaperResult',
-                component: () => import('../views/ExamPaperResult.vue')
+                component: () => import('../views/student/ExamPaperResult.vue')
             },
             {
                 path: 'profile',
@@ -92,6 +82,26 @@ const routes = [
                 path: 'join',
                 name: 'JoinInvitation',
                 component: () => import('../views/student/JoinInvitation.vue')
+            },
+            {
+                path: 'exam-paper-history',
+                name: 'ExamPaperHistory',
+                component: () => import('../views/student/ExamPaperHistory.vue')
+            },
+            {
+                path: 'exam-papers/:examPaperId/results/:resultId',
+                name: 'ExamPaperResult',
+                component: () => import('../views/student/ExamPaperResult.vue')
+            },
+            {
+                path: 'question-bank-history',
+                name: 'QuestionBankHistory',
+                component: () => import('../views/student/QuestionBankHistory.vue')
+            },
+            {
+                path: 'question-bank-results/:resultId',
+                name: 'QuestionBankResult',
+                component: () => import('../views/student/QuestionBankResult.vue')
             }
         ]
     },
@@ -126,9 +136,14 @@ const routes = [
                 component: () => import('../views/admin/ExamPaperManagement.vue')
             },
             {
-                path: 'exam-papers/:id',
-                name: 'AdminExamPaperDetail',
-                component: () => import('../views/admin/ExamPaperDetail.vue')
+                path: 'exam-papers/:id/auto-generate',
+                name: 'AdminExamPaperAutoGenerate',
+                component: () => import('../views/admin/ExamPaperAutoGenerate.vue')
+            },
+            {
+                path: 'exam-papers/:id/questions',
+                name: 'AdminExamPaperQuestions',
+                component: () => import('../views/admin/ExamPaperQuestionsManagement.vue')
             },
             {
                 path: 'exam-papers/:id/edit',
@@ -136,9 +151,9 @@ const routes = [
                 component: () => import('../views/admin/ExamPaperEdit.vue')
             },
             {
-                path: 'exam-papers/:id/questions',
-                name: 'AdminExamPaperQuestions',
-                component: () => import('../views/admin/ExamPaperQuestions.vue')
+                path: 'exam-papers/:id',
+                name: 'AdminExamPaperDetail',
+                component: () => import('../views/admin/ExamPaperDetail.vue')
             },
             {
                 path: 'statistics',
@@ -154,6 +169,11 @@ const routes = [
                 path: 'invitations',
                 name: 'AdminInvitations',
                 component: () => import('../views/admin/InvitationManagement.vue')
+            },
+            {
+                path: 'certificates',
+                name: 'AdminCertificates',
+                component: () => import('../views/admin/TrainingCertificateManagement.vue')
             }
         ]
     }
@@ -165,17 +185,44 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+    // 确保认证状态已初始化
+    if (!store.state.user && store.state.token) {
+        try {
+            await store.dispatch('initializeAuth')
+        } catch (error) {
+            store.dispatch('logout')
+            next('/login')
+            return
+        }
+    }
+
     const isAuthenticated = store.getters.isAuthenticated
     const userRole = store.getters.userRole
 
+    // 如果路由需要认证但用户未认证
     if (to.meta.requiresAuth && !isAuthenticated) {
         next('/login')
-    } else if (to.meta.requiresAdmin && !['SUPER_ADMIN', 'ADMIN'].includes(userRole)) {
-        next('/dashboard')
-    } else {
-        next()
+        return
     }
+
+    // 如果路由需要管理员权限但用户不是管理员
+    if (to.meta.requiresAdmin && !['SUPER_ADMIN', 'ADMIN'].includes(userRole)) {
+        next('/dashboard')
+        return
+    }
+
+    // 如果已认证用户访问登录页面，重定向到仪表板
+    if (to.path === '/login' && isAuthenticated) {
+        if (['SUPER_ADMIN', 'ADMIN'].includes(userRole)) {
+            next('/admin')
+        } else {
+            next('/dashboard')
+        }
+        return
+    }
+
+    next()
 })
 
 export default router

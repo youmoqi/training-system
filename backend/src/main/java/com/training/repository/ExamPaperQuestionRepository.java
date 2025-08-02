@@ -2,6 +2,7 @@ package com.training.repository;
 
 import com.training.entity.ExamPaperQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,21 +13,22 @@ import java.util.Optional;
 @Repository
 public interface ExamPaperQuestionRepository extends JpaRepository<ExamPaperQuestion, Long> {
 
-    List<ExamPaperQuestion> findByExamPaperIdOrderByQuestionOrder(Long examPaperId);
-
-    @Query("SELECT epq FROM ExamPaperQuestion epq " +
+    @Query("SELECT DISTINCT epq FROM ExamPaperQuestion epq " +
+            "JOIN FETCH epq.question q " +
+            "LEFT JOIN FETCH q.options " +
             "WHERE epq.examPaper.id = :examPaperId " +
             "ORDER BY epq.questionOrder")
     List<ExamPaperQuestion> findQuestionsByExamPaperId(@Param("examPaperId") Long examPaperId);
 
     void deleteByExamPaperId(Long examPaperId);
 
+    @Modifying
     @Query("DELETE FROM ExamPaperQuestion epq " +
             "WHERE epq.examPaper.id = :examPaperId AND epq.question.id = :questionId")
     void deleteByExamPaperIdAndQuestionId(@Param("examPaperId") Long examPaperId, @Param("questionId") Long questionId);
 
     @Query("SELECT COUNT(epq) FROM ExamPaperQuestion epq WHERE epq.examPaper.id = :examPaperId")
-    int countByExamPaperId(@Param("examPaperId") Long examPaperId);
+    Long countByExamPaperId(@Param("examPaperId") Long examPaperId);
 
     @Query("SELECT epq FROM ExamPaperQuestion epq " +
             "WHERE epq.examPaper.id = :examPaperId AND epq.question.id = :questionId")

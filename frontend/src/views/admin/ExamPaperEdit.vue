@@ -70,12 +70,7 @@
           </el-col>
         </el-row>
         
-        <el-form-item label="随机出题" prop="isRandom">
-          <el-switch v-model="examPaperForm.isRandom" />
-          <span style="margin-left: 10px; color: #909399; font-size: 12px;">
-            开启后，每次考试题目顺序将随机排列
-          </span>
-        </el-form-item>
+
         
         <el-form-item label="可见角色" prop="visibleRoles">
           <el-checkbox-group v-model="examPaperForm.visibleRoles">
@@ -124,7 +119,6 @@ export default {
       passScore: 60,
       duration: 120,
       isOnline: true,
-      isRandom: false,
       visibleRoles: []
     })
 
@@ -166,7 +160,6 @@ export default {
               passScore: examPaper.passScore,
               duration: examPaper.duration,
               isOnline: examPaper.isOnline,
-              isRandom: examPaper.isRandom,
               visibleRoles: examPaper.visibleRoles || []
             })
             isEdit.value = true

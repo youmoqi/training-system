@@ -1,7 +1,6 @@
 package com.training.dto;
 
 import lombok.Data;
-
 import java.util.List;
 
 @Data
@@ -15,4 +14,4 @@ public class ExamPaperQuestionDto {
     private String explanation;
     private List<String> options;
     private List<String> answers;
-} 
+}

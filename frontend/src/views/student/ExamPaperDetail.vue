@@ -8,7 +8,7 @@
           <el-button type="primary" @click="purchaseExamPaper" v-if="!hasPurchased">
             购买试卷
           </el-button>
-          <el-button type="success" @click="takeExam" v-if="hasPurchased">
+          <el-button type="success" @click="takeExam" v-if="hasPurchased" :disabled="!canTakeExam">
             开始考试
           </el-button>
         </div>
@@ -27,11 +27,7 @@
               {{ examPaper.isOnline ? '已上线' : '未上线' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="随机出题">
-            <el-tag :type="examPaper.isRandom ? 'warning' : 'info'">
-              {{ examPaper.isRandom ? '是' : '否' }}
-            </el-tag>
-          </el-descriptions-item>
+
           <el-descriptions-item label="可见角色" :span="2">
             <el-tag v-for="role in examPaper.visibleRoles" :key="role" style="margin-right: 5px">
               {{ getRoleName(role) }}
@@ -54,6 +50,12 @@
         >
           <template #default>
             <p>您可以随时开始考试，考试结果将自动保存。</p>
+            <p v-if="examPaper.allowRetake">
+              最大考试次数：{{ examPaper.maxAttempts }}次
+            </p>
+            <p v-else>
+              此试卷不允许重复考试
+            </p>
           </template>
         </el-alert>
         <el-alert
@@ -65,6 +67,12 @@
         >
           <template #default>
             <p>购买后即可参加考试，考试结果将自动保存。</p>
+            <p v-if="examPaper.allowRetake">
+              最大考试次数：{{ examPaper.maxAttempts }}次
+            </p>
+            <p v-else>
+              此试卷不允许重复考试
+            </p>
           </template>
         </el-alert>
       </div>
@@ -78,6 +86,7 @@
               {{ formatDateTime(scope.row.examTime) }}
             </template>
           </el-table-column>
+          <el-table-column prop="attemptNumber" label="考试次数" width="100" />
           <el-table-column prop="score" label="得分" width="100" />
           <el-table-column prop="totalScore" label="总分" width="100" />
           <el-table-column prop="correctAnswers" label="正确题数" width="120" />
@@ -94,7 +103,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="操作" width="120">
+          <el-table-column label="操作" width="120" fixed="right">
             <template #default="scope">
               <el-button size="small" @click="viewResult(scope.row)">
                 查看详情
@@ -108,11 +117,12 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import api from '@/api'
+import store from "@/store"
 
 export default {
   name: 'ExamPaperDetail',
@@ -122,11 +132,12 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    
+
     const examPaper = ref(null)
     const examResults = ref([])
     const hasPurchased = ref(false)
     const loading = ref(false)
+    const canTakeExam = ref(true)
 
     const loadExamPaper = async () => {
       loading.value = true
@@ -144,10 +155,25 @@ export default {
 
     const checkPurchaseStatus = async () => {
       try {
-        const response = await api.get(`/exam-papers/${route.params.id}/purchase-status`)
+        const response = await api.get(`/exam-papers/${route.params.id}/purchase-status`, {
+          params: {
+            userId: store.getters.userId
+          }
+        })
         if (response.data.success) {
           hasPurchased.value = response.data.data.hasPurchased
           examResults.value = response.data.data.examResults || []
+
+          // 如果已购买，检查是否可以参加考试
+          if (hasPurchased.value) {
+            try {
+              const canRetakeResponse = await api.get(`/exam-papers/${route.params.id}/can-retake/${store.getters.userId}`)
+              canTakeExam.value = canRetakeResponse.data.success && canRetakeResponse.data.data
+            } catch (error) {
+              console.error('检查考试权限失败:', error)
+              canTakeExam.value = false
+            }
+          }
         }
       } catch (error) {
         console.error('检查购买状态失败:', error)
@@ -161,10 +187,11 @@ export default {
           cancelButtonText: '取消',
           type: 'info'
         })
-        
+
         await api.post(`/exam-papers/${route.params.id}/purchase`)
         ElMessage.success('购买成功')
-        hasPurchased.value = true
+        // 重新检查购买状态
+        await checkPurchaseStatus()
       } catch (error) {
         if (error !== 'cancel') {
           ElMessage.error('购买失败')
@@ -172,8 +199,18 @@ export default {
       }
     }
 
-    const takeExam = () => {
-      router.push(`/dashboard/exam-papers/${route.params.id}/exam`)
+    const takeExam = async () => {
+      try {
+        // 检查是否可以参加考试
+        const canRetakeResponse = await api.get(`/exam-papers/${route.params.id}/can-retake/${store.getters.userId}`)
+        if (canRetakeResponse.data.success && canRetakeResponse.data.data) {
+          router.push(`/dashboard/exam-papers/${route.params.id}/exam`)
+        } else {
+          ElMessage.warning('您已达到该试卷的最大考试次数或试卷不允许重复考试')
+        }
+      } catch (error) {
+        ElMessage.error('检查考试权限失败')
+      }
     }
 
     const viewResult = (result) => {
@@ -209,6 +246,7 @@ export default {
       examResults,
       hasPurchased,
       loading,
+      canTakeExam,
       purchaseExamPaper,
       takeExam,
       viewResult,
@@ -247,4 +285,4 @@ export default {
   margin-bottom: 20px;
   color: #303133;
 }
-</style> 
+</style>

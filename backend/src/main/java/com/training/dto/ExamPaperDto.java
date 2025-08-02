@@ -15,9 +15,17 @@ public class ExamPaperDto {
     private Integer duration;
     private Integer totalQuestions;
     private Boolean isOnline;
-    private Boolean isRandom;
+    private String examCategory;
+    private Boolean allowRetake;
+    private Integer maxAttempts;
+    private Integer singleChoiceScore;
+    private Integer multipleChoiceScore;
+    private Integer trueFalseScore;
+    private Integer fillBlankScore;
+    private Integer shortAnswerScore;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private List<String> visibleRoles;
     private List<ExamPaperQuestionDto> questions;
+    private List<ExamPaperAutoRuleDto> autoRules;
 } 

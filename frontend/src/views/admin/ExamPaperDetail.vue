@@ -29,11 +29,7 @@
               {{ examPaper.isOnline ? '已上线' : '未上线' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="随机出题">
-            <el-tag :type="examPaper.isRandom ? 'warning' : 'info'">
-              {{ examPaper.isRandom ? '是' : '否' }}
-            </el-tag>
-          </el-descriptions-item>
+          
           <el-descriptions-item label="可见角色" :span="2">
             <el-tag v-for="role in examPaper.visibleRoles" :key="role" style="margin-right: 5px">
               {{ getRoleName(role) }}

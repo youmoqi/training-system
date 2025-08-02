@@ -15,4 +15,10 @@ public interface QuestionBankRepository extends JpaRepository<QuestionBank, Long
     // 分页查询方法
     Page<QuestionBank> findByTitleContainingOrDescriptionContaining(
         String title, String description, Pageable pageable);
+    
+    // 支持角色过滤的分页查询方法
+    Page<QuestionBank> findByIsOnlineTrue(Pageable pageable);
+    Page<QuestionBank> findByIsOnlineTrueAndVisibleRolesContaining(String role, Pageable pageable);
+    Page<QuestionBank> findByIsOnlineTrueAndVisibleRolesContainingAndTitleContainingOrDescriptionContaining(
+        String role, String title, String description, Pageable pageable);
 } 

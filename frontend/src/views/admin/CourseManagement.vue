@@ -46,7 +46,7 @@
                 {{ formatDateTime(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column label="操作" width="280" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="viewCourse(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="editCourse(scope.row)">
@@ -114,6 +114,21 @@
               </el-form-item>
             </el-col>
           </el-row>
+          <el-form-item label="可见用户" prop="visibleRoles">
+            <el-select
+              v-model="courseForm.visibleRoles"
+              multiple
+              placeholder="请选择可见用户角色"
+              style="width: 100%"
+            >
+              <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
+              <el-option label="爆破用户" value="BLAST_USER" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="课程价格" prop="price">
+            <el-input-number v-model="courseForm.price" :min="0" :max="10000" />
+            <span style="margin-left: 10px">元</span>
+          </el-form-item>
         </el-form>
       </div>
       <template #footer>
@@ -157,7 +172,9 @@ export default {
       title: '',
       description: '',
       duration: 60,
-      isOnline: true
+      isOnline: true,
+      visibleRoles: [], // 默认为空数组，需要手动选择
+      price: 0
     })
 
     const rules = {
@@ -169,6 +186,12 @@ export default {
       ],
       duration: [
         { required: true, message: '请输入课程时长', trigger: 'blur' }
+      ],
+      visibleRoles: [
+        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
+      ],
+      price: [
+        { required: true, message: '请输入课程价格', trigger: 'blur' }
       ]
     }
 
@@ -180,7 +203,7 @@ export default {
           size: pageSize.value,
           keyword: searchKeyword.value
         }
-        const response = await api.get('/courses/page', { params })
+        const response = await api.get('/courses/admin/page', { params })
         if (response.data.success) {
           courses.value = response.data.data.content
           total.value = response.data.data.totalElements
@@ -199,7 +222,9 @@ export default {
         title: '',
         description: '',
         duration: 60,
-        isOnline: true
+        isOnline: true,
+        visibleRoles: [],
+        price: 0
       })
       dialogVisible.value = true
     }
@@ -211,7 +236,9 @@ export default {
         title: course.title,
         description: course.description,
         duration: course.duration,
-        isOnline: course.isOnline
+        isOnline: course.isOnline,
+        visibleRoles: course.visibleRoles || [],
+        price: course.price || 0
       })
       dialogVisible.value = true
     }

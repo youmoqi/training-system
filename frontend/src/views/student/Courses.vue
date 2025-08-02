@@ -7,7 +7,8 @@
       </el-button>
     </div>
 
-    <el-row :gutter="20">
+    <!-- 我的课程列表 -->
+    <el-row :gutter="20" v-loading="myCoursesLoading">
       <el-col
         v-for="userCourse in userCourses"
         :key="userCourse.id"
@@ -30,19 +31,28 @@
           </div>
 
           <div class="course-info">
-            <h4>{{ userCourse.course.title }}</h4>
-            <p>{{ userCourse.course.description }}</p>
-
-            <div class="course-meta">
-              <span class="enroll-time">
-                选课时间：{{ formatDate(userCourse.enrollTime) }}
-              </span>
+            <div class="course-header">
+              <h4>{{ userCourse.course.title }}</h4>
               <el-tag
                 :type="userCourse.isCompleted ? 'success' : 'warning'"
                 size="small"
               >
                 {{ userCourse.isCompleted ? '已完成' : '学习中' }}
               </el-tag>
+            </div>
+
+            <p class="course-description">{{ userCourse.course.description || '暂无描述' }}</p>
+
+            <div class="course-details">
+              <div class="detail-item">
+                <span class="detail-label">选课时间：</span>
+                <span class="detail-value">{{ formatDate(userCourse.enrollTime) }}</span>
+              </div>
+
+              <div class="detail-item">
+                <span class="detail-label">观看进度：</span>
+                <span class="detail-value progress">{{ userCourse.watchProgress || 0 }}%</span>
+              </div>
             </div>
 
             <div class="course-actions">
@@ -74,6 +84,19 @@
       </el-col>
     </el-row>
 
+    <!-- 我的课程分页 -->
+    <div class="pagination-container" style="margin-top: 20px; text-align: center;">
+      <el-pagination
+        v-model:current-page="myCoursesCurrentPage"
+        v-model:page-size="myCoursesPageSize"
+        :page-sizes="[5, 10, 20, 50]"
+        :total="myCoursesTotal"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleMyCoursesSizeChange"
+        @current-change="handleMyCoursesCurrentChange"
+      />
+    </div>
+
     <!-- 课程选择对话框 -->
     <el-dialog
       v-model="showCourseSelection"
@@ -84,16 +107,30 @@
         :data="availableCourses"
         style="width: 100%"
         @selection-change="handleSelectionChange"
+        v-loading="loading"
       >
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="title" label="课程名称" />
+        <el-table-column prop="title" label="课程名称" width="200"/>
         <el-table-column prop="description" label="课程描述" />
-        <el-table-column prop="price" label="价格">
+        <el-table-column prop="price" label="价格" width="120">
           <template #default="scope">
             ¥{{ scope.row.price }}
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页组件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[5, 10, 20, 50]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
 
       <template #footer>
         <span class="dialog-footer">
@@ -129,28 +166,90 @@ export default {
     const selectedCourses = ref([])
     const showCourseSelection = ref(false)
 
+    // 分页相关
+    const currentPage = ref(1)
+    const pageSize = ref(10)
+    const total = ref(0)
+    const loading = ref(false)
+
+    // 我的课程分页相关
+    const myCoursesCurrentPage = ref(1)
+    const myCoursesPageSize = ref(10)
+    const myCoursesTotal = ref(0)
+    const myCoursesLoading = ref(false)
+
     const userRole = computed(() => store.getters.userRole)
 
     const loadUserCourses = async () => {
+      myCoursesLoading.value = true
       try {
-        const response = await api.get(`/courses/user/${store.getters.currentUser.id}`)
-        userCourses.value = response.data.data
+        const response = await api.get('/courses/student/my-courses', {
+          params: {
+            userId: store.getters.currentUser.id,
+            page: myCoursesCurrentPage.value - 1,
+            size: myCoursesPageSize.value
+          }
+        })
+        userCourses.value = response.data.data.content
+        myCoursesTotal.value = response.data.data.totalElements
       } catch (error) {
         ElMessage.error('加载课程失败')
+      } finally {
+        myCoursesLoading.value = false
       }
     }
 
     const loadAvailableCourses = async () => {
+      loading.value = true
       try {
-        const response = await api.get('/courses/online')
-        availableCourses.value = response.data.data
+        const response = await api.get('/courses/student/available-courses', {
+          params: {
+            userId: store.getters.currentUser.id,
+            page: currentPage.value - 1, // 后端从0开始，前端从1开始
+            size: pageSize.value,
+            userRole: store.getters.currentUser.role
+          }
+        })
+        availableCourses.value = response.data.data.content
+        total.value = response.data.data.totalElements
       } catch (error) {
         ElMessage.error('加载可用课程失败')
+      } finally {
+        loading.value = false
       }
     }
 
     const handleSelectionChange = (selection) => {
+      // 更新当前页面的选择状态
       selectedCourses.value = selection
+    }
+
+    // 分页处理方法
+    const handleSizeChange = (val) => {
+      pageSize.value = val
+      currentPage.value = 1
+      // 清空选择状态
+      selectedCourses.value = []
+      loadAvailableCourses()
+    }
+
+    const handleCurrentChange = (val) => {
+      currentPage.value = val
+      // 清空选择状态
+      selectedCourses.value = []
+      loadAvailableCourses()
+    }
+
+    // 我的课程分页处理方法
+    const handleMyCoursesSizeChange = (val) => {
+      myCoursesPageSize.value = val
+      myCoursesCurrentPage.value = 1
+      loadUserCourses()
+    }
+
+    const handleMyCoursesCurrentChange = (val) => {
+      myCoursesCurrentPage.value = val
+      loadUserCourses()
     }
 
     const enrollCourses = async () => {
@@ -230,7 +329,19 @@ export default {
       formatDate,
       handleImageError,
       userRole,
-      unenroll
+      unenroll,
+      currentPage,
+      pageSize,
+      handleSizeChange,
+      handleCurrentChange,
+      total,
+      loading,
+      myCoursesCurrentPage,
+      myCoursesPageSize,
+      myCoursesTotal,
+      myCoursesLoading,
+      handleMyCoursesSizeChange,
+      handleMyCoursesCurrentChange
     }
   }
 }
@@ -256,16 +367,23 @@ export default {
 .course-card {
   margin-bottom: 20px;
   transition: transform 0.3s;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .course-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .course-image {
   position: relative;
   height: 200px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .course-image img {
@@ -284,34 +402,104 @@ export default {
 }
 
 .course-info {
-  padding: 15px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 300px;
 }
 
-.course-info h4 {
-  margin: 0 0 10px 0;
-  color: #333;
-}
-
-.course-info p {
-  color: #666;
-  margin: 0 0 15px 0;
-  line-height: 1.5;
-}
-
-.course-meta {
+.course-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  min-height: 35px;
+  flex-shrink: 0;
 }
 
-.enroll-time {
-  font-size: 12px;
-  color: #999;
+.course-header h4 {
+  margin: 0;
+  color: #303133;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  flex: 1;
+  margin-right: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-description {
+  color: #606266;
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+  font-size: 14px;
+  min-height: 55px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+
+.course-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  min-height: 50px;
+  flex-shrink: 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  min-height: 18px;
+}
+
+.detail-label {
+  color: #909399;
+  margin-right: 8px;
+  min-width: 70px;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #303133;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.detail-value.progress {
+  color: #409eff;
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .course-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  min-height: 80px;
+  align-items: center;
+  flex-shrink: 0;
+  justify-content: center;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.pagination-container .el-pagination {
+  justify-content: center;
 }
 </style>

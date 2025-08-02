@@ -53,7 +53,7 @@
                 {{ formatDate(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column label="操作" width="220" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="editQuestionBank(scope.row)">编辑</el-button>
                 <el-button size="small" type="primary" @click="manageQuestions(scope.row)">
@@ -90,11 +90,11 @@
         class="dialog-container"
     >
       <div class="dialog-body">
-        <el-form :model="formData" label-width="100px">
-          <el-form-item label="题库名称" required>
+        <el-form :model="formData" label-width="100px" ref="formRef" :rules="rules">
+          <el-form-item label="题库名称" prop="title" required>
             <el-input v-model="formData.title" placeholder="请输入题库名称"/>
           </el-form-item>
-          <el-form-item label="题库描述" required>
+          <el-form-item label="题库描述" prop="description" required>
             <el-input
                 v-model="formData.description"
                 type="textarea"
@@ -102,11 +102,22 @@
                 placeholder="请输入题库描述"
             />
           </el-form-item>
-          <el-form-item label="价格">
+          <el-form-item label="价格" prop="price">
             <el-input-number v-model="formData.price" :min="0" :precision="2"/>
           </el-form-item>
-          <el-form-item label="是否上线">
+          <el-form-item label="是否上线" prop="isOnline">
             <el-switch v-model="formData.isOnline"/>
+          </el-form-item>
+          <el-form-item label="可见用户" prop="visibleRoles">
+            <el-select
+              v-model="formData.visibleRoles"
+              multiple
+              placeholder="请选择可见用户角色"
+              style="width: 100%"
+            >
+              <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
+              <el-option label="爆破用户" value="BLAST_USER" />
+            </el-select>
           </el-form-item>
         </el-form>
       </div>
@@ -144,13 +155,27 @@ export default {
     const searchKeyword = ref('')
     const showCreateDialog = ref(false)
     const editingQuestionBank = ref(null)
+    const formRef = ref(null)
 
     const formData = reactive({
       title: '',
       description: '',
       price: 0,
-      isOnline: true
+      isOnline: true,
+      visibleRoles: [] // 默认为空数组，需要手动选择
     })
+
+    const rules = {
+      title: [
+        { required: true, message: '请输入题库名称', trigger: 'blur' }
+      ],
+      description: [
+        { required: true, message: '请输入题库描述', trigger: 'blur' }
+      ],
+      visibleRoles: [
+        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
+      ]
+    }
 
     const loadQuestionBanks = async () => {
       loading.value = true
@@ -160,7 +185,7 @@ export default {
           size: pageSize.value,
           keyword: searchKeyword.value
         }
-        const response = await api.get('/question-banks/page', {params})
+        const response = await api.get('/question-banks/admin/page', { params })
         if (response.data.success) {
           questionBanks.value = response.data.data.content
           total.value = response.data.data.totalElements
@@ -200,6 +225,7 @@ export default {
       formData.description = questionBank.description
       formData.price = questionBank.price
       formData.isOnline = questionBank.isOnline
+      formData.visibleRoles = questionBank.visibleRoles || [] // 确保可见用户角色存在
       showCreateDialog.value = true
     }
 
@@ -226,26 +252,57 @@ export default {
     }
 
     const submitForm = async () => {
-      try {
-        if (editingQuestionBank.value) {
-          await api.put(`/question-banks/${editingQuestionBank.value.id}`, formData)
-          ElMessage.success('更新成功')
+      if (!formRef.value) return
+      await formRef.value.validate((valid) => {
+        if (valid) {
+          try {
+            if (editingQuestionBank.value) {
+              api.put(`/question-banks/${editingQuestionBank.value.id}`, formData)
+                .then(response => {
+                  if (response.data.success) {
+                    ElMessage.success('更新成功')
+                    showCreateDialog.value = false
+                    loadQuestionBanks()
+                  } else {
+                    ElMessage.error('更新失败')
+                  }
+                })
+                .catch(error => {
+                  ElMessage.error('更新失败')
+                })
+            } else {
+              api.post('/question-banks', formData)
+                .then(response => {
+                  if (response.data.success) {
+                    ElMessage.success('创建成功')
+                    showCreateDialog.value = false
+                    loadQuestionBanks()
+                  } else {
+                    ElMessage.error('创建失败')
+                  }
+                })
+                .catch(error => {
+                  ElMessage.error('创建失败')
+                })
+            }
+          } catch (error) {
+            ElMessage.error('操作失败')
+          }
         } else {
-          await api.post('/question-banks', formData)
-          ElMessage.success('创建成功')
+          ElMessage.error('请检查表单填写')
         }
-        showCreateDialog.value = false
-        loadQuestionBanks()
-      } catch (error) {
-        ElMessage.error('操作失败')
-      }
+      })
     }
 
     const resetForm = () => {
+      if (formRef.value) {
+        formRef.value.resetFields()
+      }
       formData.title = ''
       formData.description = ''
       formData.price = 0
       formData.isOnline = true
+      formData.visibleRoles = [] // 重置可见用户角色
     }
 
     const formatDate = (dateString) => {
@@ -274,7 +331,9 @@ export default {
       formatDate,
       handleSearch,
       handleSizeChange,
-      handleCurrentChange
+      handleCurrentChange,
+      formRef,
+      rules
     }
   }
 }

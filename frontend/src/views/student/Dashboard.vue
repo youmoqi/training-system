@@ -7,7 +7,7 @@
           <div class="user-info">
             <span>欢迎，{{ currentUser?.realName }}</span>
             <el-dropdown @command="handleCommand">
-              <el-avatar :src="currentUser?.facePhotoUrl" />
+              <el-avatar :src="currentUser?.facePhotoUrl"/>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="profile">个人资料</el-dropdown-item>
@@ -22,39 +22,57 @@
       <el-container>
         <el-aside width="200px" class="sidebar">
           <el-menu
-            :default-active="$route.path"
-            router
-            class="sidebar-menu"
+              :default-active="$route.path"
+              router
+              class="sidebar-menu"
           >
             <el-menu-item index="/dashboard/courses">
-              <el-icon><VideoPlay /></el-icon>
+              <el-icon>
+                <VideoPlay/>
+              </el-icon>
               <span>我的课程</span>
             </el-menu-item>
             <el-menu-item index="/dashboard/join" v-if="userRole === 'BLAST_USER'">
-              <el-icon><Link /></el-icon>
+              <el-icon>
+                <Link/>
+              </el-icon>
               <span>加入课程</span>
             </el-menu-item>
             <el-menu-item index="/dashboard/question-banks">
-              <el-icon><Document /></el-icon>
+              <el-icon>
+                <Document/>
+              </el-icon>
               <span>题库练习</span>
             </el-menu-item>
+            <el-menu-item index="/dashboard/question-bank-history">
+              <el-icon>
+                <Document/>
+              </el-icon>
+              <span>练习记录</span>
+            </el-menu-item>
             <el-menu-item index="/dashboard/exam-papers">
-              <el-icon><EditPen /></el-icon>
+              <el-icon>
+                <EditPen/>
+              </el-icon>
               <span>试卷考试</span>
             </el-menu-item>
-            <!-- <el-menu-item index="/dashboard/exams">
-              <el-icon><EditPen /></el-icon>
-              <span>我的考试</span>
-            </el-menu-item> -->
+            <el-menu-item index="/dashboard/exam-paper-history">
+              <el-icon>
+                <Document/>
+              </el-icon>
+              <span>考试记录</span>
+            </el-menu-item>
             <el-menu-item index="/dashboard/profile">
-              <el-icon><User /></el-icon>
+              <el-icon>
+                <User/>
+              </el-icon>
               <span>个人资料</span>
             </el-menu-item>
           </el-menu>
         </el-aside>
 
         <el-main class="main-content">
-          <router-view />
+          <router-view/>
         </el-main>
       </el-container>
     </el-container>
@@ -62,11 +80,11 @@
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { VideoPlay, Document, User, Link, EditPen } from '@element-plus/icons-vue'
+import {computed} from 'vue'
+import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
+import {ElMessage} from 'element-plus'
+import {VideoPlay, Document, User, Link, EditPen} from '@element-plus/icons-vue'
 
 export default {
   name: 'Dashboard',

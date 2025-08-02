@@ -1,105 +1,145 @@
 <template>
   <div class="question-bank-practice">
-    <div class="page-header">
-      <h3>{{ questionBankTitle }}</h3>
-      <div class="exam-info">
-        <span>题目数量：{{ questions.length }}</span>
-        <span>当前进度：{{ currentQuestionIndex + 1 }} / {{ questions.length }}</span>
-        <span>剩余时间：{{ formatTime(remainingTime) }}</span>
+    <!-- 练习头部 -->
+    <div class="exam-header">
+      <div class="header-left">
+        <el-button @click="confirmExit" icon="ArrowLeft">退出练习</el-button>
+        <h3>{{ questionBankTitle || '题库练习' }}</h3>
+      </div>
+      <div class="header-right">
+        <div class="timer">
+          <el-icon><Clock /></el-icon>
+          <span>{{ formatTime(remainingTime) }}</span>
+        </div>
+        <div class="progress">
+          <span>{{ currentQuestionIndex + 1 }} / {{ questions.length }}</span>
+        </div>
       </div>
     </div>
 
-    <div v-if="questions.length > 0" class="exam-container">
-      <!-- 题目导航 -->
-      <div class="question-nav">
-        <div class="nav-title">题目导航</div>
-        <div class="nav-buttons">
-          <el-button
-            v-for="(question, index) in questions"
-            :key="index"
-            :type="getQuestionButtonType(index)"
-            size="small"
-            @click="goToQuestion(index)"
-          >
-            {{ index + 1 }}
-          </el-button>
-        </div>
-      </div>
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-state">
+      <el-icon class="is-loading"><Loading /></el-icon>
+      <p>正在加载题目...</p>
+    </div>
 
-      <!-- 题目内容 -->
-      <div class="question-content">
+    <!-- 练习内容 -->
+    <div v-else-if="questions.length > 0" class="exam-content">
+      <el-card class="question-card" shadow="hover">
         <div class="question-header">
-          <span class="question-number">第 {{ currentQuestionIndex + 1 }} 题</span>
-          <span class="question-type">{{ getQuestionTypeText(currentQuestion.type) }}</span>
+          <div class="question-number">第 {{ currentQuestionIndex + 1 }} 题</div>
+          <div class="question-type">
+            <el-tag :type="getQuestionTypeTag(currentQuestion.type)" size="small">
+              {{ getQuestionTypeText(currentQuestion.type) }}
+            </el-tag>
+          </div>
+          <div class="question-score">
+            <el-tag type="warning" size="small">{{ currentQuestion.score || 5 }}分</el-tag>
+          </div>
         </div>
 
-        <div class="question-text">
-          {{ currentQuestion.content }}
+        <div class="question-content">
+          <h4>{{ currentQuestion.content }}</h4>
         </div>
 
-        <!-- 选择题选项 -->
-        <div v-if="isChoiceQuestion" class="question-options">
-          <el-radio-group
-            v-if="currentQuestion.type === 'SINGLE_CHOICE'"
-            v-model="userAnswers[currentQuestion.id]"
-            @change="saveAnswer"
-          >
+        <!-- 单选题 -->
+        <div v-if="currentQuestion.type === 'SINGLE_CHOICE'" class="question-options">
+          <el-radio-group v-model="currentQuestion.userAnswer">
             <el-radio
               v-for="(option, index) in currentQuestion.options"
-              :key="index"
-              :label="option"
+              :key="option"
+              :label="String.fromCharCode(65 + index)"
               class="option-item"
             >
-              {{ option }}
+              <span class="option-label">{{ String.fromCharCode(65 + index) }}.</span>
+              <span class="option-content">{{ option }}</span>
             </el-radio>
           </el-radio-group>
+        </div>
 
-          <el-checkbox-group
-            v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'"
-            v-model="userAnswers[currentQuestion.id]"
-            @change="saveAnswer"
-          >
+        <!-- 多选题 -->
+        <div v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'" class="question-options">
+          <el-checkbox-group v-model="currentQuestion.userAnswers">
             <el-checkbox
               v-for="(option, index) in currentQuestion.options"
-              :key="index"
-              :label="option"
+              :key="option"
+              :label="String.fromCharCode(65 + index)"
               class="option-item"
             >
-              {{ option }}
+              <span class="option-label">{{ String.fromCharCode(65 + index) }}.</span>
+              <span class="option-content">{{ option }}</span>
             </el-checkbox>
           </el-checkbox-group>
         </div>
 
-        <!-- 主观题答案 -->
-        <div v-else-if="currentQuestion.type === 'SUBJECTIVE'" class="question-answer">
+        <!-- 判断题 -->
+        <div v-else-if="currentQuestion.type === 'TRUE_FALSE'" class="question-options">
+          <el-radio-group v-model="currentQuestion.userAnswer">
+            <el-radio label="true" class="option-item">
+              <span class="option-label">A.</span>
+              <span class="option-content">正确</span>
+            </el-radio>
+            <el-radio label="false" class="option-item">
+              <span class="option-label">B.</span>
+              <span class="option-content">错误</span>
+            </el-radio>
+          </el-radio-group>
+        </div>
+
+        <!-- 填空题 -->
+        <div v-else-if="currentQuestion.type === 'FILL_BLANK'" class="question-answer">
           <el-input
-            v-model="userAnswers[currentQuestion.id]"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入您的答案"
-            @input="saveAnswer"
+            v-model="currentQuestion.userAnswer"
+            type="text"
+            placeholder="请输入答案..."
           />
         </div>
-      </div>
 
-      <!-- 操作按钮 -->
-      <div class="question-actions">
+        <!-- 简答题 -->
+        <div v-else-if="currentQuestion.type === 'SHORT_ANSWER'" class="question-answer">
+          <el-input
+            v-model="currentQuestion.userAnswer"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入您的答案..."
+          />
+        </div>
+      </el-card>
+
+      <!-- 题目导航 -->
+      <div class="question-navigation">
         <el-button @click="previousQuestion" :disabled="currentQuestionIndex === 0">
           上一题
         </el-button>
         <el-button @click="nextQuestion" :disabled="currentQuestionIndex === questions.length - 1">
           下一题
         </el-button>
-        <el-button type="primary" @click="submitExam" :disabled="!canSubmit">
-          提交考试
-        </el-button>
       </div>
-    </div>
 
-    <!-- 加载状态 -->
-    <div v-else-if="loading" class="loading-container">
-      <el-icon class="is-loading"><Loading /></el-icon>
-      <p>正在加载题目...</p>
+      <!-- 题目列表 -->
+      <el-card class="question-list-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <span>题目导航</span>
+            <el-button type="primary" @click="submitExam" :disabled="!canSubmit">
+              提交练习
+            </el-button>
+          </div>
+        </template>
+
+        <div class="question-list">
+          <el-button
+            v-for="(question, index) in questions"
+            :key="index"
+            :type="getQuestionButtonType(index)"
+            :class="['question-button', { 'current': index === currentQuestionIndex }]"
+            @click="goToQuestion(index)"
+            size="small"
+          >
+            {{ index + 1 }}
+          </el-button>
+        </div>
+      </el-card>
     </div>
 
     <!-- 空状态 -->
@@ -190,12 +230,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 import api from '../../api'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, Clock } from '@element-plus/icons-vue'
 
 export default {
   name: 'QuestionBankPractice',
   components: {
-    Loading
+    Loading,
+    Clock
   },
   setup() {
     const route = useRoute()
@@ -206,7 +247,6 @@ export default {
     const questionBankTitle = ref('')
     const questions = ref([])
     const currentQuestionIndex = ref(0)
-    const userAnswers = ref({})
     const remainingTime = ref(7200) // 2小时
     const showSubmitDialog = ref(false)
     const showResultDialog = ref(false)
@@ -218,17 +258,13 @@ export default {
       return questions.value[currentQuestionIndex.value] || {}
     })
 
-    const isChoiceQuestion = computed(() => {
-      return ['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(currentQuestion.value.type)
-    })
-
     const answeredCount = computed(() => {
-      return Object.keys(userAnswers.value).filter(key => {
-        const answer = userAnswers.value[key]
-        if (Array.isArray(answer)) {
-          return answer.length > 0
+      return questions.value.filter(q => {
+        if (q.type === 'MULTIPLE_CHOICE') {
+          return q.userAnswers && q.userAnswers.length > 0
+        } else {
+          return q.userAnswer && q.userAnswer.toString().trim() !== ''
         }
-        return answer && answer.toString().trim() !== ''
       }).length
     })
 
@@ -243,6 +279,13 @@ export default {
         questions.value = response.data.data
         if (questions.value.length > 0) {
           questionBankTitle.value = questions.value[0].questionBankTitle || '题库练习'
+          
+          // 初始化题目答案
+          questions.value = questions.value.map(q => ({
+            ...q,
+            userAnswer: '',
+            userAnswers: q.type === 'MULTIPLE_CHOICE' ? [] : null
+          }))
         } else {
           ElMessage.warning('该题库暂无题目')
           router.push('/dashboard/question-banks')
@@ -286,9 +329,23 @@ export default {
       const typeMap = {
         'SINGLE_CHOICE': '单选题',
         'MULTIPLE_CHOICE': '多选题',
+        'TRUE_FALSE': '判断题',
+        'FILL_BLANK': '填空题',
+        'SHORT_ANSWER': '简答题',
         'SUBJECTIVE': '主观题'
       }
       return typeMap[type] || type
+    }
+
+    const getQuestionTypeTag = (type) => {
+      const typeMap = {
+        'SINGLE_CHOICE': 'success',
+        'MULTIPLE_CHOICE': 'info',
+        'TRUE_FALSE': 'warning',
+        'FILL_BLANK': 'primary',
+        'SHORT_ANSWER': 'danger'
+      }
+      return typeMap[type] || 'info'
     }
 
     const getQuestionButtonType = (index) => {
@@ -299,11 +356,11 @@ export default {
         return 'primary'
       }
 
-      const answer = userAnswers.value[question.id]
-      if (Array.isArray(answer)) {
-        return answer.length > 0 ? 'success' : 'default'
+      if (question.type === 'MULTIPLE_CHOICE') {
+        return question.userAnswers && question.userAnswers.length > 0 ? 'success' : 'default'
+      } else {
+        return question.userAnswer && question.userAnswer.toString().trim() !== '' ? 'success' : 'default'
       }
-      return answer && answer.toString().trim() !== '' ? 'success' : 'default'
     }
 
     const goToQuestion = (index) => {
@@ -322,14 +379,6 @@ export default {
       }
     }
 
-    const saveAnswer = () => {
-      // 答案已自动保存到userAnswers中
-      // 对于主观题，确保答案是字符串类型
-      if (currentQuestion.value.type === 'SUBJECTIVE' && userAnswers.value[currentQuestion.value.id]) {
-        userAnswers.value[currentQuestion.value.id] = userAnswers.value[currentQuestion.value.id].toString()
-      }
-    }
-
     const submitExam = () => {
       showSubmitDialog.value = true
     }
@@ -338,29 +387,36 @@ export default {
       try {
         stopTimer()
 
-        const answers = Object.keys(userAnswers.value).map(questionId => {
-          const answer = userAnswers.value[questionId]
+        const answers = questions.value.map(question => {
+          let userAnswer
+          if (question.type === 'MULTIPLE_CHOICE') {
+            // 多选题：将选项标签数组转换为逗号分隔的字符串
+            userAnswer = (question.userAnswers || []).join(',')
+          } else {
+            // 单选题、判断题、填空题、简答题：直接使用答案
+            userAnswer = question.userAnswer || ''
+          }
+          
           return {
-            questionId: parseInt(questionId),
-            userAnswers: Array.isArray(answer)
-              ? answer
-              : [answer.toString()]
+            questionId: question.id,
+            userAnswer: userAnswer
           }
-        }).filter(item => {
-          // 过滤掉空答案
-          if (Array.isArray(item.userAnswers)) {
-            return item.userAnswers.length > 0 && item.userAnswers.some(a => a && a.toString().trim() !== '')
-          }
-          return false
         })
 
         const response = await api.post(`/questions/exam/${questionBankId.value}/submit`, answers, {
-          params: { userId: store.getters.currentUser.id }
+          params: { 
+            userId: store.getters.userId,
+            timeTaken: (7200 - remainingTime.value) // 计算实际用时（秒）
+          }
         })
 
-        examResult.value = response.data.data
-        showSubmitDialog.value = false
-        showResultDialog.value = true
+        if (response.data.success) {
+          ElMessage.success('练习提交成功')
+          // 跳转到练习结果详情页面
+          router.push(`/dashboard/question-bank-results/${response.data.data.id}`)
+        } else {
+          ElMessage.error('练习提交失败')
+        }
       } catch (error) {
         ElMessage.error(error.response?.data?.message || '提交失败')
         showSubmitDialog.value = false
@@ -370,6 +426,13 @@ export default {
     const goBackToList = () => {
       stopTimer()
       router.push('/dashboard/question-banks')
+    }
+
+    const confirmExit = () => {
+      if (confirm('确定要退出练习吗？已作答的题目将不会被保存。')) {
+        stopTimer()
+        router.push('/dashboard/question-banks')
+      }
     }
 
     // 页面离开时停止计时器
@@ -393,26 +456,25 @@ export default {
       questionBankTitle,
       questions,
       currentQuestionIndex,
-      userAnswers,
       remainingTime,
       showSubmitDialog,
       showResultDialog,
       examResult,
       currentQuestion,
-      isChoiceQuestion,
       answeredCount,
       canSubmit,
       formatTime,
       getQuestionTypeText,
+      getQuestionTypeTag,
       getQuestionButtonType,
       goToQuestion,
       previousQuestion,
       nextQuestion,
-      saveAnswer,
       submitExam,
       confirmSubmit,
       goBackToList,
-      loading
+      loading,
+      confirmExit
     }
   }
 }
@@ -420,129 +482,190 @@ export default {
 
 <style scoped>
 .question-bank-practice {
-  padding: 20px;
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-.page-header {
+.exam-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-.page-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.exam-info {
-  display: flex;
-  gap: 20px;
-  font-size: 14px;
-  color: #666;
-}
-
-.exam-container {
-  flex: 1;
-  display: flex;
-  gap: 20px;
-  overflow: hidden;
-}
-
-.question-nav {
-  width: 200px;
-  background: #f5f5f5;
-  padding: 15px;
-  border-radius: 8px;
-  height: fit-content;
-}
-
-.nav-title {
-  font-weight: bold;
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.nav-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.question-content {
-  flex: 1;
-  background: white;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #ebeef5;
+  background-color: #fff;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left h3 {
+  margin: 0;
+  color: #303133;
+  font-size: 18px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.timer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #409eff;
+}
+
+.timer .el-icon {
+  font-size: 18px;
+}
+
+.progress {
+  font-size: 16px;
+  font-weight: bold;
+  color: #409eff;
+}
+
+.loading-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.loading-state .el-icon {
+  font-size: 32px;
+  color: #409eff;
+  margin-bottom: 10px;
+}
+
+.loading-state p {
+  color: #909399;
+  margin: 0;
+}
+
+.exam-content {
+  flex: 1;
+  padding: 20px;
   overflow-y: auto;
+}
+
+.question-card {
+  margin-bottom: 20px;
 }
 
 .question-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .question-number {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
-  color: #333;
+  color: #303133;
 }
 
-.question-type {
-  background: #409EFF;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+.question-score {
+  margin-left: auto;
 }
 
-.question-text {
+.question-content h4 {
+  margin: 0 0 20px 0;
   font-size: 16px;
   line-height: 1.6;
-  margin-bottom: 20px;
-  color: #333;
+  color: #303133;
 }
 
 .question-options {
-  margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .option-item {
-  display: block;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 15px;
+  border: 1px solid #dcdfe6;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .option-item:hover {
-  border-color: #409EFF;
-  background: #f0f9ff;
+  border-color: #409eff;
+  background-color: #f0f9ff;
+}
+
+.option-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #303133;
+  margin-right: 10px;
+  min-width: 20px;
+}
+
+.option-content {
+  font-size: 14px;
+  color: #303133;
+  flex: 1;
 }
 
 .question-answer {
+  margin-top: 20px;
+}
+
+.question-navigation {
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 20px;
 }
 
-.question-actions {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
+.question-list-card {
   margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.question-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.question-button {
+  min-width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.question-button.current {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: white;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .submit-confirm {
@@ -551,7 +674,7 @@ export default {
 
 .submit-confirm p {
   margin: 10px 0;
-  color: #666;
+  color: #606266;
 }
 
 .exam-result {
@@ -563,12 +686,12 @@ export default {
   text-align: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .result-summary h4 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: #303133;
 }
 
 .result-stats {
@@ -583,7 +706,7 @@ export default {
 .stat-item .label {
   display: block;
   font-size: 12px;
-  color: #666;
+  color: #606266;
   margin-bottom: 5px;
 }
 
@@ -591,23 +714,23 @@ export default {
   display: block;
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #303133;
 }
 
 .stat-item .value.score {
-  color: #409EFF;
+  color: #409eff;
   font-size: 24px;
 }
 
 .result-details h5 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: #303133;
 }
 
 .question-result {
   margin-bottom: 20px;
   padding: 15px;
-  border: 1px solid #eee;
+  border: 1px solid #ebeef5;
   border-radius: 8px;
 }
 
@@ -617,17 +740,17 @@ export default {
   align-items: center;
   margin-bottom: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .question-result .question-content {
   margin-bottom: 15px;
   font-weight: bold;
-  color: #333;
+  color: #303133;
 }
 
 .answer-info {
-  background: #f9f9f9;
+  background: #f5f7fa;
   padding: 10px;
   border-radius: 4px;
 }
@@ -638,42 +761,23 @@ export default {
 
 .answer-info .label {
   font-weight: bold;
-  color: #666;
+  color: #606266;
   margin-right: 10px;
 }
 
 .answer-info .value {
-  color: #333;
+  color: #303133;
 }
 
 .explanation {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid #dcdfe6;
 }
 
 .explanation .value {
-  color: #409EFF;
+  color: #409eff;
   font-style: italic;
-}
-
-.loading-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.loading-container .el-icon {
-  font-size: 32px;
-  color: #409EFF;
-  margin-bottom: 10px;
-}
-
-.loading-container p {
-  color: #666;
-  margin: 0;
 }
 
 .empty-container {

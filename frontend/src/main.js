@@ -20,4 +20,9 @@ app.use(store)
 app.use(router)
 app.use(ElementPlus, {locale: zhCN})
 
-app.mount('#app')
+// 初始化认证状态
+store.dispatch('initializeAuth').then(() => {
+  app.mount('#app')
+}).catch(() => {
+  app.mount('#app')
+})

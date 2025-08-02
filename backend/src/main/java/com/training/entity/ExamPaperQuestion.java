@@ -1,5 +1,6 @@
 package com.training.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,10 +17,12 @@ public class ExamPaperQuestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_paper_id", nullable = false)
+    @JsonIgnore
     private ExamPaper examPaper;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonIgnore
     private Question question;
 
     @Column(name = "question_order", nullable = false)

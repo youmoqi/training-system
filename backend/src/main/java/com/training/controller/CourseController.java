@@ -28,18 +28,49 @@ public class CourseController {
     @Autowired
     private UserService userService;
 
-    // 分页获取课程列表
-    @GetMapping("/page")
-    public ResponseEntity<ApiResponse<Page<Course>>> getCoursesWithPagination(
+    // 管理员分页获取课程列表
+    @GetMapping("/admin/page")
+    public ResponseEntity<ApiResponse<Page<Course>>> getCoursesForAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<Course> courses = courseService.findCoursesWithPagination(pageable, keyword);
+            Page<Course> courses = courseService.findCoursesForAdmin(pageable, keyword);
             return ResponseEntity.ok(ApiResponse.success("获取课程列表成功", courses));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取课程列表失败: " + e.getMessage()));
+        }
+    }
+
+    // 学员获取我的课程（已选课程）
+    @GetMapping("/student/my-courses")
+    public ResponseEntity<ApiResponse<Page<UserCourse>>> getMyCourses(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<UserCourse> userCourses = courseService.findMyCourses(userId, pageable);
+            return ResponseEntity.ok(ApiResponse.success("获取我的课程成功", userCourses));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取我的课程失败: " + e.getMessage()));
+        }
+    }
+
+    // 学员获取可购买的课程（未选课程）
+    @GetMapping("/student/available-courses")
+    public ResponseEntity<ApiResponse<Page<Course>>> getAvailableCourses(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String userRole) {
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Course> courses = courseService.findAvailableCourses(userId, userRole, pageable);
+            return ResponseEntity.ok(ApiResponse.success("获取可购买课程成功", courses));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取可购买课程失败: " + e.getMessage()));
         }
     }
 
@@ -98,7 +129,7 @@ public class CourseController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             Course course = courseService.findById(id)
                     .orElseThrow(() -> new RuntimeException("课程不存在"));
 
@@ -114,7 +145,7 @@ public class CourseController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             List<UserCourse> userCourses = courseService.getUserCourses(user);
             return ResponseEntity.ok(ApiResponse.success("获取用户课程成功", userCourses));
         } catch (Exception e) {
@@ -150,7 +181,7 @@ public class CourseController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-            
+
             Course course = courseService.findById(id)
                     .orElseThrow(() -> new RuntimeException("课程不存在"));
 
@@ -160,4 +191,4 @@ public class CourseController {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
-} 
+}

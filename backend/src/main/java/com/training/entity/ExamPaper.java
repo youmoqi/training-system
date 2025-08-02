@@ -1,5 +1,6 @@
 package com.training.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 
 import lombok.Data;
@@ -38,8 +39,29 @@ public class ExamPaper {
     @Column(name = "is_online", nullable = false)
     private Boolean isOnline = true;
 
-    @Column(name = "is_random", nullable = false)
-    private Boolean isRandom = false;
+    @Column(name = "exam_category", nullable = false, length = 50)
+    private String examCategory = "GENERAL";
+
+    @Column(name = "allow_retake", nullable = false)
+    private Boolean allowRetake = true;
+
+    @Column(name = "max_attempts", nullable = false)
+    private Integer maxAttempts = 3;
+
+    @Column(name = "single_choice_score", nullable = false)
+    private Integer singleChoiceScore = 2;
+
+    @Column(name = "multiple_choice_score", nullable = false)
+    private Integer multipleChoiceScore = 4;
+
+    @Column(name = "true_false_score", nullable = false)
+    private Integer trueFalseScore = 2;
+
+    @Column(name = "fill_blank_score", nullable = false)
+    private Integer fillBlankScore = 3;
+
+    @Column(name = "short_answer_score", nullable = false)
+    private Integer shortAnswerScore = 5;
 
     @CreationTimestamp
     @Column(name = "create_time", nullable = false, updatable = false)
@@ -51,6 +73,7 @@ public class ExamPaper {
 
     // 关联的题目
     @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<ExamPaperQuestion> questions;
 
     // 可见角色

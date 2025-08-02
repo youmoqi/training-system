@@ -45,6 +45,13 @@
             <el-table-column prop="passScore" label="及格分" width="80"/>
             <el-table-column prop="duration" label="时长(分钟)" width="100"/>
             <el-table-column prop="totalQuestions" label="题目数" width="80"/>
+            <el-table-column prop="examCategory" label="考试分类" width="150">
+              <template #default="scope">
+                <el-tag :type="getCategoryTagType(scope.row.examCategory)">
+                  {{ getCategoryName(scope.row.examCategory) }}
+                </el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="状态" width="100">
               <template #default="scope">
                 <el-tag :type="scope.row.isOnline ? 'success' : 'info'">
@@ -52,23 +59,27 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="随机出题" width="100">
+            <el-table-column label="重复考试" width="100">
               <template #default="scope">
-                <el-tag :type="scope.row.isRandom ? 'warning' : 'info'">
-                  {{ scope.row.isRandom ? '是' : '否' }}
+                <el-tag :type="scope.row.allowRetake ? 'success' : 'warning'">
+                  {{ scope.row.allowRetake ? '允许' : '禁止' }}
                 </el-tag>
               </template>
             </el-table-column>
+
             <el-table-column prop="createTime" label="创建时间" width="180">
               <template #default="scope">
                 {{ formatDateTime(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="250" fixed="right">
+            <el-table-column label="操作" width="360" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="viewExamPaper(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="manageQuestions(scope.row)">
                   管理题目
+                </el-button>
+                <el-button size="small" type="success" @click="autoGenerate(scope.row)">
+                  自动组卷
                 </el-button>
                 <el-button size="small" type="warning" @click="editExamPaper(scope.row)">
                   编辑
@@ -103,7 +114,7 @@
     <el-dialog
         v-model="dialogVisible"
         :title="isEdit ? '编辑试卷' : '创建试卷'"
-        width="600px"
+        width="800px"
         class="dialog-container"
     >
       <div class="dialog-body">
@@ -144,14 +155,74 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-form-item label="随机出题" prop="isRandom">
-            <el-switch v-model="examPaperForm.isRandom"/>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="考试分类" prop="examCategory">
+                <el-select v-model="examPaperForm.examCategory" placeholder="请选择考试分类">
+                  <el-option label="易制爆用户-首次培训" value="EXPLOSIVE_FIRST"/>
+                  <el-option label="易制爆用户-继续教育" value="EXPLOSIVE_CONTINUE"/>
+                  <el-option label="爆破三大员-首次培训" value="BLAST_THREE_FIRST"/>
+                  <el-option label="爆破三大员-继续教育" value="BLAST_THREE_CONTINUE"/>
+                  <el-option label="爆破工程技术人员-首次培训" value="BLAST_TECH_FIRST"/>
+                  <el-option label="爆破工程技术人员-继续教育" value="BLAST_TECH_CONTINUE"/>
+                  <el-option label="通用" value="GENERAL"/>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="允许重复考试" prop="allowRetake">
+                <el-switch v-model="examPaperForm.allowRetake"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="最大考试次数" prop="maxAttempts">
+                <el-input-number v-model="examPaperForm.maxAttempts" :min="1" :max="10"/>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="题型分值设置">
+            <el-row :gutter="20">
+              <el-col :span="8">
+                <el-form-item label="单选题分值">
+                  <el-input-number v-model="examPaperForm.singleChoiceScore" :min="1" :max="10"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="多选题分值">
+                  <el-input-number v-model="examPaperForm.multipleChoiceScore" :min="1" :max="10"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="判断题分值">
+                  <el-input-number v-model="examPaperForm.trueFalseScore" :min="1" :max="10"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20" style="margin-top: 5px">
+              <el-col :span="10">
+                <el-form-item label="填空题分值">
+                  <el-input-number v-model="examPaperForm.fillBlankScore" :min="1" :max="10"/>
+                </el-form-item>
+              </el-col>
+              <el-col :span="10">
+                <el-form-item label="主观题分值">
+                  <el-input-number v-model="examPaperForm.shortAnswerScore" :min="1" :max="10"/>
+                </el-form-item>
+              </el-col>
+            </el-row>
           </el-form-item>
           <el-form-item label="可见角色" prop="visibleRoles">
-            <el-checkbox-group v-model="examPaperForm.visibleRoles">
-              <el-checkbox label="EXPLOSIVE_USER">易制爆用户</el-checkbox>
-              <el-checkbox label="BLAST_USER">爆破用户</el-checkbox>
-            </el-checkbox-group>
+            <el-select
+              v-model="examPaperForm.visibleRoles"
+              multiple
+              placeholder="请选择可见用户角色"
+              style="width: 100%"
+            >
+              <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
+              <el-option label="爆破用户" value="BLAST_USER" />
+            </el-select>
           </el-form-item>
         </el-form>
       </div>
@@ -199,9 +270,17 @@ export default {
       totalScore: 100,
       passScore: 60,
       duration: 120,
+      totalQuestions: 0,
       isOnline: true,
-      isRandom: false,
-      visibleRoles: []
+      examCategory: 'GENERAL',
+      allowRetake: true,
+      maxAttempts: 3,
+      singleChoiceScore: 2,
+      multipleChoiceScore: 4,
+      trueFalseScore: 2,
+      fillBlankScore: 3,
+      shortAnswerScore: 5,
+      visibleRoles: [] // 默认为空数组，需要手动选择
     })
 
     const rules = {
@@ -219,6 +298,9 @@ export default {
       ],
       duration: [
         {required: true, message: '请输入考试时长', trigger: 'blur'}
+      ],
+      visibleRoles: [
+        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
       ]
     }
 
@@ -252,8 +334,8 @@ export default {
         totalScore: 100,
         passScore: 60,
         duration: 120,
+        totalQuestions: 0,
         isOnline: true,
-        isRandom: false,
         visibleRoles: []
       })
       dialogVisible.value = true
@@ -268,8 +350,16 @@ export default {
         totalScore: paper.totalScore,
         passScore: paper.passScore,
         duration: paper.duration,
+        totalQuestions: paper.totalQuestions || 0,
         isOnline: paper.isOnline,
-        isRandom: paper.isRandom,
+        examCategory: paper.examCategory || 'GENERAL',
+        allowRetake: paper.allowRetake !== undefined ? paper.allowRetake : true,
+        maxAttempts: paper.maxAttempts || 3,
+        singleChoiceScore: paper.singleChoiceScore || 2,
+        multipleChoiceScore: paper.multipleChoiceScore || 4,
+        trueFalseScore: paper.trueFalseScore || 2,
+        fillBlankScore: paper.fillBlankScore || 3,
+        shortAnswerScore: paper.shortAnswerScore || 5,
         visibleRoles: paper.visibleRoles || []
       })
       dialogVisible.value = true
@@ -320,6 +410,10 @@ export default {
       router.push(`/admin/exam-papers/${paper.id}/questions`)
     }
 
+    const autoGenerate = (paper) => {
+      router.push(`/admin/exam-papers/${paper.id}/auto-generate`)
+    }
+
     const handleSearch = () => {
       currentPage.value = 1
       loadExamPapers()
@@ -338,6 +432,32 @@ export default {
 
     const formatDateTime = (dateTime) => {
       return new Date(dateTime).toLocaleString()
+    }
+
+    const getCategoryName = (category) => {
+      const categoryMap = {
+        'EXPLOSIVE_FIRST': '易制爆用户-首次培训',
+        'EXPLOSIVE_CONTINUE': '易制爆用户-继续教育',
+        'BLAST_THREE_FIRST': '爆破三大员-首次培训',
+        'BLAST_THREE_CONTINUE': '爆破三大员-继续教育',
+        'BLAST_TECH_FIRST': '爆破工程技术人员-首次培训',
+        'BLAST_TECH_CONTINUE': '爆破工程技术人员-继续教育',
+        'GENERAL': '通用'
+      }
+      return categoryMap[category] || category
+    }
+
+    const getCategoryTagType = (category) => {
+      const tagMap = {
+        'EXPLOSIVE_FIRST': 'primary',
+        'EXPLOSIVE_CONTINUE': 'success',
+        'BLAST_THREE_FIRST': 'warning',
+        'BLAST_THREE_CONTINUE': 'info',
+        'BLAST_TECH_FIRST': 'danger',
+        'BLAST_TECH_CONTINUE': 'warning',
+        'GENERAL': 'info'
+      }
+      return tagMap[category] || 'info'
     }
 
     onMounted(() => {
@@ -359,6 +479,7 @@ export default {
       deleteExamPaper,
       viewExamPaper,
       manageQuestions,
+      autoGenerate,
       searchKeyword,
       statusFilter,
       currentPage,
@@ -367,7 +488,9 @@ export default {
       handleSearch,
       handleSizeChange,
       handleCurrentChange,
-      formatDateTime
+      formatDateTime,
+      getCategoryName,
+      getCategoryTagType
     }
   }
 }

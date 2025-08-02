@@ -8,7 +8,6 @@ import com.training.service.UserService;
 import com.training.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,10 +30,19 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private JwtUtil jwtUtil;
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<User>> getCurrentUser(@RequestHeader("Authorization") String authorization) {
+        try {
+            Long userId = jwtUtil.getUserIdFromHeader(authorization);
+            User user = userService.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("用户不存在"));
+            return ResponseEntity.ok(ApiResponse.success("获取用户信息成功", user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<User>> register(
@@ -43,14 +51,14 @@ public class AuthController {
         try {
             // 处理人脸照片上传
             String facePhotoUrl = uploadFile(facePhoto, "faces");
-            
+
             // 这里需要将userData字符串转换为UserRegistrationDto对象
             // 为了简化，我们直接创建对象
             UserRegistrationDto registrationDto = new UserRegistrationDto();
             // 解析userData并设置到registrationDto中
-            
+
             User user = userService.registerUser(registrationDto, facePhotoUrl);
-            
+
             return ResponseEntity.ok(ApiResponse.success("注册成功", user));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -62,18 +70,13 @@ public class AuthController {
         try {
             User user = userService.findByUsername(loginDto.getUsername())
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-
             // if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
             //     throw new RuntimeException("密码错误");
             // }
-
-            // 使用新的token生成方法，包含userId
             String token = jwtUtil.generateToken(user.getUsername(), user.getId());
-            
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("user", user);
-            
             return ResponseEntity.ok(ApiResponse.success("登录成功", response));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -93,4 +96,4 @@ public class AuthController {
 
         return uploadDir + fileName;
     }
-} 
+}
