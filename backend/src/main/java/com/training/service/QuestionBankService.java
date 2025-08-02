@@ -120,16 +120,11 @@ public class QuestionBankService {
         // 获取现有的题库数据
         QuestionBank existingQuestionBank = questionBankRepository.findById(questionBank.getId())
                 .orElseThrow(() -> new RuntimeException("题库不存在"));
-
-        // 更新字段，但保留 createTime
         existingQuestionBank.setTitle(questionBank.getTitle());
         existingQuestionBank.setDescription(questionBank.getDescription());
         existingQuestionBank.setPrice(questionBank.getPrice());
         existingQuestionBank.setIsOnline(questionBank.getIsOnline());
         existingQuestionBank.setVisibleRoles(questionBank.getVisibleRoles());
-
-        // updateTime 会通过 @PreUpdate 自动设置
-
         return questionBankRepository.save(existingQuestionBank);
     }
 
