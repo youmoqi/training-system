@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import com.training.entity.QuestionBankResult;
+
 import java.util.ArrayList;
 
 @Service
@@ -44,15 +46,15 @@ public class QuestionBankService {
             return new ArrayList<>();
         }
         return userQuestionBankRepository.findByUser(user).stream()
-            .map(UserQuestionBank::getQuestionBank)
-            .collect(Collectors.toList());
+                .map(UserQuestionBank::getQuestionBank)
+                .collect(Collectors.toList());
     }
 
     // 管理员分页查询题库（不包含过滤逻辑）
     public Page<QuestionBank> findQuestionBanksForAdmin(Pageable pageable, String keyword) {
         if (keyword != null && !keyword.trim().isEmpty()) {
             return questionBankRepository.findByTitleContainingOrDescriptionContaining(
-                keyword, keyword, pageable);
+                    keyword, keyword, pageable);
         } else {
             return questionBankRepository.findAll(pageable);
         }
@@ -76,7 +78,7 @@ public class QuestionBankService {
     // 学员获取可购买的题库（未购题库）
     public Page<QuestionBank> findAvailableQuestionBanks(Long userId, String userRole, Pageable pageable) {
         // 获取用户已购题库
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         List<QuestionBank> userPurchasedQuestionBanks = getUserPurchasedQuestionBanks(userId);
 
@@ -90,8 +92,8 @@ public class QuestionBankService {
 
         // 过滤掉已购题库
         List<QuestionBank> filteredContent = onlineQuestionBanks.getContent().stream()
-            .filter(questionBank -> !userPurchasedQuestionBanks.contains(questionBank))
-            .collect(Collectors.toList());
+                .filter(questionBank -> !userPurchasedQuestionBanks.contains(questionBank))
+                .collect(Collectors.toList());
 
         return new PageImpl<>(filteredContent, pageable, onlineQuestionBanks.getTotalElements() - userPurchasedQuestionBanks.size());
     }
@@ -191,22 +193,15 @@ public class QuestionBankService {
                     .max()
                     .orElse(0);
             dto.setScore(maxScore);
-
             // 判断是否完成（只要有练习记录就认为完成）
-            boolean isCompleted = true;
-            dto.setIsCompleted(isCompleted);
-
-            // 设置完成时间（第一次练习的时间）
-            if (isCompleted) {
-                QuestionBankResult firstResult = results.get(results.size() - 1); // 获取最早的记录
-                dto.setCompleteTime(firstResult.getSubmitTime());
-            }
+            dto.setIsCompleted(true);
+            QuestionBankResult firstResult = results.get(results.size() - 1); // 获取最早的记录
+            dto.setCompleteTime(firstResult.getSubmitTime());
         } else {
             dto.setScore(null);
             dto.setIsCompleted(false);
             dto.setCompleteTime(null);
         }
-
         return dto;
     }
 }

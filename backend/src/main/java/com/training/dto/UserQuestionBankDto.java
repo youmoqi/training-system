@@ -3,6 +3,9 @@ package com.training.dto;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * @author YIZ
+ */
 @Data
 public class UserQuestionBankDto {
     private Long id;
@@ -15,4 +18,4 @@ public class UserQuestionBankDto {
     private Boolean isCompleted;
     private LocalDateTime completeTime;
     private Integer score;
-} 
+}
