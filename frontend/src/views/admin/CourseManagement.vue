@@ -32,8 +32,12 @@
           <el-table :data="courses" style="width: 100%" v-loading="loading">
             <el-table-column prop="title" label="课程名称" min-width="200" />
             <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
-            <el-table-column prop="duration" label="时长(分钟)" width="120" />
-            <el-table-column prop="chapterCount" label="章节数" width="100" />
+            <el-table-column prop="price" label="价格" width="120">
+              <template #default="scope">
+                ¥{{ scope.row.price }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="videoUrl" label="视频链接" width="200" show-overflow-tooltip />
             <el-table-column label="状态" width="100">
               <template #default="scope">
                 <el-tag :type="scope.row.isOnline ? 'success' : 'info'">
@@ -101,11 +105,17 @@
               placeholder="请输入课程描述"
             />
           </el-form-item>
+          <el-form-item label="视频链接" prop="videoUrl">
+            <el-input v-model="courseForm.videoUrl" placeholder="请输入视频链接" />
+          </el-form-item>
+          <el-form-item label="封面图片" prop="coverImageUrl">
+            <el-input v-model="courseForm.coverImageUrl" placeholder="请输入封面图片链接" />
+          </el-form-item>
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="课程时长" prop="duration">
-                <el-input-number v-model="courseForm.duration" :min="1" :max="1000" />
-                <span style="margin-left: 10px">分钟</span>
+              <el-form-item label="课程价格" prop="price">
+                <el-input-number v-model="courseForm.price" :min="0" :max="10000" />
+                <span style="margin-left: 10px">元</span>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -124,10 +134,6 @@
               <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
               <el-option label="爆破用户" value="BLAST_USER" />
             </el-select>
-          </el-form-item>
-          <el-form-item label="课程价格" prop="price">
-            <el-input-number v-model="courseForm.price" :min="0" :max="10000" />
-            <span style="margin-left: 10px">元</span>
           </el-form-item>
         </el-form>
       </div>
@@ -171,10 +177,13 @@ export default {
       id: null,
       title: '',
       description: '',
-      duration: 60,
+      videoUrl: '',
       isOnline: true,
       visibleRoles: [], // 默认为空数组，需要手动选择
-      price: 0
+      price: 0,
+      coverImageUrl: '',
+      createTime: null,
+      updateTime: null
     })
 
     const rules = {
@@ -184,8 +193,8 @@ export default {
       description: [
         { required: true, message: '请输入课程描述', trigger: 'blur' }
       ],
-      duration: [
-        { required: true, message: '请输入课程时长', trigger: 'blur' }
+      videoUrl: [
+        { required: true, message: '请输入视频链接', trigger: 'blur' }
       ],
       visibleRoles: [
         { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
@@ -207,9 +216,13 @@ export default {
         if (response.data.success) {
           courses.value = response.data.data.content
           total.value = response.data.data.totalElements
+        } else {
+          ElMessage.error(response.data.message || '加载课程失败')
         }
       } catch (error) {
-        ElMessage.error('加载课程失败')
+        console.error('Load courses error:', error)
+        const errorMessage = error.response?.data?.message || error.message || '加载课程失败'
+        ElMessage.error(errorMessage)
       } finally {
         loading.value = false
       }
@@ -221,10 +234,13 @@ export default {
         id: null,
         title: '',
         description: '',
-        duration: 60,
+        videoUrl: '',
+        coverImageUrl: '',
         isOnline: true,
         visibleRoles: [],
-        price: 0
+        price: 0,
+        createTime: null,
+        updateTime: null
       })
       dialogVisible.value = true
     }
@@ -235,10 +251,13 @@ export default {
         id: course.id,
         title: course.title,
         description: course.description,
-        duration: course.duration,
+        videoUrl: course.videoUrl,
+        coverImageUrl: course.coverImageUrl,
         isOnline: course.isOnline,
         visibleRoles: course.visibleRoles || [],
-        price: course.price || 0
+        price: course.price || 0,
+        createTime: course.createTime,
+        updateTime: course.updateTime
       })
       dialogVisible.value = true
     }
@@ -258,13 +277,15 @@ export default {
         dialogVisible.value = false
         loadCourses()
       } catch (error) {
-        ElMessage.error('操作失败')
+        console.error('Submit course error:', error)
+        const errorMessage = error.response?.data?.message || error.message || '操作失败'
+        ElMessage.error(errorMessage)
       }
     }
 
     const deleteCourse = async (course) => {
       try {
-        await ElMessageBox.confirm('确定要删除这个课程吗？', '提示', {
+        await ElMessageBox.confirm('确定要删除这个课程吗？此操作不可逆！', '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
@@ -275,7 +296,9 @@ export default {
         loadCourses()
       } catch (error) {
         if (error !== 'cancel') {
-          ElMessage.error('删除失败')
+          console.error('Delete course error:', error)
+          const errorMessage = error.response?.data?.message || error.message || '删除失败'
+          ElMessage.error(errorMessage)
         }
       }
     }

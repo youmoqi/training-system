@@ -22,6 +22,8 @@ public class Course {
     @Column
     private String coverImageUrl;
 
+
+
     @Column(nullable = false)
     private String videoUrl;
 

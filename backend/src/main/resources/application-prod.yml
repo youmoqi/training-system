@@ -6,9 +6,9 @@ spring:
     name: training-system
   
   datasource:
-    url: jdbc:mysql://1Panel-mysql-g6lU:3306/training_system?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
+    url: jdbc:mysql://8.130.78.1:3306/training_system?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: test
+    password: neuNEU123
     driver-class-name: com.mysql.cj.jdbc.Driver
   
   jpa:

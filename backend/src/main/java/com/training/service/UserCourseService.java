@@ -70,7 +70,7 @@ public class UserCourseService {
                 if (isCompleted != null) {
                     userCourses = userCourseRepository.findByIsCompleted(isCompleted, pageable);
                 } else {
-                    userCourses = userCourseRepository.findAll(pageable);
+                    userCourses = userCourseRepository.findAllWithJoins(pageable);
                 }
             }
         }

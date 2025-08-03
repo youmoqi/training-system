@@ -1,6 +1,8 @@
 package com.training.controller;
 
 import com.training.dto.ApiResponse;
+import com.training.dto.MyCourseDto;
+import com.training.dto.UserCourseListDto;
 import com.training.entity.Course;
 import com.training.entity.User;
 import com.training.entity.UserCourse;
@@ -45,13 +47,13 @@ public class CourseController {
 
     // 学员获取我的课程（已选课程）
     @GetMapping("/student/my-courses")
-    public ResponseEntity<ApiResponse<Page<UserCourse>>> getMyCourses(
+    public ResponseEntity<ApiResponse<Page<MyCourseDto>>> getMyCourses(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<UserCourse> userCourses = courseService.findMyCourses(userId, pageable);
+            Page<MyCourseDto> userCourses = courseService.findMyCoursesDto(userId, pageable);
             return ResponseEntity.ok(ApiResponse.success("获取我的课程成功", userCourses));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取我的课程失败: " + e.getMessage()));
@@ -88,9 +90,13 @@ public class CourseController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Course>> getCourseById(@PathVariable Long id) {
-        return courseService.findById(id)
-                .map(course -> ResponseEntity.ok(ApiResponse.success("获取课程成功", course)))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return courseService.findById(id)
+                    .map(course -> ResponseEntity.ok(ApiResponse.success("获取课程成功", course)))
+                    .orElse(ResponseEntity.badRequest().body(ApiResponse.error("课程不存在")));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("获取课程失败: " + e.getMessage()));
+        }
     }
 
     @PostMapping
@@ -141,12 +147,12 @@ public class CourseController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<UserCourse>>> getUserCourses(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<List<UserCourseListDto>>> getUserCourses(@PathVariable Long userId) {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-            List<UserCourse> userCourses = courseService.getUserCourses(user);
+            List<UserCourseListDto> userCourses = courseService.getUserCoursesDto(user);
             return ResponseEntity.ok(ApiResponse.success("获取用户课程成功", userCourses));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));

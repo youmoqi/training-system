@@ -1,5 +1,7 @@
 package com.training.service;
 
+import com.training.dto.MyCourseDto;
+import com.training.dto.UserCourseListDto;
 import com.training.entity.Course;
 import com.training.entity.User;
 import com.training.entity.UserCourse;
@@ -12,7 +14,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.BeanUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +41,7 @@ public class CourseService {
         if (user == null) {
             return new ArrayList<>();
         }
-        return userCourseRepository.findByUser(user).stream()
+        return userCourseRepository.findByUserWithJoins(user).stream()
                 .map(UserCourse::getCourse)
                 .collect(Collectors.toList());
     }
@@ -56,7 +60,15 @@ public class CourseService {
     public Page<UserCourse> findMyCourses(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        return userCourseRepository.findByUser(user, pageable);
+        return userCourseRepository.findByUserWithJoins(user, pageable);
+    }
+
+    // 学员获取我的课程（已选课程）- 返回DTO
+    public Page<MyCourseDto> findMyCoursesDto(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        Page<UserCourse> userCourses = userCourseRepository.findByUserWithJoins(user, pageable);
+        return userCourses.map(this::convertToMyCourseDto);
     }
 
     // 学员获取可购买的课程（未选课程）
@@ -83,6 +95,26 @@ public class CourseService {
     }
 
     public Course createCourse(Course course) {
+        // 验证必填字段
+        if (course.getTitle() == null || course.getTitle().trim().isEmpty()) {
+            throw new RuntimeException("课程名称不能为空");
+        }
+        if (course.getDescription() == null || course.getDescription().trim().isEmpty()) {
+            throw new RuntimeException("课程描述不能为空");
+        }
+        if (course.getVideoUrl() == null || course.getVideoUrl().trim().isEmpty()) {
+            throw new RuntimeException("视频URL不能为空");
+        }
+        if (course.getPrice() == null || course.getPrice() < 0) {
+            throw new RuntimeException("课程价格不能为负数");
+        }
+        if (course.getIsOnline() == null) {
+            course.setIsOnline(false);
+        }
+        if (course.getVisibleRoles() == null || course.getVisibleRoles().isEmpty()) {
+            throw new RuntimeException("请选择可见用户角色");
+        }
+        
         return courseRepository.save(course);
     }
 
@@ -103,10 +135,47 @@ public class CourseService {
     }
 
     public Course updateCourse(Course course) {
+        // 验证课程是否存在
+        Course existingCourse = courseRepository.findById(course.getId())
+                .orElseThrow(() -> new RuntimeException("课程不存在"));
+        
+        // 验证必填字段
+        if (course.getTitle() == null || course.getTitle().trim().isEmpty()) {
+            throw new RuntimeException("课程名称不能为空");
+        }
+        if (course.getDescription() == null || course.getDescription().trim().isEmpty()) {
+            throw new RuntimeException("课程描述不能为空");
+        }
+        if (course.getVideoUrl() == null || course.getVideoUrl().trim().isEmpty()) {
+            throw new RuntimeException("视频URL不能为空");
+        }
+        if (course.getPrice() == null || course.getPrice() < 0) {
+            throw new RuntimeException("课程价格不能为负数");
+        }
+        if (course.getIsOnline() == null) {
+            course.setIsOnline(false);
+        }
+        if (course.getVisibleRoles() == null || course.getVisibleRoles().isEmpty()) {
+            throw new RuntimeException("请选择可见用户角色");
+        }
+        
+        // 保留原有的createTime
+        course.setCreateTime(existingCourse.getCreateTime());
+        
         return courseRepository.save(course);
     }
 
     public void deleteCourse(Long id) {
+        // 验证课程是否存在
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("课程不存在"));
+        
+        // 检查是否有用户已选这门课程
+        List<UserCourse> userCourses = userCourseRepository.findByCourseId(id);
+        if (!userCourses.isEmpty()) {
+            throw new RuntimeException("该课程已有用户选择，无法删除");
+        }
+        
         courseRepository.deleteById(id);
     }
 
@@ -147,7 +216,52 @@ public class CourseService {
     }
 
     public List<UserCourse> getUserCourses(User user) {
-        return userCourseRepository.findByUser(user);
+        return userCourseRepository.findByUserWithJoins(user);
+    }
+
+    public List<UserCourseListDto> getUserCoursesDto(User user) {
+        List<UserCourse> userCourses = userCourseRepository.findByUserWithJoins(user);
+        return userCourses.stream()
+                .map(this::convertToUserCourseListDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 转换为MyCourseDto
+     */
+    private MyCourseDto convertToMyCourseDto(UserCourse userCourse) {
+        MyCourseDto dto = new MyCourseDto();
+        dto.setId(userCourse.getId());
+        dto.setCourseId(userCourse.getCourse().getId());
+        dto.setCourseTitle(userCourse.getCourse().getTitle());
+        dto.setCourseDescription(userCourse.getCourse().getDescription());
+        dto.setCoverImageUrl(userCourse.getCourse().getCoverImageUrl());
+        dto.setVideoUrl(userCourse.getCourse().getVideoUrl());
+        dto.setPrice(userCourse.getCourse().getPrice());
+        dto.setIsOnline(userCourse.getCourse().getIsOnline());
+        dto.setEnrollTime(userCourse.getEnrollTime());
+        dto.setIsCompleted(userCourse.getIsCompleted());
+        dto.setCompleteTime(userCourse.getCompleteTime());
+        dto.setWatchProgress(userCourse.getWatchProgress());
+        return dto;
+    }
+
+    /**
+     * 转换为UserCourseListDto
+     */
+    private UserCourseListDto convertToUserCourseListDto(UserCourse userCourse) {
+        UserCourseListDto dto = new UserCourseListDto();
+        dto.setId(userCourse.getId());
+        dto.setUserId(userCourse.getUser().getId());
+        dto.setUsername(userCourse.getUser().getUsername());
+        dto.setRealName(userCourse.getUser().getRealName());
+        dto.setCourseId(userCourse.getCourse().getId());
+        dto.setCourseTitle(userCourse.getCourse().getTitle());
+        dto.setEnrollTime(userCourse.getEnrollTime());
+        dto.setIsCompleted(userCourse.getIsCompleted());
+        dto.setCompleteTime(userCourse.getCompleteTime());
+        dto.setWatchProgress(userCourse.getWatchProgress());
+        return dto;
     }
 
     public void updateCourseProgress(User user, Course course, Integer progress) {

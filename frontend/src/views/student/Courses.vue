@@ -17,8 +17,8 @@
         <el-card class="course-card" shadow="hover">
           <div class="course-image">
             <img
-              :src="userCourse.course.coverImageUrl || '/course-placeholder.svg'"
-              :alt="userCourse.course.title"
+              :src="userCourse.coverImageUrl || '/course-placeholder.svg'"
+              :alt="userCourse.courseTitle"
               @error="handleImageError"
             />
             <div class="course-progress">
@@ -32,7 +32,7 @@
 
           <div class="course-info">
             <div class="course-header">
-              <h4>{{ userCourse.course.title }}</h4>
+              <h4>{{ userCourse.courseTitle }}</h4>
               <el-tag
                 :type="userCourse.isCompleted ? 'success' : 'warning'"
                 size="small"
@@ -41,7 +41,7 @@
               </el-tag>
             </div>
 
-            <p class="course-description">{{ userCourse.course.description || '暂无描述' }}</p>
+            <p class="course-description">{{ userCourse.courseDescription || '暂无描述' }}</p>
 
             <div class="course-details">
               <div class="detail-item">
@@ -59,7 +59,7 @@
               <el-button
                 type="primary"
                 size="small"
-                @click="watchCourse(userCourse.course)"
+                @click="watchCourse(userCourse)"
               >
                 观看课程
               </el-button>
@@ -74,7 +74,7 @@
               <el-button
                 type="danger"
                 size="small"
-                @click="unenroll(userCourse.course.id)"
+                @click="unenroll(userCourse.courseId)"
               >
                 退课
               </el-button>
@@ -183,6 +183,7 @@ export default {
     const loadUserCourses = async () => {
       myCoursesLoading.value = true
       try {
+        console.log('Current user:', store.getters.currentUser)
         const response = await api.get('/courses/student/my-courses', {
           params: {
             userId: store.getters.currentUser.id,
@@ -190,10 +191,12 @@ export default {
             size: myCoursesPageSize.value
           }
         })
+        console.log('API Response:', response.data)
         userCourses.value = response.data.data.content
         myCoursesTotal.value = response.data.data.totalElements
       } catch (error) {
-        ElMessage.error('加载课程失败')
+        console.error('Load user courses error:', error)
+        ElMessage.error('加载课程失败: ' + (error.response?.data?.message || error.message))
       } finally {
         myCoursesLoading.value = false
       }
@@ -267,13 +270,13 @@ export default {
       }
     }
 
-    const watchCourse = (course) => {
-      router.push(`/dashboard/course/${course.id}`)
+    const watchCourse = (userCourse) => {
+      router.push(`/dashboard/course/${userCourse.courseId}`)
     }
 
     const markAsCompleted = async (userCourse) => {
       try {
-        await api.put(`/courses/${userCourse.course.id}/progress`, null, {
+        await api.put(`/courses/${userCourse.courseId}/progress`, null, {
           params: {
             userId: store.getters.currentUser.id,
             progress: 100
