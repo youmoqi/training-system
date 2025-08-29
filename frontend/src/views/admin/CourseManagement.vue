@@ -4,7 +4,9 @@
       <h3 class="page-title">课程管理</h3>
       <div class="page-actions">
         <el-button type="primary" @click="showCreateDialog">
-          <el-icon><Plus /></el-icon>
+          <el-icon>
+            <Plus/>
+          </el-icon>
           创建课程
         </el-button>
       </div>
@@ -15,14 +17,16 @@
         <!-- 搜索栏 -->
         <div class="search-section">
           <el-input
-            v-model="searchKeyword"
-            placeholder="搜索课程..."
-            class="search-input"
-            clearable
-            @input="handleSearch"
+              v-model="searchKeyword"
+              placeholder="搜索课程..."
+              class="search-input"
+              clearable
+              @input="handleSearch"
           >
             <template #prefix>
-              <el-icon><Search /></el-icon>
+              <el-icon>
+                <Search/>
+              </el-icon>
             </template>
           </el-input>
         </div>
@@ -30,14 +34,14 @@
         <!-- 课程列表 -->
         <div class="table-container">
           <el-table :data="courses" style="width: 100%" v-loading="loading">
-            <el-table-column prop="title" label="课程名称" min-width="200" />
-            <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
+            <el-table-column prop="title" label="课程名称" min-width="200"/>
+            <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip/>
             <el-table-column prop="price" label="价格" width="120">
               <template #default="scope">
                 ¥{{ scope.row.price }}
               </template>
             </el-table-column>
-            <el-table-column prop="videoUrl" label="视频链接" width="200" show-overflow-tooltip />
+            <el-table-column prop="videoUrl" label="视频链接" width="200" show-overflow-tooltip/>
             <el-table-column label="状态" width="100">
               <template #default="scope">
                 <el-tag :type="scope.row.isOnline ? 'success' : 'info'">
@@ -70,72 +74,72 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="[10, 20, 50, 100]"
-            :total="total"
-            layout="total, sizes, prev, pager, next, jumper"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
+              v-model:current-page="currentPage"
+              v-model:page-size="pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="total"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
           />
         </div>
 
         <!-- 空状态 -->
-        <el-empty v-if="!loading && courses.length === 0" description="暂无课程数据" />
+        <el-empty v-if="!loading && courses.length === 0" description="暂无课程数据"/>
       </div>
     </div>
 
     <!-- 创建/编辑课程对话框 -->
     <el-dialog
-      v-model="dialogVisible"
-      :title="isEdit ? '编辑课程' : '创建课程'"
-      width="600px"
-      class="dialog-container"
+        v-model="dialogVisible"
+        :title="isEdit ? '编辑课程' : '创建课程'"
+        width="600px"
+        class="dialog-container"
     >
       <div class="dialog-body">
         <el-form :model="courseForm" :rules="rules" ref="courseFormRef" label-width="100px">
           <el-form-item label="课程名称" prop="title">
-            <el-input v-model="courseForm.title" placeholder="请输入课程名称" />
+            <el-input v-model="courseForm.title" placeholder="请输入课程名称"/>
           </el-form-item>
           <el-form-item label="课程描述" prop="description">
             <el-input
-              v-model="courseForm.description"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入课程描述"
+                v-model="courseForm.description"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入课程描述"
             />
           </el-form-item>
           <el-form-item label="视频链接" prop="videoUrl">
-            <el-input v-model="courseForm.videoUrl" placeholder="请输入视频链接" />
+            <el-input v-model="courseForm.videoUrl" placeholder="请输入视频链接"/>
           </el-form-item>
           <el-form-item label="封面图片" prop="coverImageUrl">
-            <el-input v-model="courseForm.coverImageUrl" placeholder="请输入封面图片链接" />
+            <el-input v-model="courseForm.coverImageUrl" placeholder="请输入封面图片链接"/>
           </el-form-item>
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="课程价格" prop="price">
-                <el-input-number v-model="courseForm.price" :min="0" :max="10000" />
+                <el-input-number v-model="courseForm.price" :min="0" :max="10000"/>
                 <span style="margin-left: 10px">元</span>
               </el-form-item>
             </el-col>
             <el-col :span="12">
               <el-form-item label="是否上线" prop="isOnline">
-                <el-switch v-model="courseForm.isOnline" />
+                <el-switch v-model="courseForm.isOnline"/>
               </el-form-item>
             </el-col>
           </el-row>
-          <el-form-item label="可见角色" prop="visibleRoles">
+          <el-form-item label="可见角色" prop="visibleRoleIds">
             <el-select
-              v-model="courseForm.visibleRoles"
-              multiple
-              placeholder="请选择可见角色分类"
-              style="width: 100%"
+                v-model="courseForm.visibleRoleIds"
+                multiple
+                placeholder="请选择可见角色分类"
+                style="width: 100%"
             >
-              <el-option 
-                v-for="role in roleCategories" 
-                :key="role.id" 
-                :label="role.name" 
-                :value="role.id" 
+              <el-option
+                  v-for="role in roleCategories"
+                  :key="role.id"
+                  :label="role.name"
+                  :value="role.id"
               />
             </el-select>
           </el-form-item>
@@ -152,10 +156,10 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Search } from '@element-plus/icons-vue'
+import {ref, reactive, onMounted} from 'vue'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
+import {Plus, Search} from '@element-plus/icons-vue'
 import api from '@/api'
 
 export default {
@@ -184,28 +188,26 @@ export default {
       description: '',
       videoUrl: '',
       isOnline: true,
-      visibleRoles: [], // 默认为空数组，需要手动选择
+      visibleRoleIds: [],
       price: 0,
-      coverImageUrl: '',
-      createTime: null,
-      updateTime: null
+      coverImageUrl: ''
     })
 
     const rules = {
       title: [
-        { required: true, message: '请输入课程名称', trigger: 'blur' }
+        {required: true, message: '请输入课程名称', trigger: 'blur'}
       ],
       description: [
-        { required: true, message: '请输入课程描述', trigger: 'blur' }
+        {required: true, message: '请输入课程描述', trigger: 'blur'}
       ],
       videoUrl: [
-        { required: true, message: '请输入视频链接', trigger: 'blur' }
+        {required: true, message: '请输入视频链接', trigger: 'blur'}
       ],
-      visibleRoles: [
-        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
+      visibleRoleIds: [
+        {type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change'}
       ],
       price: [
-        { required: true, message: '请输入课程价格', trigger: 'blur' }
+        {required: true, message: '请输入课程价格', trigger: 'blur'}
       ]
     }
 
@@ -217,7 +219,7 @@ export default {
           size: pageSize.value,
           keyword: searchKeyword.value
         }
-        const response = await api.get('/courses/admin/page', { params })
+        const response = await api.get('/courses/admin/page', {params})
         if (response.data.success) {
           courses.value = response.data.data.content
           total.value = response.data.data.totalElements
@@ -242,7 +244,7 @@ export default {
         videoUrl: '',
         coverImageUrl: '',
         isOnline: true,
-        visibleRoles: [],
+        visibleRoleIds: [],
         price: 0,
         createTime: null,
         updateTime: null
@@ -259,10 +261,8 @@ export default {
         videoUrl: course.videoUrl,
         coverImageUrl: course.coverImageUrl,
         isOnline: course.isOnline,
-        visibleRoles: course.visibleRoles || [],
-        price: course.price || 0,
-        createTime: course.createTime,
-        updateTime: course.updateTime
+        visibleRoleIds: course.visibleRoles ? course.visibleRoles.map(role => role.id) : [],
+        price: course.price || 0
       })
       dialogVisible.value = true
     }
@@ -340,7 +340,7 @@ export default {
       loadCourses()
       loadRoleCategories()
     })
-    
+
     const loadRoleCategories = async () => {
       try {
         const response = await api.get('/categories/roles')
@@ -359,7 +359,6 @@ export default {
       courseForm,
       courseFormRef,
       rules,
-      loadCourses,
       showCreateDialog,
       editCourse,
       submitCourse,
@@ -373,7 +372,8 @@ export default {
       handleSearch,
       handleSizeChange,
       handleCurrentChange,
-      formatDateTime
+      formatDateTime,
+      roleCategories
     }
   }
 }

@@ -9,6 +9,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "exam_papers")
@@ -62,8 +65,13 @@ public class ExamPaper {
     @Column(name = "short_answer_score", nullable = false)
     private Integer shortAnswerScore = 5;
 
-    @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<ExamPaperVisibleRole> visibleRoles;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "exam_paper_visible_roles",
+            joinColumns = @JoinColumn(name = "exam_paper_id"),
+            inverseJoinColumns = @JoinColumn(name = "visibility_role_id")
+    )
+    private List<Role> visibleRoles;
 
     @CreationTimestamp
     private LocalDateTime createTime;

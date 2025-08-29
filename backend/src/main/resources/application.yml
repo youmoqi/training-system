@@ -47,9 +47,9 @@ file:
 # 日志配置
 logging:
   level:
-    com.training: ERROR
-    org.springframework.security: ERROR
-    org.springframework.web: ERROR
-    org.hibernate: ERROR
-    org.springframework.boot: ERROR
-    root: ERROR
+    com.training: INFO
+    org.springframework.security: WARN
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    org.springframework.boot: INFO
+    root: INFO

@@ -101,7 +101,7 @@ public class AuthController {
             dir.mkdirs();
         }
 
-        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         Path filePath = Paths.get(uploadDir + fileName);
         Files.write(filePath, file.getBytes());
 
@@ -120,8 +120,8 @@ public class AuthController {
             if (isRequired(cfg, "idCard") && isBlank(dto.getIdCard())) missing.add("身份证");
             if (isRequired(cfg, "phone") && isBlank(dto.getPhone())) missing.add("手机号");
             if (isRequired(cfg, "workUnit") && isBlank(dto.getWorkUnit())) missing.add("工作单位");
-            if (isRequired(cfg, "trainingType") && isBlank(dto.getTrainingType())) missing.add("培训类型");
-            if (isRequired(cfg, "jobCategory") && dto.getJobCategoryId() == null) missing.add("岗位类别");
+            if (isRequired(cfg, "trainingType") && dto.getRoleCategory() == null) missing.add("角色类型");
+            if (isRequired(cfg, "jobCategory") && dto.getJobCategory() == null) missing.add("岗位类别");
             if (isRequired(cfg, "paymentAmount") && dto.getPaymentAmount() == null) missing.add("缴费金额");
             if (isRequired(cfg, "facePhotoUrl") && (facePhoto == null || facePhoto.isEmpty())) missing.add("人脸照片");
         } catch (Exception ignored) {

@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @RestController
 @RequestMapping("/api/exam-papers")
 @CrossOrigin(origins = "*")
@@ -39,13 +42,6 @@ public class ExamPaperController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ExamPaperDto>>> getAllExamPapers() {
         List<ExamPaperDto> examPapers = examPaperService.getAllExamPapers();
-        return ResponseEntity.ok(ApiResponse.success(examPapers));
-    }
-
-    // 根据角色获取试卷
-    @GetMapping("/role/{role}")
-    public ResponseEntity<ApiResponse<List<ExamPaperDto>>> getExamPapersByRole(@PathVariable String role) {
-        List<ExamPaperDto> examPapers = examPaperService.getExamPapersByRole(role);
         return ResponseEntity.ok(ApiResponse.success(examPapers));
     }
 

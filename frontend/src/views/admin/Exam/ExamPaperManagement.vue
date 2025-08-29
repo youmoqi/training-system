@@ -213,18 +213,18 @@
               </el-col>
             </el-row>
           </el-form-item>
-          <el-form-item label="可见角色" prop="visibleRoles">
+          <el-form-item label="可见角色" prop="visibleRoleIds">
             <el-select
-              v-model="examPaperForm.visibleRoles"
-              multiple
-              placeholder="请选择可见角色分类"
-              style="width: 100%"
+                v-model="examPaperForm.visibleRoleIds"
+                multiple
+                placeholder="请选择可见角色分类"
+                style="width: 100%"
             >
-              <el-option 
-                v-for="role in roleCategories" 
-                :key="role.id" 
-                :label="role.name" 
-                :value="role.id" 
+              <el-option
+                  v-for="role in roleCategories"
+                  :key="role.id"
+                  :label="role.name"
+                  :value="role.id"
               />
             </el-select>
           </el-form-item>
@@ -241,11 +241,12 @@
 </template>
 
 <script>
-import {ref, reactive, computed, onMounted} from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import {useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Plus, Search} from '@element-plus/icons-vue'
 import api from '@/api'
+import {getCategoryName, getCategoryTagType} from '@/utils/examCategory'
 
 export default {
   name: 'ExamPaperManagement',
@@ -285,7 +286,7 @@ export default {
       trueFalseScore: 2,
       fillBlankScore: 3,
       shortAnswerScore: 5,
-      visibleRoles: [] // 默认为空数组，需要手动选择
+      visibleRoleIds: []
     })
 
     const rules = {
@@ -304,8 +305,8 @@ export default {
       duration: [
         {required: true, message: '请输入考试时长', trigger: 'blur'}
       ],
-      visibleRoles: [
-        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
+      visibleRoleIds: [
+        {type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change'}
       ]
     }
 
@@ -341,7 +342,7 @@ export default {
         duration: 120,
         totalQuestions: 0,
         isOnline: true,
-        visibleRoles: []
+        visibleRoleIds: []
       })
       dialogVisible.value = true
     }
@@ -365,7 +366,7 @@ export default {
         trueFalseScore: paper.trueFalseScore || 2,
         fillBlankScore: paper.fillBlankScore || 3,
         shortAnswerScore: paper.shortAnswerScore || 5,
-        visibleRoles: paper.visibleRoles || []
+        visibleRoleIds: paper.visibleRoles ? paper.visibleRoles.map(role => role.id) : []
       })
       dialogVisible.value = true
     }
@@ -439,37 +440,11 @@ export default {
       return new Date(dateTime).toLocaleString()
     }
 
-    const getCategoryName = (category) => {
-      const categoryMap = {
-        'EXPLOSIVE_FIRST': '易制爆用户-首次培训',
-        'EXPLOSIVE_CONTINUE': '易制爆用户-继续教育',
-        'BLAST_THREE_FIRST': '爆破三大员-首次培训',
-        'BLAST_THREE_CONTINUE': '爆破三大员-继续教育',
-        'BLAST_TECH_FIRST': '爆破工程技术人员-首次培训',
-        'BLAST_TECH_CONTINUE': '爆破工程技术人员-继续教育',
-        'GENERAL': '通用'
-      }
-      return categoryMap[category] || category
-    }
-
-    const getCategoryTagType = (category) => {
-      const tagMap = {
-        'EXPLOSIVE_FIRST': 'primary',
-        'EXPLOSIVE_CONTINUE': 'success',
-        'BLAST_THREE_FIRST': 'warning',
-        'BLAST_THREE_CONTINUE': 'info',
-        'BLAST_TECH_FIRST': 'danger',
-        'BLAST_TECH_CONTINUE': 'warning',
-        'GENERAL': 'info'
-      }
-      return tagMap[category] || 'info'
-    }
-
     onMounted(() => {
       loadExamPapers()
       loadRoleCategories()
     })
-    
+
     const loadRoleCategories = async () => {
       try {
         const response = await api.get('/categories/roles')

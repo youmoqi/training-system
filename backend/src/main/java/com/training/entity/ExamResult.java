@@ -2,6 +2,8 @@ package com.training.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,14 +39,10 @@ public class ExamResult {
     private Boolean isPassed;
 
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime submitTime;
 
     @OneToMany(mappedBy = "examResult", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<QuestionResult> questionResults;
-
-    @PrePersist
-    protected void onCreate() {
-        submitTime = LocalDateTime.now();
-    }
-} 
+}

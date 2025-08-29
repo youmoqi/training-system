@@ -45,7 +45,6 @@ public class ExamPaperHistory {
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
-    // 关联关系
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
@@ -57,4 +56,4 @@ public class ExamPaperHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_paper_result_id", insertable = false, updatable = false)
     private ExamPaperResult examPaperResult;
-} 
+}

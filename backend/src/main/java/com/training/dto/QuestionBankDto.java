@@ -4,6 +4,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 public class QuestionBankDto {
     private Long id;
@@ -11,7 +14,7 @@ public class QuestionBankDto {
     private String description;
     private Double price;
     private Boolean isOnline;
-    private List<Long> visibleCategoryIds;
+    private List<Long> visibleRoleIds;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

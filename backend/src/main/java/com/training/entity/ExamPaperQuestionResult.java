@@ -1,8 +1,12 @@
 package com.training.entity;
 
 import javax.persistence.*;
+
 import lombok.Data;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "exam_paper_question_results")
@@ -36,4 +40,4 @@ public class ExamPaperQuestionResult {
 
     @Column(name = "explanation", columnDefinition = "TEXT")
     private String explanation;
-} 
+}

@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Repository
 public interface ExamPaperResultRepository extends JpaRepository<ExamPaperResult, Long> {
 

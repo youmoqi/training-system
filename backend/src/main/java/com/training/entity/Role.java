@@ -4,10 +4,13 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
-@Table(name = "visibility_categories")
-public class VisibilityCategory {
+@Table(name = "roles")
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,4 +23,4 @@ public class VisibilityCategory {
 
     @Column(nullable = false)
     private Boolean isActive = true;
-} 
+}

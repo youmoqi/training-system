@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 public class ExamPaperDto {
     private Long id;
@@ -25,7 +28,7 @@ public class ExamPaperDto {
     private Integer shortAnswerScore;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    private List<Long> visibleCategoryIds;
+    private List<Long> visibleRoleIds;
     private List<ExamPaperQuestionDto> questions;
     private List<ExamPaperAutoRuleDto> autoRules;
-} 
+}

@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "job_categories")
@@ -20,4 +23,4 @@ public class JobCategory {
 
     @Column(nullable = false)
     private Boolean isActive = true;
-} 
+}

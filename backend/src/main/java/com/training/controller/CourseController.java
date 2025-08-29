@@ -6,7 +6,6 @@ import com.training.dto.MyCourseDto;
 import com.training.dto.UserCourseListDto;
 import com.training.entity.Course;
 import com.training.entity.User;
-import com.training.entity.UserCourse;
 import com.training.service.CourseService;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @RestController
 @RequestMapping("/api/courses")
 @CrossOrigin(origins = "*")
@@ -67,10 +69,10 @@ public class CourseController {
             @RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String userRole) {
+            @RequestParam(required = false) Long roleId) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<Course> courses = courseService.findAvailableCourses(userId, userRole, pageable);
+            Page<Course> courses = courseService.findAvailableCourses(userId, roleId, pageable);
             return ResponseEntity.ok(ApiResponse.success("获取可购买课程成功", courses));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取可购买课程失败: " + e.getMessage()));
@@ -159,8 +161,8 @@ public class CourseController {
         }
     }
 
-    @DeleteMapping("/unenroll/{courseId}")
-    public ResponseEntity<ApiResponse<Void>> unenrollCourse(
+    @DeleteMapping("/unroll/{courseId}")
+    public ResponseEntity<ApiResponse<Void>> unrollCourse(
             @PathVariable Long courseId,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -172,7 +174,7 @@ public class CourseController {
             Course course = courseService.findById(courseId)
                     .orElseThrow(() -> new RuntimeException("课程不存在"));
 
-            courseService.unenrollCourse(user, course);
+            courseService.unrollCourse(user, course);
             return ResponseEntity.ok(ApiResponse.success("成功退出课程"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));

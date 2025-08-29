@@ -108,18 +108,18 @@
           <el-form-item label="是否上线" prop="isOnline">
             <el-switch v-model="formData.isOnline"/>
           </el-form-item>
-          <el-form-item label="可见角色" prop="visibleRoles">
+          <el-form-item label="可见角色" prop="visibleRoleIds">
             <el-select
-              v-model="formData.visibleRoles"
-              multiple
-              placeholder="请选择可见角色分类"
-              style="width: 100%"
+                v-model="formData.visibleRoleIds"
+                multiple
+                placeholder="请选择可见角色分类"
+                style="width: 100%"
             >
-              <el-option 
-                v-for="role in roleCategories" 
-                :key="role.id" 
-                :label="role.name" 
-                :value="role.id" 
+              <el-option
+                  v-for="role in roleCategories"
+                  :key="role.id"
+                  :label="role.name"
+                  :value="role.id"
               />
             </el-select>
           </el-form-item>
@@ -167,18 +167,18 @@ export default {
       description: '',
       price: 0,
       isOnline: true,
-      visibleRoles: [] // 默认为空数组，需要手动选择
+      visibleRoleIds: []
     })
 
     const rules = {
       title: [
-        { required: true, message: '请输入题库名称', trigger: 'blur' }
+        {required: true, message: '请输入题库名称', trigger: 'blur'}
       ],
       description: [
-        { required: true, message: '请输入题库描述', trigger: 'blur' }
+        {required: true, message: '请输入题库描述', trigger: 'blur'}
       ],
-      visibleRoles: [
-        { type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change' }
+      visibleRoleIds: [
+        {type: 'array', required: true, message: '请选择可见用户角色', trigger: 'change'}
       ]
     }
 
@@ -190,7 +190,7 @@ export default {
           size: pageSize.value,
           keyword: searchKeyword.value
         }
-        const response = await api.get('/question-banks/admin/page', { params })
+        const response = await api.get('/question-banks/admin/page', {params})
         if (response.data.success) {
           questionBanks.value = response.data.data.content
           total.value = response.data.data.totalElements
@@ -230,7 +230,7 @@ export default {
       formData.description = questionBank.description
       formData.price = questionBank.price
       formData.isOnline = questionBank.isOnline
-      formData.visibleRoles = questionBank.visibleRoles || [] // 确保可见用户角色存在
+      formData.visibleRoleIds = questionBank.visibleRoles ? questionBank.visibleRoles.map(role => role.id) : []
       showCreateDialog.value = true
     }
 
@@ -263,32 +263,32 @@ export default {
           try {
             if (editingQuestionBank.value) {
               api.put(`/question-banks/${editingQuestionBank.value.id}`, formData)
-                .then(response => {
-                  if (response.data.success) {
-                    ElMessage.success('更新成功')
-                    showCreateDialog.value = false
-                    loadQuestionBanks()
-                  } else {
+                  .then(response => {
+                    if (response.data.success) {
+                      ElMessage.success('更新成功')
+                      showCreateDialog.value = false
+                      loadQuestionBanks()
+                    } else {
+                      ElMessage.error('更新失败')
+                    }
+                  })
+                  .catch(error => {
                     ElMessage.error('更新失败')
-                  }
-                })
-                .catch(error => {
-                  ElMessage.error('更新失败')
-                })
+                  })
             } else {
               api.post('/question-banks', formData)
-                .then(response => {
-                  if (response.data.success) {
-                    ElMessage.success('创建成功')
-                    showCreateDialog.value = false
-                    loadQuestionBanks()
-                  } else {
+                  .then(response => {
+                    if (response.data.success) {
+                      ElMessage.success('创建成功')
+                      showCreateDialog.value = false
+                      loadQuestionBanks()
+                    } else {
+                      ElMessage.error('创建失败')
+                    }
+                  })
+                  .catch(error => {
                     ElMessage.error('创建失败')
-                  }
-                })
-                .catch(error => {
-                  ElMessage.error('创建失败')
-                })
+                  })
             }
           } catch (error) {
             ElMessage.error('操作失败')
@@ -307,7 +307,7 @@ export default {
       formData.description = ''
       formData.price = 0
       formData.isOnline = true
-      formData.visibleRoles = [] // 重置可见用户角色
+      formData.visibleRoleIds = [] // 重置可见用户角色
     }
 
     const formatDate = (dateString) => {
@@ -318,7 +318,7 @@ export default {
       loadQuestionBanks()
       loadRoleCategories()
     })
-    
+
     const loadRoleCategories = async () => {
       try {
         const response = await api.get('/categories/roles')

@@ -7,6 +7,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "exam_paper_questions")
@@ -34,4 +37,4 @@ public class ExamPaperQuestion {
     @CreationTimestamp
     @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
-} 
+}

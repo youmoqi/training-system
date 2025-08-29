@@ -1,6 +1,9 @@
 package com.training.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -35,20 +38,11 @@ public class TrainingCertificate {
     @Column(nullable = false)
     private String certificateType; // 证书类型：EXPLOSIVE_USER(易制爆), BLAST_USER(爆破三大员)
 
+    @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createTime;
 
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updateTime;
-
-    @PrePersist
-    protected void onCreate() {
-        createTime = LocalDateTime.now();
-        updateTime = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updateTime = LocalDateTime.now();
-    }
-} 
+}

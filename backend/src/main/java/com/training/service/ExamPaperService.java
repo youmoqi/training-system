@@ -8,7 +8,6 @@ import com.training.repository.*;
 import com.training.entity.User;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +18,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Arrays;
 
+/**
+ * @author 14798
+ */
 @Service
 public class ExamPaperService {
 
@@ -47,10 +49,7 @@ public class ExamPaperService {
     private UserRepository userRepository;
 
     @Autowired
-    private ExamPaperVisibleRoleRepository examPaperVisibleRoleRepository;
-
-    @Autowired
-    private VisibilityCategoryRepository visibilityCategoryRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -87,14 +86,14 @@ public class ExamPaperService {
         // 获取用户信息以确定用户角色
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        String userRole = user.getRole().getCode();
+        Long userRole = user.getRole().getId();
         Page<UserExamPaper> userExamPapers;
         if (keyword != null && !keyword.trim().isEmpty()) {
             // 按关键词搜索用户已购买的试卷，并过滤可见角色
-            userExamPapers = userExamPaperRepository.findByUserIdAndExamPaperTitleContainingAndUserRole(userId, keyword, userRole, pageable);
+            userExamPapers = userExamPaperRepository.findByUserIdAndKeywordAndRoleId(userId, keyword, userRole, pageable);
         } else {
             // 不按关键词搜索，获取用户所有已购买的试卷，并过滤可见角色
-            userExamPapers = userExamPaperRepository.findByUserIdAndUserRole(userId, userRole, pageable);
+            userExamPapers = userExamPaperRepository.findByUserIdAndRoleId(userId, userRole, pageable);
         }
         return userExamPapers.map(uep -> convertToDto(uep.getExamPaper()));
     }
@@ -104,14 +103,14 @@ public class ExamPaperService {
         // 获取用户信息以确定用户角色
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        String userRole = user.getRole().getCode();
+        Long roleId = user.getRole().getId();
         Page<ExamPaper> examPapers;
         if (keyword != null && !keyword.trim().isEmpty()) {
             // 按关键词搜索可购买的试卷，并过滤可见角色
-            examPapers = examPaperRepository.findPurchasableByKeywordAndUserRole(keyword, userRole, userId, pageable);
+            examPapers = examPaperRepository.findPurchasableByKeywordAndRoleId(keyword, roleId, userId, pageable);
         } else {
             // 不按关键词搜索，获取所有可购买的试卷，并过滤可见角色
-            examPapers = examPaperRepository.findPurchasableByUserRole(userRole, userId, pageable);
+            examPapers = examPaperRepository.findPurchasableByRoleId(roleId, userId, pageable);
         }
         return examPapers.map(this::convertToDto);
     }
@@ -119,13 +118,6 @@ public class ExamPaperService {
     // 获取所有试卷
     public List<ExamPaperDto> getAllExamPapers() {
         return examPaperRepository.findByIsOnlineTrue().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    // 根据角色获取试卷
-    public List<ExamPaperDto> getExamPapersByRole(String role) {
-        return examPaperRepository.findByRoleAndIsOnlineTrue(role).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -275,16 +267,11 @@ public class ExamPaperService {
             examPaper = examPaperRepository.save(examPaper);
 
             // 重建可见分类映射
-            if (examPaperDto.getVisibleCategoryIds() != null && !examPaperDto.getVisibleCategoryIds().isEmpty()) {
-                List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(examPaperDto.getVisibleCategoryIds());
-                List<ExamPaperVisibleRole> mappings = new ArrayList<>();
-                for (VisibilityCategory cat : cats) {
-                    ExamPaperVisibleRole m = new ExamPaperVisibleRole();
-                    m.setExamPaper(examPaper);
-                    m.setVisibilityCategory(cat);
-                    mappings.add(m);
-                }
-                examPaperVisibleRoleRepository.saveAll(mappings);
+            if (examPaperDto.getVisibleRoleIds() != null && !examPaperDto.getVisibleRoleIds().isEmpty()) {
+                List<Role> cats = roleRepository.findAllById(examPaperDto.getVisibleRoleIds());
+                examPaper.setVisibleRoles(cats);
+            } else {
+                examPaper.setVisibleRoles(new ArrayList<>());
             }
 
             return ApiResponse.success(convertToDto(examPaperRepository.findById(examPaper.getId()).orElse(examPaper)));
@@ -306,18 +293,12 @@ public class ExamPaperService {
             BeanUtils.copyProperties(examPaperDto, examPaper);
             examPaper = examPaperRepository.save(examPaper);
 
-            // 重建可见分类映射
-            examPaperVisibleRoleRepository.deleteAllByExamPaperId(examPaper.getId());
-            if (examPaperDto.getVisibleCategoryIds() != null && !examPaperDto.getVisibleCategoryIds().isEmpty()) {
-                List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(examPaperDto.getVisibleCategoryIds());
-                List<ExamPaperVisibleRole> mappings = new ArrayList<>();
-                for (VisibilityCategory cat : cats) {
-                    ExamPaperVisibleRole m = new ExamPaperVisibleRole();
-                    m.setExamPaper(examPaper);
-                    m.setVisibilityCategory(cat);
-                    mappings.add(m);
-                }
-                examPaperVisibleRoleRepository.saveAll(mappings);
+            // 可见分类映射
+            if (examPaperDto.getVisibleRoleIds() != null && !examPaperDto.getVisibleRoleIds().isEmpty()) {
+                List<Role> cats = roleRepository.findAllById(examPaperDto.getVisibleRoleIds());
+                examPaper.setVisibleRoles(cats);
+            } else {
+                examPaper.setVisibleRoles(new ArrayList<>());
             }
 
             return ApiResponse.success(convertToDto(examPaperRepository.findById(examPaper.getId()).orElse(examPaper)));

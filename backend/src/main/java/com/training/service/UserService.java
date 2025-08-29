@@ -4,10 +4,10 @@ import com.training.dto.UserRegistrationDto;
 import com.training.dto.UserPermissionsUpdateDto;
 import com.training.entity.JobCategory;
 import com.training.entity.User;
-import com.training.entity.VisibilityCategory;
+import com.training.entity.Role;
 import com.training.repository.JobCategoryRepository;
 import com.training.repository.UserRepository;
-import com.training.repository.VisibilityCategoryRepository;
+import com.training.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +29,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private VisibilityCategoryRepository visibilityCategoryRepository;
+    private RoleRepository roleRepository;
 
     @Autowired
     private JobCategoryRepository jobCategoryRepository;
@@ -68,28 +68,23 @@ public class UserService {
         user.setIdCard(registrationDto.getIdCard());
         user.setPhone(registrationDto.getPhone());
         user.setWorkUnit(registrationDto.getWorkUnit());
-        user.setTrainingType(registrationDto.getTrainingType());
+
+        // 设置角色类别
+        if (registrationDto.getRoleCategory() != null) {
+            Role roleCategory = roleRepository.findById(registrationDto.getRoleCategory())
+                    .orElseThrow(() -> new RuntimeException("找不到对应的角色类别"));
+            user.setRole(roleCategory);
+        }
 
         // 设置作业类别
-        JobCategory jobCategory = jobCategoryRepository.findById(registrationDto.getJobCategoryId())
-                .orElseThrow(() -> new RuntimeException("找不到对应的作业类别"));
-        user.setJobCategory(jobCategory);
+        if (registrationDto.getJobCategory() != null) {
+            JobCategory jobCategory = jobCategoryRepository.findById(registrationDto.getJobCategory())
+                    .orElseThrow(() -> new RuntimeException("找不到对应的作业类别"));
+            user.setJobCategory(jobCategory);
+        }
 
         user.setFacePhotoUrl(facePhotoUrl);
         user.setPaymentAmount(registrationDto.getPaymentAmount());
-
-        // 根据培训类型设置角色
-        if ("易制爆".equals(registrationDto.getTrainingType())) {
-            // 设置用户可见性分类为易制爆人员
-            VisibilityCategory explosiveCategory = visibilityCategoryRepository.findByCode("EXPLOSIVE_FIRST")
-                    .orElseThrow(() -> new RuntimeException("找不到易制爆人员角色分类"));
-            user.setRole(explosiveCategory);
-        } else {
-            // 设置用户可见性分类为爆破三大员
-            VisibilityCategory blastCategory = visibilityCategoryRepository.findByCode("BLAST_THREE_FIRST")
-                    .orElseThrow(() -> new RuntimeException("找不到爆破三大员角色分类"));
-            user.setRole(blastCategory);
-        }
 
         return userRepository.save(user);
     }
@@ -112,8 +107,8 @@ public class UserService {
 
     public User updateUserPermissions(Long id, UserPermissionsUpdateDto dto) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("用户不存在"));
-        if (dto.getVisibilityCategoryId() != null) {
-            VisibilityCategory category = visibilityCategoryRepository.findById(dto.getVisibilityCategoryId())
+        if (dto.getRoleId() != null) {
+            Role category = roleRepository.findById(dto.getRoleId())
                     .orElseThrow(() -> new RuntimeException("找不到对应的角色分类"));
             user.setRole(category);
         }

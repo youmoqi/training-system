@@ -1,12 +1,16 @@
 package com.training.entity;
 
 import javax.persistence.*;
+
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "exam_paper_results")
@@ -51,4 +55,4 @@ public class ExamPaperResult {
     // 题目答题记录
     @OneToMany(mappedBy = "examPaperResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ExamPaperQuestionResult> questionResults;
-} 
+}

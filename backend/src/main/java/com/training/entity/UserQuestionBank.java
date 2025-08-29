@@ -1,6 +1,7 @@
 package com.training.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -25,10 +26,6 @@ public class UserQuestionBank {
     private QuestionBank questionBank;
 
     @Column(name = "purchase_time", nullable = false)
+    @CreationTimestamp
     private LocalDateTime purchaseTime;
-
-    @PrePersist
-    protected void onCreate() {
-        purchaseTime = LocalDateTime.now();
-    }
 }

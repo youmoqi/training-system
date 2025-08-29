@@ -2,7 +2,7 @@
   <div class="courses-page">
     <div class="page-header">
       <h3>我的课程</h3>
-      <el-button v-if="userRole !== 'BLAST_USER'" type="primary" @click="showCourseSelection = true">
+      <el-button type="primary" @click="showCourseSelection = true">
         选择课程
       </el-button>
     </div>
@@ -10,22 +10,22 @@
     <!-- 我的课程列表 -->
     <el-row :gutter="20" v-loading="myCoursesLoading">
       <el-col
-        v-for="userCourse in userCourses"
-        :key="userCourse.id"
-        :span="8"
+          v-for="userCourse in userCourses"
+          :key="userCourse.id"
+          :span="8"
       >
         <el-card class="course-card" shadow="hover">
           <div class="course-image">
             <img
-              :src="userCourse.coverImageUrl || '/course-placeholder.svg'"
-              :alt="userCourse.courseTitle"
-              @error="handleImageError"
+                :src="userCourse.coverImageUrl || '/course-placeholder.svg'"
+                :alt="userCourse.courseTitle"
+                @error="handleImageError"
             />
             <div class="course-progress">
               <el-progress
-                :percentage="userCourse.watchProgress || 0"
-                :stroke-width="8"
-                color="#409EFF"
+                  :percentage="userCourse.watchProgress || 0"
+                  :stroke-width="8"
+                  color="#409EFF"
               />
             </div>
           </div>
@@ -34,8 +34,8 @@
             <div class="course-header">
               <h4>{{ userCourse.courseTitle }}</h4>
               <el-tag
-                :type="userCourse.isCompleted ? 'success' : 'warning'"
-                size="small"
+                  :type="userCourse.isCompleted ? 'success' : 'warning'"
+                  size="small"
               >
                 {{ userCourse.isCompleted ? '已完成' : '学习中' }}
               </el-tag>
@@ -57,24 +57,24 @@
 
             <div class="course-actions">
               <el-button
-                type="primary"
-                size="small"
-                @click="watchCourse(userCourse)"
+                  type="primary"
+                  size="small"
+                  @click="watchCourse(userCourse)"
               >
                 观看课程
               </el-button>
               <el-button
-                v-if="!userCourse.isCompleted"
-                type="success"
-                size="small"
-                @click="markAsCompleted(userCourse)"
+                  v-if="!userCourse.isCompleted"
+                  type="success"
+                  size="small"
+                  @click="markAsCompleted(userCourse)"
               >
                 标记完成
               </el-button>
               <el-button
-                type="danger"
-                size="small"
-                @click="unenroll(userCourse.courseId)"
+                  type="danger"
+                  size="small"
+                  @click="unroll(userCourse.courseId)"
               >
                 退课
               </el-button>
@@ -87,31 +87,31 @@
     <!-- 我的课程分页 -->
     <div class="pagination-container" style="margin-top: 20px; text-align: center;">
       <el-pagination
-        v-model:current-page="myCoursesCurrentPage"
-        v-model:page-size="myCoursesPageSize"
-        :page-sizes="[5, 10, 20, 50]"
-        :total="myCoursesTotal"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleMyCoursesSizeChange"
-        @current-change="handleMyCoursesCurrentChange"
+          v-model:current-page="myCoursesCurrentPage"
+          v-model:page-size="myCoursesPageSize"
+          :page-sizes="[5, 10, 20, 50]"
+          :total="myCoursesTotal"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleMyCoursesSizeChange"
+          @current-change="handleMyCoursesCurrentChange"
       />
     </div>
 
     <!-- 课程选择对话框 -->
     <el-dialog
-      v-model="showCourseSelection"
-      title="选择课程"
-      width="800px"
+        v-model="showCourseSelection"
+        title="选择课程"
+        width="800px"
     >
       <el-table
-        :data="availableCourses"
-        style="width: 100%"
-        @selection-change="handleSelectionChange"
-        v-loading="loading"
+          :data="availableCourses"
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+          v-loading="loading"
       >
-        <el-table-column type="selection" width="55" />
+        <el-table-column type="selection" width="55"/>
         <el-table-column prop="title" label="课程名称" width="200"/>
-        <el-table-column prop="description" label="课程描述" />
+        <el-table-column prop="description" label="课程描述"/>
         <el-table-column prop="price" label="价格" width="120">
           <template #default="scope">
             ¥{{ scope.row.price }}
@@ -122,13 +122,13 @@
       <!-- 分页组件 -->
       <div class="pagination-container">
         <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="[5, 10, 20, 50]"
-          :total="total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[5, 10, 20, 50]"
+            :total="total"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
         />
       </div>
 
@@ -136,9 +136,9 @@
         <span class="dialog-footer">
           <el-button @click="showCourseSelection = false">取消</el-button>
           <el-button
-            type="primary"
-            :disabled="selectedCourses.length === 0"
-            @click="enrollCourses"
+              type="primary"
+              :disabled="selectedCourses.length === 0"
+              @click="enrollCourses"
           >
             确认选课
           </el-button>
@@ -149,10 +149,10 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from 'vue'
-import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {ref, onMounted, computed} from 'vue'
+import {useStore} from 'vuex'
+import {useRouter} from 'vue-router'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import api from '../../../api'
 
 export default {
@@ -177,8 +177,6 @@ export default {
     const myCoursesPageSize = ref(10)
     const myCoursesTotal = ref(0)
     const myCoursesLoading = ref(false)
-
-    const userRole = computed(() => store.getters.userRole?.code)
 
     const loadUserCourses = async () => {
       myCoursesLoading.value = true
@@ -208,9 +206,9 @@ export default {
         const response = await api.get('/courses/student/available-courses', {
           params: {
             userId: store.getters.currentUser.id,
-            page: currentPage.value - 1, // 后端从0开始，前端从1开始
+            page: currentPage.value - 1,
             size: pageSize.value,
-            userRole: store.getters.currentUser.role
+            roleId: store.getters.currentUser.role.id
           }
         })
         availableCourses.value = response.data.data.content
@@ -259,7 +257,7 @@ export default {
       try {
         for (const course of selectedCourses.value) {
           await api.post(`/courses/${course.id}/enroll`, null, {
-            params: { userId: store.getters.currentUser.id }
+            params: {userId: store.getters.currentUser.id}
           })
         }
         ElMessage.success('选课成功')
@@ -297,7 +295,7 @@ export default {
       // Handle image loading error
     }
 
-    const unenroll = async (courseId) => {
+    const unroll = async (courseId) => {
       try {
         await ElMessageBox.confirm('您确定要退出这门课程吗？此操作不可逆！', '确认退课', {
           confirmButtonText: '确定',
@@ -305,7 +303,7 @@ export default {
           type: 'warning',
         });
 
-        await api.delete(`/courses/unenroll/${courseId}`);
+        await api.delete(`/courses/unroll/${courseId}`);
         ElMessage.success('成功退出课程');
         loadUserCourses(); // Refresh the list
       } catch (error) {
@@ -331,8 +329,7 @@ export default {
       markAsCompleted,
       formatDate,
       handleImageError,
-      userRole,
-      unenroll,
+      unroll,
       currentPage,
       pageSize,
       handleSizeChange,

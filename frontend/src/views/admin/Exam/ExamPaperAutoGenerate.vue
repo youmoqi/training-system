@@ -117,10 +117,11 @@
 
 <script>
 import {ref, reactive, onMounted} from 'vue'
-import {useRoute, useRouter} from 'vue-router'
+import {useRoute} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {ArrowLeft, Plus, MagicStick} from '@element-plus/icons-vue'
 import api from '@/api'
+import {getCategoryName} from '@/utils/examCategory'
 
 export default {
   name: 'ExamPaperAutoGenerate',
@@ -303,19 +304,6 @@ export default {
     const getQuestionBankName = (bankId) => {
       const bank = questionBanks.value.find(bank => bank.id === bankId)
       return bank ? bank.title : bankId
-    }
-
-    const getCategoryName = (category) => {
-      const categoryMap = {
-        'EXPLOSIVE_FIRST': '易制爆用户-首次培训',
-        'EXPLOSIVE_CONTINUE': '易制爆用户-继续教育',
-        'BLAST_THREE_FIRST': '爆破三大员-首次培训',
-        'BLAST_THREE_CONTINUE': '爆破三大员-继续教育',
-        'BLAST_TECH_FIRST': '爆破工程技术人员-首次培训',
-        'BLAST_TECH_CONTINUE': '爆破工程技术人员-继续教育',
-        'GENERAL': '通用'
-      }
-      return categoryMap[category] || category
     }
 
     onMounted(() => {

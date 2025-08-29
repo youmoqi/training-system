@@ -2,10 +2,15 @@ package com.training.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "question_bank_results")
@@ -40,25 +45,17 @@ public class QuestionBankResult {
     private Integer timeTaken;
 
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime submitTime;
 
     @Column(nullable = false)
     private Boolean isPassed;
 
     @Column(name = "create_time", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createTime;
 
     @OneToMany(mappedBy = "questionBankResult", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<QuestionBankQuestionResult> questionResults;
-
-    @PrePersist
-    protected void onCreate() {
-        if (submitTime == null) {
-            submitTime = LocalDateTime.now();
-        }
-        if (createTime == null) {
-            createTime = LocalDateTime.now();
-        }
-    }
-} 
+}

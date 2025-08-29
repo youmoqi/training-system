@@ -11,12 +11,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.BeanUtils;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @author 14798
+ */
 @Service
 @Transactional
 public class CourseService {
@@ -31,10 +32,7 @@ public class CourseService {
     private UserRepository userRepository;
 
     @Autowired
-    private VisibilityCategoryRepository visibilityCategoryRepository;
-
-    @Autowired
-    private CourseVisibleRoleRepository courseVisibleRoleRepository;
+    private RoleRepository roleRepository;
 
     // 获取用户已选课程
     private List<Course> getUserEnrolledCourses(Long userId) {
@@ -57,13 +55,6 @@ public class CourseService {
         }
     }
 
-    // 学员获取我的课程（已选课程）
-    public Page<UserCourse> findMyCourses(Long userId, Pageable pageable) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-        return userCourseRepository.findByUserWithJoins(user, pageable);
-    }
-
     // 学员获取我的课程（已选课程）- 返回DTO
     public Page<MyCourseDto> findMyCoursesDto(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
@@ -73,16 +64,16 @@ public class CourseService {
     }
 
     // 学员获取可购买的课程（未选课程）
-    public Page<Course> findAvailableCourses(Long userId, String userRole, Pageable pageable) {
+    public Page<Course> findAvailableCourses(Long userId, Long roleId, Pageable pageable) {
         // 获取用户已选课程
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         List<Course> userEnrolledCourses = getUserEnrolledCourses(userId);
 
         // 根据角色获取在线课程
         Page<Course> onlineCourses;
-        if (userRole != null && !userRole.isEmpty()) {
-            onlineCourses = courseRepository.findByIsOnlineTrueAndVisibleRolesContaining(userRole, pageable);
+        if (roleId != null) {
+            onlineCourses = courseRepository.findByIsOnlineTrueAndVisibleRolesId(roleId, pageable);
         } else {
             onlineCourses = courseRepository.findByIsOnlineTrue(pageable);
         }
@@ -93,30 +84,6 @@ public class CourseService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(filteredContent, pageable, onlineCourses.getTotalElements() - userEnrolledCourses.size());
-    }
-
-    public Course createCourse(Course course) {
-        // 验证必填字段
-        if (course.getTitle() == null || course.getTitle().trim().isEmpty()) {
-            throw new RuntimeException("课程名称不能为空");
-        }
-        if (course.getDescription() == null || course.getDescription().trim().isEmpty()) {
-            throw new RuntimeException("课程描述不能为空");
-        }
-        if (course.getVideoUrl() == null || course.getVideoUrl().trim().isEmpty()) {
-            throw new RuntimeException("视频URL不能为空");
-        }
-        if (course.getPrice() == null || course.getPrice() < 0) {
-            throw new RuntimeException("课程价格不能为负数");
-        }
-        if (course.getIsOnline() == null) {
-            course.setIsOnline(false);
-        }
-        if (course.getVisibleRoles() == null || course.getVisibleRoles().isEmpty()) {
-            throw new RuntimeException("请选择可见用户角色");
-        }
-        
-        return courseRepository.save(course);
     }
 
     public Optional<Course> findById(Long id) {
@@ -131,56 +98,19 @@ public class CourseService {
         return courseRepository.findByIsOnlineTrue();
     }
 
-    public List<Course> findCoursesByRole(String role) {
-        return courseRepository.findByIsOnlineTrueAndVisibleRolesContaining(role);
-    }
-
-    public Course updateCourse(Course course) {
-        // 验证课程是否存在
-        Course existingCourse = courseRepository.findById(course.getId())
-                .orElseThrow(() -> new RuntimeException("课程不存在"));
-        
-        // 验证必填字段
-        if (course.getTitle() == null || course.getTitle().trim().isEmpty()) {
-            throw new RuntimeException("课程名称不能为空");
-        }
-        if (course.getDescription() == null || course.getDescription().trim().isEmpty()) {
-            throw new RuntimeException("课程描述不能为空");
-        }
-        if (course.getVideoUrl() == null || course.getVideoUrl().trim().isEmpty()) {
-            throw new RuntimeException("视频URL不能为空");
-        }
-        if (course.getPrice() == null || course.getPrice() < 0) {
-            throw new RuntimeException("课程价格不能为负数");
-        }
-        if (course.getIsOnline() == null) {
-            course.setIsOnline(false);
-        }
-        if (course.getVisibleRoles() == null || course.getVisibleRoles().isEmpty()) {
-            throw new RuntimeException("请选择可见用户角色");
-        }
-        
-        // 保留原有的createTime
-        course.setCreateTime(existingCourse.getCreateTime());
-        
-        return courseRepository.save(course);
-    }
-
     public void deleteCourse(Long id) {
         // 验证课程是否存在
-        Course course = courseRepository.findById(id)
+        courseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("课程不存在"));
-        
         // 检查是否有用户已选这门课程
         List<UserCourse> userCourses = userCourseRepository.findByCourseId(id);
         if (!userCourses.isEmpty()) {
             throw new RuntimeException("该课程已有用户选择，无法删除");
         }
-        
         courseRepository.deleteById(id);
     }
 
-    public boolean enrollCourse(User user, Course course) {
+    public void enrollCourse(User user, Course course) {
         // 检查用户是否已经选过这门课
         if (userCourseRepository.existsByUserAndCourse(user, course)) {
             throw new RuntimeException("您已经选过这门课程");
@@ -199,8 +129,6 @@ public class CourseService {
         userCourse.setUser(user);
         userCourse.setCourse(course);
         userCourseRepository.save(userCourse);
-
-        return true;
     }
 
     public void enrollCourseWithInvitation(User user, Course course) {
@@ -214,10 +142,6 @@ public class CourseService {
         userCourse.setUser(user);
         userCourse.setCourse(course);
         userCourseRepository.save(userCourse);
-    }
-
-    public List<UserCourse> getUserCourses(User user) {
-        return userCourseRepository.findByUserWithJoins(user);
     }
 
     public List<UserCourseListDto> getUserCoursesDto(User user) {
@@ -277,14 +201,18 @@ public class CourseService {
         }
     }
 
-    public void unenrollCourse(User user, Course course) {
+    public void unrollCourse(User user, Course course) {
         UserCourse userCourse = userCourseRepository.findByUserAndCourse(user, course)
                 .orElseThrow(() -> new RuntimeException("您没有选择这门课程"));
         userCourseRepository.delete(userCourse);
     }
 
     public Course createOrUpdateCourse(Long id, CourseDto dto) {
-        Course course = id == null ? new Course() : courseRepository.findById(id).orElseThrow(() -> new RuntimeException("课程不存在"));
+        Course course = id == null
+                ? new Course()
+                : courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("课程不存在"));
+
         course.setTitle(dto.getTitle());
         course.setDescription(dto.getDescription());
         course.setVideoUrl(dto.getVideoUrl());
@@ -292,24 +220,15 @@ public class CourseService {
         course.setIsOnline(Boolean.TRUE.equals(dto.getIsOnline()));
         course.setCoverImageUrl(dto.getCoverImageUrl());
 
-        Course saved = courseRepository.save(course);
+        // 设置可见分类
+        if (dto.getVisibleRoleIds() != null && !dto.getVisibleRoleIds().isEmpty()) {
+            List<Role> cats = roleRepository.findAllById(dto.getVisibleRoleIds());
+            course.setVisibleRoles(cats);
+        } else {
+            course.setVisibleRoles(new ArrayList<>());
+        }
 
-        // 重建可见分类映射
-        if (saved.getVisibleRoles() != null) {
-            courseVisibleRoleRepository.deleteAllByCourseId(saved.getId());
-            saved.getVisibleRoles().clear();
-        }
-        if (dto.getVisibleCategoryIds() != null && !dto.getVisibleCategoryIds().isEmpty()) {
-            List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(dto.getVisibleCategoryIds());
-            List<CourseVisibleRole> mappings = new ArrayList<>();
-            for (VisibilityCategory cat : cats) {
-                CourseVisibleRole m = new CourseVisibleRole();
-                m.setCourse(saved);
-                m.setVisibilityCategory(cat);
-                mappings.add(m);
-            }
-            courseVisibleRoleRepository.saveAll(mappings);
-        }
-        return courseRepository.findById(saved.getId()).orElse(saved);
+        return courseRepository.save(course);
     }
+
 }

@@ -1,13 +1,16 @@
 package com.training.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * @author 14798
+ */
 @Entity
 @Table(name = "user_courses")
 @Data
@@ -29,6 +32,7 @@ public class UserCourse {
     private Course course;
 
     @Column(nullable = false)
+    @CreationTimestamp
     private LocalDateTime enrollTime;
 
     @Column(nullable = false)
@@ -39,17 +43,4 @@ public class UserCourse {
 
     @Column
     private Integer watchProgress; // 观看进度百分比
-
-    @PrePersist
-    protected void onCreate() {
-        if (enrollTime == null) {
-            enrollTime = LocalDateTime.now();
-        }
-        if (isCompleted == null) {
-            isCompleted = false;
-        }
-        if (watchProgress == null) {
-            watchProgress = 0;
-        }
-    }
 }

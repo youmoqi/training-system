@@ -7,6 +7,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "exam_paper_auto_rules")
@@ -35,8 +38,7 @@ public class ExamPaperAutoRule {
     @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
 
-    // 关联关系
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_paper_id", insertable = false, updatable = false)
     private ExamPaper examPaper;
-} 
+}

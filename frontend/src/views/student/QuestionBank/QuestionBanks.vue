@@ -197,9 +197,9 @@ export default {
         const response = await api.get('/question-banks/student/available-question-banks', {
           params: {
             userId: store.getters.currentUser.id,
-            page: currentPage.value - 1, // 后端从0开始，前端从1开始
+            page: currentPage.value - 1,
             size: pageSize.value,
-            userRole: store.getters.currentUser.role
+            roleId: store.getters.currentUser.role.id
           }
         })
         availableQuestionBanks.value = response.data.data.content

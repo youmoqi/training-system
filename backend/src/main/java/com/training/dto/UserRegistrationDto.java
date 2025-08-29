@@ -5,6 +5,9 @@ import lombok.Data;
 
 import javax.validation.constraints.*;
 
+/**
+ * @author 14798
+ */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRegistrationDto {
@@ -35,11 +38,11 @@ public class UserRegistrationDto {
     @NotBlank(message = "工作单位不能为空")
     private String workUnit;
 
-    @NotBlank(message = "培训类型不能为空")
-    private String trainingType;
+    @NotBlank(message = "角色类型不能为空")
+    private Long roleCategory;
 
     @NotNull(message = "作业类别不能为空")
-    private Long jobCategoryId;
+    private Long jobCategory;
 
     @NotNull(message = "缴费额度不能为空")
     @DecimalMin(value = "0.0", message = "缴费额度不能为负数")

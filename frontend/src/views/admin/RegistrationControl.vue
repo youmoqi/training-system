@@ -40,7 +40,7 @@ const FIELD_DEFS = [
   { key: 'idCard', label: '身份证' },
   { key: 'phone', label: '手机号' },
   { key: 'workUnit', label: '工作单位' },
-  { key: 'trainingType', label: '培训类型' },
+  { key: 'roleCategory', label: '角色类别' },
   { key: 'jobCategory', label: '岗位类别' },
   { key: 'facePhotoUrl', label: '人脸照片' },
   { key: 'paymentAmount', label: '缴费金额' }
@@ -97,4 +97,4 @@ export default {
 </script>
 
 <style scoped>
-</style> 
+</style>

@@ -5,6 +5,9 @@ import lombok.Data;
 import javax.persistence.*;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "question_results")
@@ -30,14 +33,14 @@ public class QuestionResult {
     private String explanation;
 
     @ElementCollection
-    @CollectionTable(name = "question_result_answers", 
+    @CollectionTable(name = "question_result_answers",
                     joinColumns = @JoinColumn(name = "question_result_id"))
     @Column(name = "answer")
     private List<String> userAnswers;
 
     @ElementCollection
-    @CollectionTable(name = "question_result_correct_answers", 
+    @CollectionTable(name = "question_result_correct_answers",
                     joinColumns = @JoinColumn(name = "question_result_id"))
     @Column(name = "answer")
     private List<String> correctAnswers;
-} 
+}

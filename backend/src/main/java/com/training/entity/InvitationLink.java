@@ -1,10 +1,16 @@
 package com.training.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "invitation_links")
@@ -32,26 +38,18 @@ public class InvitationLink {
     private LocalDateTime expireTime;
 
     @Column(updatable = false)
+    @CreationTimestamp
     private LocalDateTime createTime;
 
+    @Column(nullable = false)
+    @UpdateTimestamp
     private LocalDateTime updateTime;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "invitation_courses",
-        joinColumns = @JoinColumn(name = "invitation_id"),
-        inverseJoinColumns = @JoinColumn(name = "course_id")
+            name = "invitation_courses",
+            joinColumns = @JoinColumn(name = "invitation_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private List<Course> courses;
-
-    @PrePersist
-    protected void onCreate() {
-        createTime = LocalDateTime.now();
-        updateTime = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updateTime = LocalDateTime.now();
-    }
-} 
+}

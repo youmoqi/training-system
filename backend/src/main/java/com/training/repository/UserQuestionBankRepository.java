@@ -9,13 +9,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * @author 14798
+ */
 @Repository
 public interface UserQuestionBankRepository extends JpaRepository<UserQuestionBank, Long> {
     List<UserQuestionBank> findByUser(User user);
-
-    Optional<UserQuestionBank> findByUserAndQuestionBank(User user, QuestionBank questionBank);
 
     boolean existsByUserAndQuestionBank(User user, QuestionBank questionBank);
 

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import javax.persistence.*;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "question_bank_question_results")
@@ -39,4 +42,4 @@ public class QuestionBankQuestionResult {
 
     @Column(columnDefinition = "TEXT")
     private String explanation;
-} 
+}

@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author 14798
+ */
 @Repository
 public interface ExamPaperAutoRuleRepository extends JpaRepository<ExamPaperAutoRule, Long> {
 

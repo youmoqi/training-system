@@ -1,10 +1,15 @@
 package com.training.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "users")
@@ -48,12 +53,14 @@ public class User {
     private Double paymentAmount;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "visibility_category_id")
-    private VisibilityCategory role;
+    @JoinColumn(name = "role_id")
+    private Role role;
 
+    @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createTime;
 
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updateTime;
 
@@ -62,15 +69,4 @@ public class User {
 
     @Column(nullable = false)
     private boolean canExam = true;
-
-    @PrePersist
-    protected void onCreate() {
-        createTime = LocalDateTime.now();
-        updateTime = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updateTime = LocalDateTime.now();
-    }
 }

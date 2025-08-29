@@ -11,7 +11,7 @@
  Target Server Version : 80403 (8.4.3)
  File Encoding         : 65001
 
- Date: 29/08/2025 22:33:26
+ Date: 30/08/2025 00:18:32
 */
 
 SET NAMES utf8mb4;
@@ -24,13 +24,13 @@ DROP TABLE IF EXISTS `course_visible_roles`;
 CREATE TABLE `course_visible_roles`  (
                                          `id` bigint NOT NULL,
                                          `course_id` bigint NOT NULL COMMENT '课程ID',
-                                         `visibility_category_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
+                                         `visibility_role_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
                                          `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
                                          PRIMARY KEY (`id`) USING BTREE,
-                                         INDEX `idx_qb_vis_cat`(`visibility_category_id` ASC) USING BTREE,
+                                         INDEX `idx_qb_vis_cat`(`visibility_role_id` ASC) USING BTREE,
                                          INDEX `fk_qb_cou_ban`(`course_id` ASC) USING BTREE,
                                          CONSTRAINT `fk_qb_cou_ban` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                         CONSTRAINT `fk_qb_cou_cat` FOREIGN KEY (`visibility_category_id`) REFERENCES `visibility_categories` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+                                         CONSTRAINT `fk_qb_cou_cat` FOREIGN KEY (`visibility_role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '课程可见角色表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -51,26 +51,6 @@ CREATE TABLE `courses`  (
                             INDEX `idx_title`(`title` ASC) USING BTREE,
                             INDEX `idx_is_online`(`is_online` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 235 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '课程表' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for exam_categories
--- ----------------------------
-DROP TABLE IF EXISTS `exam_categories`;
-CREATE TABLE `exam_categories`  (
-                                    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '分类ID',
-                                    `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分类代码',
-                                    `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分类名称',
-                                    `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '分类描述',
-                                    `parent_code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '父分类代码',
-                                    `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序',
-                                    `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT '是否启用',
-                                    `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                    `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                    PRIMARY KEY (`id`) USING BTREE,
-                                    UNIQUE INDEX `unique_code`(`code` ASC) USING BTREE,
-                                    INDEX `idx_parent_code`(`parent_code` ASC) USING BTREE,
-                                    INDEX `idx_sort_order`(`sort_order` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '考试分类表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for exam_paper_auto_rules
@@ -186,13 +166,13 @@ DROP TABLE IF EXISTS `exam_paper_visible_roles`;
 CREATE TABLE `exam_paper_visible_roles`  (
                                              `id` bigint NOT NULL,
                                              `exam_paper_id` bigint NOT NULL COMMENT '考试ID',
-                                             `visibility_category_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
+                                             `visibility_role_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
                                              `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
                                              PRIMARY KEY (`id`) USING BTREE,
-                                             INDEX `idx_qb_vis_cat`(`visibility_category_id` ASC) USING BTREE,
+                                             INDEX `idx_qb_vis_cat`(`visibility_role_id` ASC) USING BTREE,
                                              INDEX `fk_qb_exa_ban`(`exam_paper_id` ASC) USING BTREE,
                                              CONSTRAINT `fk_qb_exa_ban` FOREIGN KEY (`exam_paper_id`) REFERENCES `exam_papers` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                             CONSTRAINT `fk_qb_exa_cat` FOREIGN KEY (`visibility_category_id`) REFERENCES `visibility_categories` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+                                             CONSTRAINT `fk_qb_exa_cat` FOREIGN KEY (`visibility_role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '考试可见角色表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -372,12 +352,12 @@ DROP TABLE IF EXISTS `question_bank_visible_roles`;
 CREATE TABLE `question_bank_visible_roles`  (
                                                 `id` bigint NOT NULL,
                                                 `question_bank_id` bigint NOT NULL COMMENT '题库ID',
-                                                `visibility_category_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
+                                                `visibility_role_id` bigint NULL DEFAULT NULL COMMENT '可见性分类ID',
                                                 PRIMARY KEY (`id`) USING BTREE,
-                                                INDEX `idx_qb_vis_cat`(`visibility_category_id` ASC) USING BTREE,
+                                                INDEX `idx_qb_vis_cat`(`visibility_role_id` ASC) USING BTREE,
                                                 INDEX `fk_qb_que_ban`(`question_bank_id` ASC) USING BTREE,
-                                                CONSTRAINT `fk_qb_vis_cat` FOREIGN KEY (`visibility_category_id`) REFERENCES `visibility_categories` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-                                                CONSTRAINT `fk_qb_que_ban` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+                                                CONSTRAINT `fk_qb_que_ban` FOREIGN KEY (`question_bank_id`) REFERENCES `question_banks` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+                                                CONSTRAINT `fk_qb_vis_cat` FOREIGN KEY (`visibility_role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '题库可见角色表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -589,12 +569,11 @@ CREATE TABLE `users`  (
                           `job_category_id` bigint NULL DEFAULT NULL COMMENT '作业类别',
                           `face_photo_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '人脸照片URL',
                           `payment_amount` decimal(10, 2) NULL DEFAULT NULL COMMENT '缴费额度',
-                          `can_learn` tinyint(1) NULL DEFAULT 1 COMMENT '学习权限',
-                          `can_exam` tinyint(1) NULL DEFAULT 1 COMMENT '考试权限',
+                          `can_learn` tinyint(1) NULL DEFAULT 0 COMMENT '学习权限',
+                          `can_exam` tinyint(1) NULL DEFAULT 0 COMMENT '考试权限',
                           `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                           `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                          `role` bigint NULL DEFAULT NULL COMMENT '角色分类ID',
-                          `visibility_category_id` bigint NULL DEFAULT NULL,
+                          `role_id` bigint NULL DEFAULT NULL COMMENT '角色分类ID',
                           PRIMARY KEY (`id`) USING BTREE,
                           UNIQUE INDEX `username`(`username` ASC) USING BTREE,
                           UNIQUE INDEX `id_card`(`id_card` ASC) USING BTREE,
@@ -602,17 +581,17 @@ CREATE TABLE `users`  (
                           INDEX `idx_username`(`username` ASC) USING BTREE,
                           INDEX `idx_id_card`(`id_card` ASC) USING BTREE,
                           INDEX `idx_phone`(`phone` ASC) USING BTREE,
-                          INDEX `FKardt8pfj2l4r0kjn04q1jcxkn`(`role` ASC) USING BTREE,
+                          INDEX `FKardt8pfj2l4r0kjn04q1jcxkn`(`role_id` ASC) USING BTREE,
                           INDEX `FKsvdx48thf3vfak6tvd4an22en`(`job_category_id` ASC) USING BTREE,
-                          CONSTRAINT `FKardt8pfj2l4r0kjn04q1jcxkn` FOREIGN KEY (`role`) REFERENCES `visibility_categories` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+                          CONSTRAINT `FKardt8pfj2l4r0kjn04q1jcxkn` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
                           CONSTRAINT `FKsvdx48thf3vfak6tvd4an22en` FOREIGN KEY (`job_category_id`) REFERENCES `job_categories` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 258 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 259 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for visibility_categories
+-- Table structure for roles
 -- ----------------------------
-DROP TABLE IF EXISTS `visibility_categories`;
-CREATE TABLE `visibility_categories`  (
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles`  (
                                           `id` bigint NOT NULL AUTO_INCREMENT,
                                           `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
                                           `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,

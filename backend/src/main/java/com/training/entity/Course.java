@@ -1,10 +1,16 @@
 package com.training.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "courses")
@@ -22,8 +28,6 @@ public class Course {
     @Column
     private String coverImageUrl;
 
-
-
     @Column(nullable = false)
     private String videoUrl;
 
@@ -33,23 +37,19 @@ public class Course {
     @Column(nullable = false)
     private Boolean isOnline;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<CourseVisibleRole> visibleRoles;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "course_visible_roles",
+            joinColumns = @JoinColumn(name = "course_id"),
+            inverseJoinColumns = @JoinColumn(name = "visibility_role_id")
+    )
+    private List<Role> visibleRoles;
 
+    @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime createTime;
 
+    @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updateTime;
-
-    @PrePersist
-    protected void onCreate() {
-        createTime = LocalDateTime.now();
-        updateTime = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updateTime = LocalDateTime.now();
-    }
 }

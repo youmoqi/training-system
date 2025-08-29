@@ -17,6 +17,9 @@ import java.util.stream.Collectors;
 
 import java.util.ArrayList;
 
+/**
+ * @author 14798
+ */
 @Service
 @Transactional
 public class QuestionBankService {
@@ -34,10 +37,7 @@ public class QuestionBankService {
     private QuestionBankResultRepository questionBankResultRepository;
 
     @Autowired
-    private QuestionBankVisibleRoleRepository questionBankVisibleRoleRepository;
-
-    @Autowired
-    private VisibilityCategoryRepository visibilityCategoryRepository;
+    private RoleRepository roleRepository;
 
     // 获取用户已购题库
     private List<QuestionBank> getUserPurchasedQuestionBanks(Long userId) {
@@ -76,7 +76,7 @@ public class QuestionBankService {
     }
 
     // 学员获取可购买的题库（未购题库）
-    public Page<QuestionBank> findAvailableQuestionBanks(Long userId, String userRole, Pageable pageable) {
+    public Page<QuestionBank> findAvailableQuestionBanks(Long userId, Long roleId, Pageable pageable) {
         // 获取用户已购题库
         userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
@@ -84,8 +84,8 @@ public class QuestionBankService {
 
         // 根据角色获取在线题库
         Page<QuestionBank> onlineQuestionBanks;
-        if (userRole != null && !userRole.isEmpty()) {
-            onlineQuestionBanks = questionBankRepository.findByIsOnlineTrueAndVisibleRolesContaining(userRole, pageable);
+        if (roleId != null) {
+            onlineQuestionBanks = questionBankRepository.findByIsOnlineTrueAndVisibleRolesId(roleId, pageable);
         } else {
             onlineQuestionBanks = questionBankRepository.findByIsOnlineTrue(pageable);
         }
@@ -95,7 +95,7 @@ public class QuestionBankService {
                 .filter(questionBank -> !userPurchasedQuestionBanks.contains(questionBank))
                 .collect(Collectors.toList());
 
-        return new PageImpl<>(filteredContent, pageable, onlineQuestionBanks.getTotalElements() - userPurchasedQuestionBanks.size());
+        return new PageImpl<>(filteredContent, pageable, Math.max(0, onlineQuestionBanks.getTotalElements() - userPurchasedQuestionBanks.size()));
     }
 
     public QuestionBank createOrUpdateQuestionBank(Long id, QuestionBankDto dto) {
@@ -107,20 +107,11 @@ public class QuestionBankService {
         QuestionBank saved = questionBankRepository.save(qb);
 
         // 重建可见分类映射
-        if (saved.getVisibleRoles() != null) {
-            questionBankVisibleRoleRepository.deleteAllByQuestionBankId(saved.getId());
-            saved.getVisibleRoles().clear();
-        }
-        if (dto.getVisibleCategoryIds() != null && !dto.getVisibleCategoryIds().isEmpty()) {
-            List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(dto.getVisibleCategoryIds());
-            List<QuestionBankVisibleRole> mappings = new ArrayList<>();
-            for (VisibilityCategory cat : cats) {
-                QuestionBankVisibleRole m = new QuestionBankVisibleRole();
-                m.setQuestionBank(saved);
-                m.setVisibilityCategory(cat);
-                mappings.add(m);
-            }
-            questionBankVisibleRoleRepository.saveAll(mappings);
+        if (dto.getVisibleRoleIds() != null && !dto.getVisibleRoleIds().isEmpty()) {
+            List<Role> cats = roleRepository.findAllById(dto.getVisibleRoleIds());
+            saved.setVisibleRoles(cats);
+        } else {
+            saved.setVisibleRoles(new ArrayList<>());
         }
         return questionBankRepository.findById(saved.getId()).orElse(saved);
     }
@@ -137,8 +128,8 @@ public class QuestionBankService {
         return questionBankRepository.findByIsOnlineTrue();
     }
 
-    public List<QuestionBank> findQuestionBanksByRole(String role) {
-        return questionBankRepository.findByIsOnlineTrueAndVisibleRolesContaining(role);
+    public List<QuestionBank> findQuestionBanksByRole(Long roleId) {
+        return questionBankRepository.findByIsOnlineTrueAndVisibleRolesId(roleId);
     }
 
     public void deleteQuestionBank(Long id) {

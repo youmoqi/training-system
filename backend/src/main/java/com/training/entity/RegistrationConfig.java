@@ -4,6 +4,9 @@ import lombok.Data;
 
 import javax.persistence.*;
 
+/**
+ * @author 14798
+ */
 @Data
 @Entity
 @Table(name = "registration_config")
@@ -16,4 +19,4 @@ public class RegistrationConfig {
     @Lob
     @Column(nullable = false)
     private String fieldsConfigJson;
-} 
+}

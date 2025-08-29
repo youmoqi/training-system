@@ -237,12 +237,18 @@ public class PdfGenerator {
 
     private String getUserRoleDisplayName(String role) {
         switch (role) {
-            case "EXPLOSIVE_USER":
-                return "易制爆人员";
-            case "BLAST_USER":
-                return "爆破三大员";
-            case "ADMIN":
-                return "管理员";
+            case "EXPLOSIVE_FIRST":
+                return "易制爆用户-首次培训";
+            case "EXPLOSIVE_CONTINUE":
+                return "易制爆用户-继续教育";
+            case "BLAST_THREE_FIRST":
+                return "爆破三大员-首次培训";
+            case "BLAST_THREE_CONTINUE":
+                return "爆破三大员-继续教育";
+            case "BLAST_TECH_FIRST":
+                return "爆破工程技术人员-首次培训";
+            case "BLAST_TECH_CONTINUE":
+                return "爆破工程技术人员-继续教育";
             case "SUPER_ADMIN":
                 return "超级管理员";
             default:

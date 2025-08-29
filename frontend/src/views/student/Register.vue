@@ -70,10 +70,11 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="培训类型" prop="trainingType" :required="isRequired('trainingType')">
-              <el-select v-model="formData.trainingType" :disabled="!isEditable('trainingType')" placeholder="请选择培训类型" style="width: 100%">
+            <el-form-item label="角色类型" prop="roleCategory" :required="isRequired('roleCategory')">
+              <el-select v-model="formData.roleCategory" :disabled="!isEditable('roleCategory')"
+                         placeholder="请选择角色类型" style="width: 100%">
                 <el-option
-                    v-for="option in trainingOptions"
+                    v-for="option in roleOptions"
                     :key="option.value"
                     :label="option.label"
                     :value="option.value"
@@ -83,7 +84,8 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="作业类别" prop="jobCategory" :required="isRequired('jobCategory')">
-              <el-select v-model="formData.jobCategory" :disabled="!isEditable('jobCategory')" placeholder="请选择作业类别" style="width: 100%">
+              <el-select v-model="formData.jobCategory" :disabled="!isEditable('jobCategory')"
+                         placeholder="请选择作业类别" style="width: 100%">
                 <el-option
                     v-for="option in jobOptions"
                     :key="option.value"
@@ -168,25 +170,22 @@ export default {
       idCard: '',
       phone: '',
       workUnit: '',
-      trainingType: '',
+      roleCategory: '',
       jobCategory: '',
       paymentAmount: 0,
       facePhoto: null
     })
 
     const jobOptions = ref([])
-    const trainingOptions = ref([])
-    // Store selected training type to filter job categories
-    const selectedTrainingType = ref('')
-
+    const roleOptions = ref([])
     const fieldConfig = reactive({})
 
     const baseRules = {
       username: [
-        { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+        {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'}
       ],
       password: [
-        { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+        {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
       ],
       idCard: [
         {
@@ -196,7 +195,7 @@ export default {
         }
       ],
       phone: [
-        { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
+        {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
       ]
     }
 
@@ -207,7 +206,11 @@ export default {
       const apply = (key, label, extra = []) => {
         const arr = [...extra]
         if (isRequired(key)) {
-          arr.unshift({ required: true, message: `请输入${label}`, trigger: key === 'gender' || key === 'trainingType' || key === 'jobCategory' ? 'change' : 'blur' })
+          arr.unshift({
+            required: true,
+            message: `请输入${label}`,
+            trigger: key === 'gender' || key === 'trainingType' || key === 'jobCategory' ? 'change' : 'blur'
+          })
         }
         r[key] = arr
       }
@@ -218,10 +221,10 @@ export default {
       apply('idCard', '身份证号码', baseRules.idCard)
       apply('phone', '手机号', baseRules.phone)
       apply('workUnit', '工作单位')
-      apply('trainingType', '培训类型')
+      apply('roleCategory', '角色类别')
       apply('jobCategory', '作业类别')
       apply('paymentAmount', '缴费额度')
-      r.facePhoto = isRequired('facePhotoUrl') ? [{ required: true, message: '请上传人脸照片', trigger: 'change' }] : []
+      r.facePhoto = isRequired('facePhotoUrl') ? [{required: true, message: '请上传人脸照片', trigger: 'change'}] : []
       Object.assign(rules, r)
     }
 
@@ -235,7 +238,7 @@ export default {
 
     const loadConfig = async () => {
       try {
-        const [cfgResp, jobsResp, trainingResp] = await Promise.all([
+        const [cfgResp, jobsResp, rolesResp] = await Promise.all([
           api.get('/registration-config'),
           api.get('/categories/jobs'),
           api.get('/categories/roles')
@@ -243,16 +246,22 @@ export default {
         if (cfgResp.data.success) {
           const cfgJson = cfgResp.data.data.fieldsConfigJson
           const obj = JSON.parse(cfgJson || '{}')
-          ;['username','password','realName','gender','idCard','phone','workUnit','trainingType','jobCategory','paymentAmount','facePhotoUrl']
-            .forEach(k => {
-              fieldConfig[k] = { required: !!obj?.[k]?.required, editable: obj?.[k]?.editable !== false }
-            })
+          ;['username', 'password', 'realName', 'gender', 'idCard', 'phone', 'workUnit', 'roleCategory', 'jobCategory', 'paymentAmount', 'facePhotoUrl']
+              .forEach(k => {
+                fieldConfig[k] = {required: !!obj?.[k]?.required, editable: obj?.[k]?.editable !== false}
+              })
         }
         if (jobsResp.data.success) {
-          jobOptions.value = (jobsResp.data.data || []).filter(it => it.isActive).map(it => ({ label: it.name, value: it.id }))
+          jobOptions.value = (jobsResp.data.data || []).filter(it => it.isActive).map(it => ({
+            label: it.name,
+            value: it.id
+          }))
         }
-        if (trainingResp.data.success) {
-          trainingOptions.value = (trainingResp.data.data || []).filter(it => it.isActive).map(it => ({ label: it.name, value: it.code }))
+        if (rolesResp.data.success) {
+          roleOptions.value = (rolesResp.data.data || []).filter(it => it.isActive).map(it => ({
+            label: it.name,
+            value: it.id
+          }))
         }
         buildRulesFromConfig()
         await nextTick()
@@ -269,7 +278,6 @@ export default {
         ElMessage.error('文件大小不能超过2MB')
         return
       }
-
       formData.facePhoto = file.raw
       previewUrl.value = URL.createObjectURL(file.raw)
     }
@@ -278,7 +286,6 @@ export default {
       try {
         await registerForm.value.validate()
         loading.value = true
-
         await store.dispatch('register', formData)
         ElMessage.success('注册成功，请登录')
         router.push('/login')
@@ -302,7 +309,7 @@ export default {
       isRequired,
       isEditable,
       jobOptions,
-      trainingOptions
+      roleOptions
     }
   }
 }

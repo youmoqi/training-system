@@ -39,7 +39,7 @@
             <el-table-column prop="phone" label="手机号" width="150"/>
             <el-table-column prop="role" label="角色" width="200">
               <template #default="scope">
-                <el-tag :type="getRoleTagType(scope.row.role.code)">
+                <el-tag :type="getCategoryTagType(scope.row.role.code)">
                   {{ scope.row.role.name}}
                 </el-tag>
               </template>
@@ -49,7 +49,7 @@
                 {{ formatDate(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" fixed="right">
+            <el-table-column label="操作" fixed="right" width="260" >
               <template #default="scope">
                 <el-button size="small" @click="viewUser(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="openPermissions(scope.row)">编辑权限</el-button>
@@ -149,9 +149,11 @@ import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 import {Plus, Search} from '@element-plus/icons-vue'
 import api from '@/api'
+import {getCategoryTagType} from "@/utils/examCategory";
 
 export default {
   name: 'UserManagement',
+  methods: {getCategoryTagType},
   components: {
     Plus,
     Search
@@ -191,14 +193,14 @@ export default {
           api.get('/categories/roles'),
           api.get('/categories/jobs')
         ])
-        
+
         if (rolesResp.data.success) {
           roleCategories.value = (rolesResp.data.data || []).filter(it => it.isActive).map(it => ({
             label: it.name,
             value: it.id
           }))
         }
-        
+
         if (jobsResp.data.success) {
           jobOptions.value = jobsResp.data.data.filter(it => it.isActive).map(it => ({
             label: it.name,
@@ -258,7 +260,7 @@ export default {
     const openPermissions = (user) => {
       permissionForm.value = {
         id: user.id,
-        role: user.visibilityCategory?.id,
+        role: user.role?.id,
         jobCategory: user.jobCategory?.id,
         canLearn: !!user.canLearn,
         canExam: !!user.canExam
@@ -271,7 +273,7 @@ export default {
       savingPermission.value = true
       try {
         const {id, role, canLearn, canExam, jobCategory} = permissionForm.value
-        const body = {visibilityCategoryId: role, canLearn, canExam, jobCategoryId: jobCategory}
+        const body = {roleId: role, canLearn, canExam, jobCategoryId: jobCategory}
         const resp = await api.put(`/users/${id}/permissions`, body)
         if (resp.data.success) {
           ElMessage.success('保存成功')
@@ -305,16 +307,6 @@ export default {
       }
     }
 
-    const getRoleTagType = (role) => {
-      const typeMap = {
-        'SUPER_ADMIN': 'danger',
-        'ADMIN': 'warning',
-        'EXPLOSIVE_USER': 'primary',
-        'BLAST_USER': 'success'
-      }
-      return typeMap[role] || 'info'
-    }
-
     const formatDate = (dateString) => {
       return new Date(dateString).toLocaleString('zh-CN')
     }
@@ -343,7 +335,7 @@ export default {
       savePermissions,
       viewUser,
       deleteUser,
-      getRoleTagType,
+      getCategoryTagType,
       formatDate,
       handleSearch,
       handleSizeChange,

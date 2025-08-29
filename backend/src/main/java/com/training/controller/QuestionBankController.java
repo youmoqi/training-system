@@ -66,10 +66,10 @@ public class QuestionBankController {
             @RequestParam Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String userRole) {
+            @RequestParam(required = false) Long roleId) {
         try {
             Pageable pageable = PageRequest.of(page, size);
-            Page<QuestionBank> questionBanks = questionBankService.findAvailableQuestionBanks(userId, userRole, pageable);
+            Page<QuestionBank> questionBanks = questionBankService.findAvailableQuestionBanks(userId, roleId, pageable);
             return ResponseEntity.ok(ApiResponse.success("获取可购买题库成功", questionBanks));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取可购买题库失败: " + e.getMessage()));
@@ -83,10 +83,10 @@ public class QuestionBankController {
     }
 
     @GetMapping("/online")
-    public ResponseEntity<ApiResponse<List<QuestionBank>>> getOnlineQuestionBanks(@RequestParam(required = false) String userRole) {
+    public ResponseEntity<ApiResponse<List<QuestionBank>>> getOnlineQuestionBanks(@RequestParam(required = false) Long roleId) {
         List<QuestionBank> questionBanks;
-        if (userRole != null && !userRole.isEmpty()) {
-            questionBanks = questionBankService.findQuestionBanksByRole(userRole);
+        if (roleId != null) {
+            questionBanks = questionBankService.findQuestionBanksByRole(roleId);
         } else {
             questionBanks = questionBankService.findOnlineQuestionBanks();
         }

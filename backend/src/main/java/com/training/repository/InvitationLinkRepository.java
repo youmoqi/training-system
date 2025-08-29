@@ -8,11 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * @author 14798
+ */
 @Repository
 public interface InvitationLinkRepository extends JpaRepository<InvitationLink, Long> {
     Optional<InvitationLink> findByLinkCode(String linkCode);
-    
+
     // 分页查询方法
     Page<InvitationLink> findByTitleContainingOrDescriptionContaining(
         String title, String description, Pageable pageable);
-} 
+}

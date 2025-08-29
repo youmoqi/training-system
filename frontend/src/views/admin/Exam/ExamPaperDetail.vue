@@ -29,7 +29,7 @@
 
           <el-descriptions-item label="可见角色" :span="2">
             <el-tag v-for="role in examPaper.visibleRoles" :key="role" style="margin-right: 5px">
-              {{ role?.visibilityCategory.name }}
+              {{ role?.role.name }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="创建时间" :span="2">

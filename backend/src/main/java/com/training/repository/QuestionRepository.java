@@ -1,7 +1,6 @@
 package com.training.repository;
 
 import com.training.entity.Question;
-import com.training.entity.QuestionBank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +11,6 @@ import java.util.List;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
-    List<Question> findByQuestionBank(QuestionBank questionBank);
 
     // 分页查询方法
     Page<Question> findByContentContaining(String content, Pageable pageable);
