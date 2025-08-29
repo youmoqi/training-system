@@ -124,15 +124,19 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-form-item label="可见用户" prop="visibleRoles">
+          <el-form-item label="可见角色" prop="visibleRoles">
             <el-select
               v-model="courseForm.visibleRoles"
               multiple
-              placeholder="请选择可见用户角色"
+              placeholder="请选择可见角色分类"
               style="width: 100%"
             >
-              <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
-              <el-option label="爆破用户" value="BLAST_USER" />
+              <el-option 
+                v-for="role in roleCategories" 
+                :key="role.id" 
+                :label="role.name" 
+                :value="role.id" 
+              />
             </el-select>
           </el-form-item>
         </el-form>
@@ -169,6 +173,7 @@ export default {
     const isEdit = ref(false)
     const courseFormRef = ref(null)
     const searchKeyword = ref('')
+    const roleCategories = ref([])
     const currentPage = ref(1)
     const pageSize = ref(20)
     const total = ref(0)
@@ -333,7 +338,18 @@ export default {
 
     onMounted(() => {
       loadCourses()
+      loadRoleCategories()
     })
+    
+    const loadRoleCategories = async () => {
+      try {
+        const response = await api.get('/categories/roles')
+        roleCategories.value = response.data.data
+      } catch (error) {
+        console.error('Failed to load role categories:', error)
+        ElMessage.error('获取角色分类失败')
+      }
+    }
 
     return {
       courses,

@@ -29,7 +29,7 @@
 
           <el-descriptions-item label="可见角色" :span="2">
             <el-tag v-for="role in examPaper.visibleRoles" :key="role" style="margin-right: 5px">
-              {{ getRoleName(role) }}
+              {{ role?.visibilityCategory.name }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="创建时间" :span="2">
@@ -157,14 +157,6 @@ export default {
       }
     }
 
-    const getRoleName = (role) => {
-      const roleMap = {
-        'EXPLOSIVE_USER': '易制爆用户',
-        'BLAST_USER': '爆破用户'
-      }
-      return roleMap[role] || role
-    }
-
     const getQuestionTypeName = (type) => {
       const typeMap = {
         'SINGLE_CHOICE': '单选题',
@@ -203,7 +195,6 @@ export default {
       manageQuestions,
       viewQuestion,
       removeQuestion,
-      getRoleName,
       getQuestionTypeName,
       getQuestionTypeTag,
       formatDateTime

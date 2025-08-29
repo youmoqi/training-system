@@ -8,6 +8,7 @@ import com.training.repository.*;
 import com.training.entity.User;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,12 @@ public class ExamPaperService {
     private UserRepository userRepository;
 
     @Autowired
+    private ExamPaperVisibleRoleRepository examPaperVisibleRoleRepository;
+
+    @Autowired
+    private VisibilityCategoryRepository visibilityCategoryRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     // 分页查询试卷
@@ -80,7 +87,7 @@ public class ExamPaperService {
         // 获取用户信息以确定用户角色
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        String userRole = String.valueOf(user.getRole());
+        String userRole = user.getRole().getCode();
         Page<UserExamPaper> userExamPapers;
         if (keyword != null && !keyword.trim().isEmpty()) {
             // 按关键词搜索用户已购买的试卷，并过滤可见角色
@@ -97,7 +104,7 @@ public class ExamPaperService {
         // 获取用户信息以确定用户角色
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        String userRole = String.valueOf(user.getRole());
+        String userRole = user.getRole().getCode();
         Page<ExamPaper> examPapers;
         if (keyword != null && !keyword.trim().isEmpty()) {
             // 按关键词搜索可购买的试卷，并过滤可见角色
@@ -266,7 +273,21 @@ public class ExamPaperService {
                 examPaper.setMaxAttempts(3);
             }
             examPaper = examPaperRepository.save(examPaper);
-            return ApiResponse.success(convertToDto(examPaper));
+
+            // 重建可见分类映射
+            if (examPaperDto.getVisibleCategoryIds() != null && !examPaperDto.getVisibleCategoryIds().isEmpty()) {
+                List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(examPaperDto.getVisibleCategoryIds());
+                List<ExamPaperVisibleRole> mappings = new ArrayList<>();
+                for (VisibilityCategory cat : cats) {
+                    ExamPaperVisibleRole m = new ExamPaperVisibleRole();
+                    m.setExamPaper(examPaper);
+                    m.setVisibilityCategory(cat);
+                    mappings.add(m);
+                }
+                examPaperVisibleRoleRepository.saveAll(mappings);
+            }
+
+            return ApiResponse.success(convertToDto(examPaperRepository.findById(examPaper.getId()).orElse(examPaper)));
         } catch (Exception e) {
             return ApiResponse.error("创建试卷失败: " + e.getMessage());
         }
@@ -284,7 +305,22 @@ public class ExamPaperService {
             // 保存原有的totalQuestions值
             BeanUtils.copyProperties(examPaperDto, examPaper);
             examPaper = examPaperRepository.save(examPaper);
-            return ApiResponse.success(convertToDto(examPaper));
+
+            // 重建可见分类映射
+            examPaperVisibleRoleRepository.deleteAllByExamPaperId(examPaper.getId());
+            if (examPaperDto.getVisibleCategoryIds() != null && !examPaperDto.getVisibleCategoryIds().isEmpty()) {
+                List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(examPaperDto.getVisibleCategoryIds());
+                List<ExamPaperVisibleRole> mappings = new ArrayList<>();
+                for (VisibilityCategory cat : cats) {
+                    ExamPaperVisibleRole m = new ExamPaperVisibleRole();
+                    m.setExamPaper(examPaper);
+                    m.setVisibilityCategory(cat);
+                    mappings.add(m);
+                }
+                examPaperVisibleRoleRepository.saveAll(mappings);
+            }
+
+            return ApiResponse.success(convertToDto(examPaperRepository.findById(examPaper.getId()).orElse(examPaper)));
         } catch (Exception e) {
             return ApiResponse.error("更新试卷失败: " + e.getMessage());
         }

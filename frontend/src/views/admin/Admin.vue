@@ -47,6 +47,10 @@
               <el-icon><User /></el-icon>
               <span>用户管理</span>
             </el-menu-item>
+            <el-menu-item index="/admin/registration-control">
+              <el-icon><Document /></el-icon>
+              <span>注册信息控制</span>
+            </el-menu-item>
             <el-menu-item index="/admin/invitations">
               <el-icon><Link /></el-icon>
               <span>邀请链接</span>

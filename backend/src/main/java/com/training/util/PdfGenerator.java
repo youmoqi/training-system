@@ -236,21 +236,29 @@ public class PdfGenerator {
     }
 
     private String getUserRoleDisplayName(String role) {
-        return switch (role) {
-            case "EXPLOSIVE_USER" -> "易制爆人员";
-            case "BLAST_USER" -> "爆破三大员";
-            case "ADMIN" -> "管理员";
-            case "SUPER_ADMIN" -> "超级管理员";
-            default -> "未知";
-        };
+        switch (role) {
+            case "EXPLOSIVE_USER":
+                return "易制爆人员";
+            case "BLAST_USER":
+                return "爆破三大员";
+            case "ADMIN":
+                return "管理员";
+            case "SUPER_ADMIN":
+                return "超级管理员";
+            default:
+                return "未知";
+        }
     }
 
     private String getCertificateTypeDisplayName(String type) {
-        return switch (type) {
-            case "EXPLOSIVE_USER" -> "易制爆人员培训证明";
-            case "BLAST_USER" -> "爆破三大员培训证明";
-            default -> "未知";
-        };
+        switch (type) {
+            case "EXPLOSIVE_USER":
+                return "易制爆人员培训证明";
+            case "BLAST_USER":
+                return "爆破三大员培训证明";
+            default:
+                return "未知";
+        }
     }
 
     private String safe(String value) {

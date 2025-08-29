@@ -37,9 +37,11 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .antMatchers("/api/auth/**", "/h2-console/**").permitAll()
+                .antMatchers("/api/registration-config/**", "/h2-console/**").permitAll()
+                .antMatchers("/api/categories/**", "/h2-console/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/invitations/join").hasRole("BLAST_USER")
                 .antMatchers(HttpMethod.DELETE, "/api/courses/unenroll/**").authenticated()
-                .antMatchers("/api/admin/**", "/api/invitations/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .antMatchers("/api/admin/**", "/api/invitations/**").hasAnyRole("SUPER_ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
@@ -62,9 +64,9 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-} 
+}

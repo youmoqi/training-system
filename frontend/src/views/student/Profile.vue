@@ -9,12 +9,12 @@
         <el-card class="profile-card">
           <div class="avatar-section">
             <el-avatar
-              :src="currentUser?.facePhotoUrl"
-              :size="120"
-              class="profile-avatar"
+                :src="currentUser?.facePhotoUrl"
+                :size="120"
+                class="profile-avatar"
             />
             <h4>{{ currentUser?.realName }}</h4>
-            <p>{{ getRoleText(currentUser?.role) }}</p>
+            <p>{{ currentUser?.role.name }}</p>
           </div>
 
           <div class="user-stats">
@@ -80,7 +80,7 @@
           </template>
 
           <el-table :data="userCourses" style="width: 100%">
-            <el-table-column prop="course.title" label="课程名称" />
+            <el-table-column prop="course.title" label="课程名称"/>
             <el-table-column prop="enrollTime" label="选课时间">
               <template #default="scope">
                 {{ formatDate(scope.row.enrollTime) }}
@@ -89,8 +89,8 @@
             <el-table-column prop="watchProgress" label="观看进度">
               <template #default="scope">
                 <el-progress
-                  :percentage="scope.row.watchProgress || 0"
-                  :stroke-width="8"
+                    :percentage="scope.row.watchProgress || 0"
+                    :stroke-width="8"
                 />
               </template>
             </el-table-column>
@@ -109,9 +109,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
-import { ElMessage } from 'element-plus'
+import {ref, computed, onMounted} from 'vue'
+import {useStore} from 'vuex'
+import {ElMessage} from 'element-plus'
 import api from '../../api'
 
 export default {
@@ -135,16 +135,6 @@ export default {
       }
     }
 
-    const getRoleText = (role) => {
-      const roleMap = {
-        'SUPER_ADMIN': '超级管理员',
-        'ADMIN': '管理员',
-        'EXPLOSIVE_USER': '易制爆人员',
-        'BLAST_USER': '爆破三大员'
-      }
-      return roleMap[role] || '未知角色'
-    }
-
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       return new Date(dateString).toLocaleString('zh-CN')
@@ -158,7 +148,6 @@ export default {
       currentUser,
       userCourses,
       completedCourses,
-      getRoleText,
       formatDate
     }
   }

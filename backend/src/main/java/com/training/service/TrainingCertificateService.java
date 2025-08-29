@@ -87,8 +87,7 @@ public class TrainingCertificateService {
         }
         certificate.setCompleteDate(completeTime);
         certificate.setIsPaid(isPaid);
-        certificate.setCertificateType(user.getRole().name());
-
+        certificate.setCertificateType(user.getRole() != null ? user.getRole().getName() : "未知");
         return certificateRepository.save(certificate);
     }
 
@@ -96,7 +95,7 @@ public class TrainingCertificateService {
     private String generateCertificateNumber(User user, Course course) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         String dateStr = LocalDateTime.now().format(formatter);
-        String userType = user.getRole().name().substring(0, 2);
+        String userType = user.getRole() != null ? user.getRole().getCode() : "未知";
         return String.format("CERT-%s-%s-%s-%d", dateStr, userType, course.getId(), user.getId());
     }
 
@@ -119,14 +118,8 @@ public class TrainingCertificateService {
     }
 
     // 根据用户角色和是否收费查询
-    public List<TrainingCertificateDto> getCertificatesByRoleAndPayment(String role, Boolean isPaid) {
-        List<TrainingCertificate> certificates = certificateRepository.findByUserRoleAndIsPaid(role, isPaid);
-        return certificates.stream().map(this::convertToDto).collect(Collectors.toList());
-    }
-
-    // 查询所有证书
-    public List<TrainingCertificateDto> getAllCertificates() {
-        List<TrainingCertificate> certificates = certificateRepository.findAll();
+    public List<TrainingCertificateDto> getCertificatesByRoleAndPayment(Long categoryId, Boolean isPaid) {
+        List<TrainingCertificate> certificates = certificateRepository.findByUserRoleAndIsPaid(categoryId, isPaid);
         return certificates.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -147,11 +140,11 @@ public class TrainingCertificateService {
 
         if (searchKeyword != null && !searchKeyword.isEmpty()) {
             spec = spec.and((root, query, cb) ->
-                cb.or(
-                    cb.like(root.get("certificateNumber"), "%" + searchKeyword + "%"),
-                    cb.like(root.get("user").get("username"), "%" + searchKeyword + "%"),
-                    cb.like(root.get("user").get("realName"), "%" + searchKeyword + "%")
-                )
+                    cb.or(
+                            cb.like(root.get("certificateNumber"), "%" + searchKeyword + "%"),
+                            cb.like(root.get("user").get("username"), "%" + searchKeyword + "%"),
+                            cb.like(root.get("user").get("realName"), "%" + searchKeyword + "%")
+                    )
             );
         }
 
@@ -208,7 +201,7 @@ public class TrainingCertificateService {
         dto.setUserId(certificate.getUser().getId());
         dto.setUsername(certificate.getUser().getUsername());
         dto.setRealName(certificate.getUser().getRealName());
-        dto.setUserRole(certificate.getUser().getRole().name());
+        dto.setUserRole(certificate.getUser().getRole().getCode());
         dto.setCourseId(certificate.getCourse().getId());
         dto.setCourseTitle(certificate.getCourse().getTitle());
         dto.setCertificateNumber(certificate.getCertificateNumber());

@@ -153,7 +153,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import api from '../../api'
+import api from '../../../api'
 
 export default {
   name: 'Courses',
@@ -178,7 +178,7 @@ export default {
     const myCoursesTotal = ref(0)
     const myCoursesLoading = ref(false)
 
-    const userRole = computed(() => store.getters.userRole)
+    const userRole = computed(() => store.getters.userRole?.code)
 
     const loadUserCourses = async () => {
       myCoursesLoading.value = true

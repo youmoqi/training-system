@@ -138,10 +138,13 @@ invitation_links (1) ←→ (N) invitation_question_banks ←→ (1) question_ba
 ## 角色权限说明
 
 ### 用户角色类型
-- `SUPER_ADMIN` - 超级管理员
-- `ADMIN` - 管理员
-- `EXPLOSIVE_USER` - 易制爆用户
-- `BLAST_USER` - 爆破用户
+SUPER_ADMIN	超级管理员
+EXPLOSIVE_FIRST	易制爆人员-首次培训
+EXPLOSIVE_CONTINUE	易制爆人员-继续教育
+BLAST_THREE_FIRST	爆破三大员-首次培训
+BLAST_THREE_CONTINUE	爆破三大员-继续教育
+ENGINEER_FIRST	爆破工程技术人员-首次培训
+ENGINEER_CONTINUE	爆破工程技术人员-继续教育
 
 ### 权限控制机制
 - 通过 `*_visible_roles` 表控制资源对不同角色的可见性

@@ -108,15 +108,19 @@
           <el-form-item label="是否上线" prop="isOnline">
             <el-switch v-model="formData.isOnline"/>
           </el-form-item>
-          <el-form-item label="可见用户" prop="visibleRoles">
+          <el-form-item label="可见角色" prop="visibleRoles">
             <el-select
               v-model="formData.visibleRoles"
               multiple
-              placeholder="请选择可见用户角色"
+              placeholder="请选择可见角色分类"
               style="width: 100%"
             >
-              <el-option label="易制爆用户" value="EXPLOSIVE_USER" />
-              <el-option label="爆破用户" value="BLAST_USER" />
+              <el-option 
+                v-for="role in roleCategories" 
+                :key="role.id" 
+                :label="role.name" 
+                :value="role.id" 
+              />
             </el-select>
           </el-form-item>
         </el-form>
@@ -156,6 +160,7 @@ export default {
     const showCreateDialog = ref(false)
     const editingQuestionBank = ref(null)
     const formRef = ref(null)
+    const roleCategories = ref([])
 
     const formData = reactive({
       title: '',
@@ -311,7 +316,18 @@ export default {
 
     onMounted(() => {
       loadQuestionBanks()
+      loadRoleCategories()
     })
+    
+    const loadRoleCategories = async () => {
+      try {
+        const response = await api.get('/categories/roles')
+        roleCategories.value = response.data.data
+      } catch (error) {
+        console.error('Failed to load role categories:', error)
+        ElMessage.error('获取角色分类失败')
+      }
+    }
 
     return {
       questionBanks,
@@ -333,7 +349,8 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       formRef,
-      rules
+      rules,
+      roleCategories
     }
   }
 }

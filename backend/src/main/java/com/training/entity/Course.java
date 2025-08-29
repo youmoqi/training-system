@@ -33,10 +33,8 @@ public class Course {
     @Column(nullable = false)
     private Boolean isOnline;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "course_visible_roles", joinColumns = @JoinColumn(name = "course_id"))
-    @Column(name = "role")
-    private List<String> visibleRoles;
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<CourseVisibleRole> visibleRoles;
 
     @Column(nullable = false)
     private LocalDateTime createTime;

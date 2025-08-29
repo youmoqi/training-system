@@ -308,7 +308,7 @@
 import {ref, reactive, computed, onMounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import api from '../../api'
+import api from '../../../api'
 
 export default {
   name: 'QuestionManagement',

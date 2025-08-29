@@ -1,6 +1,5 @@
 package com.training.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 
 import lombok.Data;
@@ -63,22 +62,12 @@ public class ExamPaper {
     @Column(name = "short_answer_score", nullable = false)
     private Integer shortAnswerScore = 5;
 
+    @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ExamPaperVisibleRole> visibleRoles;
+
     @CreationTimestamp
-    @Column(name = "create_time", nullable = false, updatable = false)
     private LocalDateTime createTime;
 
     @UpdateTimestamp
-    @Column(name = "update_time", nullable = false)
     private LocalDateTime updateTime;
-
-    // 关联的题目
-    @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<ExamPaperQuestion> questions;
-
-    // 可见角色
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "exam_paper_visible_roles", joinColumns = @JoinColumn(name = "exam_paper_id"))
-    @Column(name = "role")
-    private List<String> visibleRoles;
 }

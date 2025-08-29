@@ -1,6 +1,7 @@
 package com.training.controller;
 
 import com.training.dto.ApiResponse;
+import com.training.dto.UserPermissionsUpdateDto;
 import com.training.entity.User;
 import com.training.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,16 @@ public class UserController {
             user.setId(id);
             User updatedUser = userService.updateUser(user);
             return ResponseEntity.ok(ApiResponse.success("更新用户成功", updatedUser));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/permissions")
+    public ResponseEntity<ApiResponse<User>> updatePermissions(@PathVariable Long id, @RequestBody UserPermissionsUpdateDto dto) {
+        try {
+            User updated = userService.updateUserPermissions(id, dto);
+            return ResponseEntity.ok(ApiResponse.success("更新权限成功", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }

@@ -7,7 +7,7 @@
 ## 技术栈
 
 ### 后端
-- Java 8
+- Java 11
 - Spring Boot 2.7.14
 - Spring Security
 - Spring Data JPA

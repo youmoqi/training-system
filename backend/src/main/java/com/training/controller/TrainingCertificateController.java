@@ -25,7 +25,7 @@ public class TrainingCertificateController {
 
     // 生成培训证明
     @PostMapping("/generate")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TrainingCertificateDto>> generateCertificate(
             @RequestParam Long userId,
             @RequestParam Long courseId,
@@ -41,7 +41,7 @@ public class TrainingCertificateController {
 
     // 获取所有证书（分页）
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAllCertificates(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -58,7 +58,7 @@ public class TrainingCertificateController {
 
     // 根据用户ID获取证书
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<TrainingCertificateDto>>> getCertificatesByUserId(@PathVariable Long userId) {
         try {
             List<TrainingCertificateDto> certificates = certificateService.getCertificatesByUserId(userId);
@@ -70,7 +70,7 @@ public class TrainingCertificateController {
 
     // 根据证书类型获取证书
     @GetMapping("/type/{certificateType}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<TrainingCertificateDto>>> getCertificatesByType(@PathVariable String certificateType) {
         try {
             List<TrainingCertificateDto> certificates = certificateService.getCertificatesByType(certificateType);
@@ -82,7 +82,7 @@ public class TrainingCertificateController {
 
     // 根据是否收费获取证书
     @GetMapping("/payment/{isPaid}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<TrainingCertificateDto>>> getCertificatesByPayment(@PathVariable Boolean isPaid) {
         try {
             List<TrainingCertificateDto> certificates = certificateService.getCertificatesByPayment(isPaid);
@@ -93,13 +93,13 @@ public class TrainingCertificateController {
     }
 
     // 根据用户角色和是否收费获取证书
-    @GetMapping("/role/{role}/payment/{isPaid}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @GetMapping("/role/{categoryId}/payment/{isPaid}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<TrainingCertificateDto>>> getCertificatesByRoleAndPayment(
-            @PathVariable String role,
+            @PathVariable Long categoryId,
             @PathVariable Boolean isPaid) {
         try {
-            List<TrainingCertificateDto> certificates = certificateService.getCertificatesByRoleAndPayment(role, isPaid);
+            List<TrainingCertificateDto> certificates = certificateService.getCertificatesByRoleAndPayment(categoryId, isPaid);
             return ResponseEntity.ok(ApiResponse.success(certificates, "获取证书列表成功"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -108,7 +108,7 @@ public class TrainingCertificateController {
 
     // 根据证书编号获取证书
     @GetMapping("/number/{certificateNumber}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TrainingCertificateDto>> getCertificateByNumber(@PathVariable String certificateNumber) {
         try {
             TrainingCertificateDto certificate = certificateService.getCertificateByNumber(certificateNumber);
@@ -124,7 +124,7 @@ public class TrainingCertificateController {
 
     // 删除证书
     @DeleteMapping("/{certificateId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<String>> deleteCertificate(@PathVariable Long certificateId) {
         try {
             certificateService.deleteCertificate(certificateId);
@@ -136,7 +136,7 @@ public class TrainingCertificateController {
 
     // 下载证书PDF
     @GetMapping("/download/{certificateId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ByteArrayResource> downloadCertificate(@PathVariable Long certificateId) {
         try {
             byte[] pdfBytes = certificateService.generateCertificatePdf(certificateId);
@@ -153,7 +153,7 @@ public class TrainingCertificateController {
 
     // 批量下载证书
     @PostMapping("/download/batch")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ByteArrayResource> downloadBatchCertificates(@RequestBody List<Long> certificateIds) {
         try {
             byte[] pdfBytes = certificateService.generateBatchCertificatesPdf(certificateIds);
@@ -175,7 +175,7 @@ public class TrainingCertificateController {
         dto.setUserId(certificate.getUser().getId());
         dto.setUsername(certificate.getUser().getUsername());
         dto.setRealName(certificate.getUser().getRealName());
-        dto.setUserRole(certificate.getUser().getRole().name());
+        dto.setUserRole(certificate.getUser().getRole().getCode());
         dto.setCourseId(certificate.getCourse().getId());
         dto.setCourseTitle(certificate.getCourse().getTitle());
         dto.setCertificateNumber(certificate.getCertificateNumber());

@@ -32,15 +32,15 @@
         </div>
 
         <!-- 用户列表 -->
-        <div class="table-container">
-          <el-table :data="users" style="width: 100%" v-loading="loading">
-            <el-table-column prop="username" label="用户名" min-width="120"/>
-            <el-table-column prop="realName" label="真实姓名" min-width="120"/>
-            <el-table-column prop="phone" label="手机号" min-width="120"/>
-            <el-table-column prop="role" label="角色" width="120">
+        <div class="table-container" style="overflow-x: auto;">
+          <el-table :data="users" style="min-width: 900px" v-loading="loading">
+            <el-table-column prop="username" label="用户名" width="150"/>
+            <el-table-column prop="realName" label="真实姓名" width="150"/>
+            <el-table-column prop="phone" label="手机号" width="150"/>
+            <el-table-column prop="role" label="角色" width="200">
               <template #default="scope">
-                <el-tag :type="getRoleTagType(scope.row.role)">
-                  {{ getRoleText(scope.row.role) }}
+                <el-tag :type="getRoleTagType(scope.row.role.code)">
+                  {{ scope.row.role.name}}
                 </el-tag>
               </template>
             </el-table-column>
@@ -49,9 +49,10 @@
                 {{ formatDate(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column label="操作" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="viewUser(scope.row)">查看</el-button>
+                <el-button size="small" type="primary" @click="openPermissions(scope.row)">编辑权限</el-button>
                 <el-button size="small" type="danger" @click="deleteUser(scope.row.id)">
                   删除
                 </el-button>
@@ -76,19 +77,33 @@
     </div>
 
     <!-- 用户详情对话框 -->
-    <el-dialog v-model="showUserDialog" title="用户详情" width="600px" class="dialog-container">
+    <el-dialog v-model="showUserDialog" title="用户详情" width="700px" class="dialog-container">
       <div class="dialog-body" v-if="selectedUser">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="用户名">{{ selectedUser.username }}</el-descriptions-item>
           <el-descriptions-item label="真实姓名">{{ selectedUser.realName }}</el-descriptions-item>
           <el-descriptions-item label="手机号">{{ selectedUser.phone }}</el-descriptions-item>
+          <el-descriptions-item label="性别">{{ selectedUser.gender }}</el-descriptions-item>
+          <el-descriptions-item label="身份证">{{ selectedUser.idCard }}</el-descriptions-item>
+          <el-descriptions-item label="工作单位">{{ selectedUser.workUnit }}</el-descriptions-item>
+          <el-descriptions-item label="培训类型">{{ selectedUser.trainingType }}</el-descriptions-item>
+          <el-descriptions-item label="岗位类别">{{ selectedUser.jobCategory }}</el-descriptions-item>
+          <el-descriptions-item label="人脸照片" :span="2">
+            <a :href="selectedUser.facePhotoUrl" target="_blank">查看</a>
+          </el-descriptions-item>
+          <el-descriptions-item label="缴费金额">{{ selectedUser.paymentAmount }}</el-descriptions-item>
           <el-descriptions-item label="角色">
-            <el-tag :type="getRoleTagType(selectedUser.role)">
-              {{ getRoleText(selectedUser.role) }}
+            <el-tag :type="getRoleTagType(selectedUser?.role.code)">
+              {{ selectedUser?.role.name }}
             </el-tag>
           </el-descriptions-item>
+          <el-descriptions-item label="学习权限">{{ selectedUser.canLearn ? '允许' : '禁止' }}</el-descriptions-item>
+          <el-descriptions-item label="考试权限">{{ selectedUser.canExam ? '允许' : '禁止' }}</el-descriptions-item>
           <el-descriptions-item label="创建时间" :span="2">
             {{ formatDate(selectedUser.createTime) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="更新时间" :span="2">
+            {{ formatDate(selectedUser.updateTime) }}
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -96,6 +111,34 @@
         <div class="dialog-footer">
           <el-button @click="showUserDialog = false">关闭</el-button>
         </div>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑权限对话框 -->
+    <el-dialog v-model="showPermissionDialog" title="编辑权限" width="520px">
+      <div v-if="permissionForm">
+        <el-form :model="permissionForm" label-width="110px">
+          <el-form-item label="角色">
+            <el-select v-model="permissionForm.role" placeholder="选择角色" style="width: 260px">
+              <el-option v-for="role in roleCategories" :key="role.value" :label="role.label" :value="role.value"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="作业类别">
+            <el-select v-model="permissionForm.jobCategory" placeholder="选择作业类别" style="width: 260px">
+              <el-option v-for="option in jobOptions" :key="option.value" :label="option.label" :value="option.value"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="学习权限">
+            <el-switch v-model="permissionForm.canLearn"/>
+          </el-form-item>
+          <el-form-item label="考试权限">
+            <el-switch v-model="permissionForm.canExam"/>
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="showPermissionDialog = false">取消</el-button>
+        <el-button type="primary" :loading="savingPermission" @click="savePermissions">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -122,6 +165,50 @@ export default {
     const searchKeyword = ref('')
     const showUserDialog = ref(false)
     const selectedUser = ref(null)
+
+    const showPermissionDialog = ref(false)
+    const savingPermission = ref(false)
+    const permissionForm = ref(null)
+    const jobOptions = ref([])
+    const roleCategories = ref([])
+
+    const loadJobCategories = async () => {
+      try {
+        const resp = await api.get('/categories/jobs')
+        if (resp.data.success) {
+          jobOptions.value = (resp.data.data || []).filter(it => it.isActive).map(it => ({
+            label: it.name,
+            value: it.code
+          }))
+        }
+      } catch {
+      }
+    }
+
+    const loadRoleCategories = async () => {
+      try {
+        const [rolesResp, jobsResp] = await Promise.all([
+          api.get('/categories/roles'),
+          api.get('/categories/jobs')
+        ])
+        
+        if (rolesResp.data.success) {
+          roleCategories.value = (rolesResp.data.data || []).filter(it => it.isActive).map(it => ({
+            label: it.name,
+            value: it.id
+          }))
+        }
+        
+        if (jobsResp.data.success) {
+          jobOptions.value = jobsResp.data.data.filter(it => it.isActive).map(it => ({
+            label: it.name,
+            value: it.id
+          }))
+        }
+      } catch (error) {
+        console.error('加载角色分类失败', error)
+      }
+    }
 
     const loadUsers = async () => {
       loading.value = true
@@ -160,13 +247,44 @@ export default {
     }
 
     const showCreateDialog = () => {
-      // 实现添加用户功能
       ElMessage.info('添加用户功能待实现')
     }
 
     const viewUser = (user) => {
       selectedUser.value = user
       showUserDialog.value = true
+    }
+
+    const openPermissions = (user) => {
+      permissionForm.value = {
+        id: user.id,
+        role: user.visibilityCategory?.id,
+        jobCategory: user.jobCategory?.id,
+        canLearn: !!user.canLearn,
+        canExam: !!user.canExam
+      }
+      showPermissionDialog.value = true
+    }
+
+    const savePermissions = async () => {
+      if (!permissionForm.value) return
+      savingPermission.value = true
+      try {
+        const {id, role, canLearn, canExam, jobCategory} = permissionForm.value
+        const body = {visibilityCategoryId: role, canLearn, canExam, jobCategoryId: jobCategory}
+        const resp = await api.put(`/users/${id}/permissions`, body)
+        if (resp.data.success) {
+          ElMessage.success('保存成功')
+          showPermissionDialog.value = false
+          loadUsers()
+        } else {
+          ElMessage.error(resp.data.message || '保存失败')
+        }
+      } catch (e) {
+        ElMessage.error('保存失败')
+      } finally {
+        savingPermission.value = false
+      }
     }
 
     const deleteUser = async (id) => {
@@ -187,16 +305,6 @@ export default {
       }
     }
 
-    const getRoleText = (role) => {
-      const roleMap = {
-        'SUPER_ADMIN': '超级管理员',
-        'ADMIN': '管理员',
-        'EXPLOSIVE_USER': '易制爆人员',
-        'BLAST_USER': '爆破三大员'
-      }
-      return roleMap[role] || '未知角色'
-    }
-
     const getRoleTagType = (role) => {
       const typeMap = {
         'SUPER_ADMIN': 'danger',
@@ -212,6 +320,8 @@ export default {
     }
 
     onMounted(() => {
+      loadJobCategories()
+      loadRoleCategories()
       loadUsers()
     })
 
@@ -219,14 +329,20 @@ export default {
       users,
       showUserDialog,
       selectedUser,
+      showPermissionDialog,
+      savingPermission,
+      permissionForm,
+      jobOptions,
+      roleCategories,
       loading,
       currentPage,
       pageSize,
       total,
       searchKeyword,
+      openPermissions,
+      savePermissions,
       viewUser,
       deleteUser,
-      getRoleText,
       getRoleTagType,
       formatDate,
       handleSearch,

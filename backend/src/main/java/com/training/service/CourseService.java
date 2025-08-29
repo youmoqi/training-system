@@ -1,13 +1,10 @@
 package com.training.service;
 
+import com.training.dto.CourseDto;
 import com.training.dto.MyCourseDto;
 import com.training.dto.UserCourseListDto;
-import com.training.entity.Course;
-import com.training.entity.User;
-import com.training.entity.UserCourse;
-import com.training.repository.CourseRepository;
-import com.training.repository.UserCourseRepository;
-import com.training.repository.UserRepository;
+import com.training.entity.*;
+import com.training.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -17,9 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +29,12 @@ public class CourseService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VisibilityCategoryRepository visibilityCategoryRepository;
+
+    @Autowired
+    private CourseVisibleRoleRepository courseVisibleRoleRepository;
 
     // 获取用户已选课程
     private List<Course> getUserEnrolledCourses(Long userId) {
@@ -280,5 +281,35 @@ public class CourseService {
         UserCourse userCourse = userCourseRepository.findByUserAndCourse(user, course)
                 .orElseThrow(() -> new RuntimeException("您没有选择这门课程"));
         userCourseRepository.delete(userCourse);
+    }
+
+    public Course createOrUpdateCourse(Long id, CourseDto dto) {
+        Course course = id == null ? new Course() : courseRepository.findById(id).orElseThrow(() -> new RuntimeException("课程不存在"));
+        course.setTitle(dto.getTitle());
+        course.setDescription(dto.getDescription());
+        course.setVideoUrl(dto.getVideoUrl());
+        course.setPrice(dto.getPrice());
+        course.setIsOnline(Boolean.TRUE.equals(dto.getIsOnline()));
+        course.setCoverImageUrl(dto.getCoverImageUrl());
+
+        Course saved = courseRepository.save(course);
+
+        // 重建可见分类映射
+        if (saved.getVisibleRoles() != null) {
+            courseVisibleRoleRepository.deleteAllByCourseId(saved.getId());
+            saved.getVisibleRoles().clear();
+        }
+        if (dto.getVisibleCategoryIds() != null && !dto.getVisibleCategoryIds().isEmpty()) {
+            List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(dto.getVisibleCategoryIds());
+            List<CourseVisibleRole> mappings = new ArrayList<>();
+            for (VisibilityCategory cat : cats) {
+                CourseVisibleRole m = new CourseVisibleRole();
+                m.setCourse(saved);
+                m.setVisibilityCategory(cat);
+                mappings.add(m);
+            }
+            courseVisibleRoleRepository.saveAll(mappings);
+        }
+        return courseRepository.findById(saved.getId()).orElse(saved);
     }
 }

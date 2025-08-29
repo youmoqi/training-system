@@ -75,8 +75,11 @@ export default createStore({
     async register({ commit }, userData) {
       try {
         const formData = new FormData()
-        formData.append('userData', JSON.stringify(userData))
-        formData.append('facePhoto', userData.facePhoto)
+        const { facePhoto, ...payload } = userData || {}
+        formData.append('userData', JSON.stringify(payload))
+        if (facePhoto) {
+          formData.append('facePhoto', facePhoto)
+        }
 
         const response = await api.post('/auth/register', formData)
         return response.data

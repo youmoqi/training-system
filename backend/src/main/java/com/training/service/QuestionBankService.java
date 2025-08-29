@@ -1,13 +1,9 @@
 package com.training.service;
 
-import com.training.entity.QuestionBank;
-import com.training.entity.User;
-import com.training.entity.UserQuestionBank;
+import com.training.dto.QuestionBankDto;
+import com.training.entity.*;
 import com.training.dto.UserQuestionBankDto;
-import com.training.repository.QuestionBankRepository;
-import com.training.repository.UserQuestionBankRepository;
-import com.training.repository.UserRepository;
-import com.training.repository.QuestionBankResultRepository;
+import com.training.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,8 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.training.entity.QuestionBankResult;
 
 import java.util.ArrayList;
 
@@ -38,6 +32,12 @@ public class QuestionBankService {
 
     @Autowired
     private QuestionBankResultRepository questionBankResultRepository;
+
+    @Autowired
+    private QuestionBankVisibleRoleRepository questionBankVisibleRoleRepository;
+
+    @Autowired
+    private VisibilityCategoryRepository visibilityCategoryRepository;
 
     // 获取用户已购题库
     private List<QuestionBank> getUserPurchasedQuestionBanks(Long userId) {
@@ -98,8 +98,31 @@ public class QuestionBankService {
         return new PageImpl<>(filteredContent, pageable, onlineQuestionBanks.getTotalElements() - userPurchasedQuestionBanks.size());
     }
 
-    public QuestionBank createQuestionBank(QuestionBank questionBank) {
-        return questionBankRepository.save(questionBank);
+    public QuestionBank createOrUpdateQuestionBank(Long id, QuestionBankDto dto) {
+        QuestionBank qb = id == null ? new QuestionBank() : questionBankRepository.findById(id).orElseThrow(() -> new RuntimeException("题库不存在"));
+        qb.setTitle(dto.getTitle());
+        qb.setDescription(dto.getDescription());
+        qb.setPrice(dto.getPrice());
+        qb.setIsOnline(Boolean.TRUE.equals(dto.getIsOnline()));
+        QuestionBank saved = questionBankRepository.save(qb);
+
+        // 重建可见分类映射
+        if (saved.getVisibleRoles() != null) {
+            questionBankVisibleRoleRepository.deleteAllByQuestionBankId(saved.getId());
+            saved.getVisibleRoles().clear();
+        }
+        if (dto.getVisibleCategoryIds() != null && !dto.getVisibleCategoryIds().isEmpty()) {
+            List<VisibilityCategory> cats = visibilityCategoryRepository.findAllById(dto.getVisibleCategoryIds());
+            List<QuestionBankVisibleRole> mappings = new ArrayList<>();
+            for (VisibilityCategory cat : cats) {
+                QuestionBankVisibleRole m = new QuestionBankVisibleRole();
+                m.setQuestionBank(saved);
+                m.setVisibilityCategory(cat);
+                mappings.add(m);
+            }
+            questionBankVisibleRoleRepository.saveAll(mappings);
+        }
+        return questionBankRepository.findById(saved.getId()).orElse(saved);
     }
 
     public Optional<QuestionBank> findById(Long id) {
@@ -116,18 +139,6 @@ public class QuestionBankService {
 
     public List<QuestionBank> findQuestionBanksByRole(String role) {
         return questionBankRepository.findByIsOnlineTrueAndVisibleRolesContaining(role);
-    }
-
-    public QuestionBank updateQuestionBank(QuestionBank questionBank) {
-        // 获取现有的题库数据
-        QuestionBank existingQuestionBank = questionBankRepository.findById(questionBank.getId())
-                .orElseThrow(() -> new RuntimeException("题库不存在"));
-        existingQuestionBank.setTitle(questionBank.getTitle());
-        existingQuestionBank.setDescription(questionBank.getDescription());
-        existingQuestionBank.setPrice(questionBank.getPrice());
-        existingQuestionBank.setIsOnline(questionBank.getIsOnline());
-        existingQuestionBank.setVisibleRoles(questionBank.getVisibleRoles());
-        return questionBankRepository.save(existingQuestionBank);
     }
 
     public void deleteQuestionBank(Long id) {

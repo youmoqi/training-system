@@ -93,8 +93,8 @@ export default {
         ElMessage.success('登录成功')
 
         // 根据用户角色跳转到不同页面
-        const userRole = store.getters.userRole
-        if (['SUPER_ADMIN', 'ADMIN'].includes(userRole)) {
+        const userRole = store.getters.userRole?.code
+        if (['SUPER_ADMIN'].includes(userRole)) {
           router.push('/admin')
         } else {
           router.push('/dashboard')

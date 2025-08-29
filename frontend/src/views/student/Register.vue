@@ -12,20 +12,24 @@
           :rules="rules"
           class="register-form"
           label-width="100px"
+          status-icon
+          :show-message="true"
+          :hide-required-asterisk="false"
       >
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="formData.username" placeholder="请输入用户名"/>
+            <el-form-item label="用户名" prop="username" :required="isRequired('username')">
+              <el-input v-model="formData.username" :disabled="!isEditable('username')" placeholder="请输入用户名"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="密码" prop="password">
+            <el-form-item label="密码" prop="password" :required="isRequired('password')">
               <el-input
                   v-model="formData.password"
                   type="password"
                   placeholder="请输入密码"
                   show-password
+                  :disabled="!isEditable('password')"
               />
             </el-form-item>
           </el-col>
@@ -33,13 +37,13 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="真实姓名" prop="realName">
-              <el-input v-model="formData.realName" placeholder="请输入真实姓名"/>
+            <el-form-item label="真实姓名" prop="realName" :required="isRequired('realName')">
+              <el-input v-model="formData.realName" :disabled="!isEditable('realName')" placeholder="请输入真实姓名"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="性别" prop="gender">
-              <el-radio-group v-model="formData.gender">
+            <el-form-item label="性别" prop="gender" :required="isRequired('gender')">
+              <el-radio-group v-model="formData.gender" :disabled="!isEditable('gender')">
                 <el-radio label="男">男</el-radio>
                 <el-radio label="女">女</el-radio>
               </el-radio-group>
@@ -49,60 +53,69 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="身份证号码" prop="idCard">
-              <el-input v-model="formData.idCard" placeholder="请输入身份证号码"/>
+            <el-form-item label="身份证号码" prop="idCard" :required="isRequired('idCard')">
+              <el-input v-model="formData.idCard" :disabled="!isEditable('idCard')" placeholder="请输入身份证号码"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" placeholder="请输入手机号"/>
+            <el-form-item label="手机号" prop="phone" :required="isRequired('phone')">
+              <el-input v-model="formData.phone" :disabled="!isEditable('phone')" placeholder="请输入手机号"/>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="工作单位" prop="workUnit">
-          <el-input v-model="formData.workUnit" placeholder="请输入工作单位"/>
+        <el-form-item label="工作单位" prop="workUnit" :required="isRequired('workUnit')">
+          <el-input v-model="formData.workUnit" :disabled="!isEditable('workUnit')" placeholder="请输入工作单位"/>
         </el-form-item>
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="培训类型" prop="trainingType">
-              <el-select v-model="formData.trainingType" placeholder="请选择培训类型" style="width: 100%">
-                <el-option label="易制爆" value="易制爆"/>
-                <el-option label="爆破作业" value="爆破作业"/>
+            <el-form-item label="培训类型" prop="trainingType" :required="isRequired('trainingType')">
+              <el-select v-model="formData.trainingType" :disabled="!isEditable('trainingType')" placeholder="请选择培训类型" style="width: 100%">
+                <el-option
+                    v-for="option in trainingOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="作业类别" prop="jobCategory">
-              <el-select v-model="formData.jobCategory" placeholder="请选择作业类别" style="width: 100%">
-                <el-option label="爆破" value="爆破"/>
-                <el-option label="拆除" value="拆除"/>
-                <el-option label="其他" value="其他"/>
+            <el-form-item label="作业类别" prop="jobCategory" :required="isRequired('jobCategory')">
+              <el-select v-model="formData.jobCategory" :disabled="!isEditable('jobCategory')" placeholder="请选择作业类别" style="width: 100%">
+                <el-option
+                    v-for="option in jobOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="缴费额度" prop="paymentAmount">
+        <el-form-item label="缴费额度" prop="paymentAmount" :required="isRequired('paymentAmount')">
           <el-input-number
               v-model="formData.paymentAmount"
               :min="0"
               :precision="2"
               style="width: 100%"
               placeholder="请输入缴费额度"
+              :disabled="!isEditable('paymentAmount')"
           />
         </el-form-item>
 
-        <el-form-item label="人脸照片" prop="facePhoto">
+        <el-form-item label="人脸照片" prop="facePhoto" :required="isRequired('facePhotoUrl')">
           <el-upload
               ref="upload"
               :auto-upload="false"
               :on-change="handleFileChange"
               :show-file-list="false"
               accept="image/*"
+              :disabled="!isEditable('facePhotoUrl')"
           >
-            <el-button type="primary">选择照片</el-button>
+            <el-button type="primary" :disabled="!isEditable('facePhotoUrl')">选择照片</el-button>
             <template #tip>
               <div class="el-upload__tip">只能上传jpg/png文件，且不超过2MB</div>
             </template>
@@ -132,10 +145,11 @@
 </template>
 
 <script>
-import {ref, reactive} from 'vue'
+import {ref, reactive, onMounted, nextTick} from 'vue'
 import {useStore} from 'vuex'
 import {useRouter} from 'vue-router'
 import {ElMessage} from 'element-plus'
+import api from '@/api'
 
 export default {
   name: 'Register',
@@ -160,23 +174,21 @@ export default {
       facePhoto: null
     })
 
-    const rules = {
+    const jobOptions = ref([])
+    const trainingOptions = ref([])
+    // Store selected training type to filter job categories
+    const selectedTrainingType = ref('')
+
+    const fieldConfig = reactive({})
+
+    const baseRules = {
       username: [
-        {required: true, message: '请输入用户名', trigger: 'blur'},
-        {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'}
+        { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
       ],
       password: [
-        {required: true, message: '请输入密码', trigger: 'blur'},
-        {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
-      ],
-      realName: [
-        {required: true, message: '请输入真实姓名', trigger: 'blur'}
-      ],
-      gender: [
-        {required: true, message: '请选择性别', trigger: 'change'}
+        { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
       ],
       idCard: [
-        {required: true, message: '请输入身份证号码', trigger: 'blur'},
         {
           pattern: /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/,
           message: '身份证号码格式不正确',
@@ -184,24 +196,72 @@ export default {
         }
       ],
       phone: [
-        {required: true, message: '请输入手机号', trigger: 'blur'},
-        {pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur'}
-      ],
-      workUnit: [
-        {required: true, message: '请输入工作单位', trigger: 'blur'}
-      ],
-      trainingType: [
-        {required: true, message: '请选择培训类型', trigger: 'change'}
-      ],
-      jobCategory: [
-        {required: true, message: '请选择作业类别', trigger: 'change'}
-      ],
-      paymentAmount: [
-        {required: true, message: '请输入缴费额度', trigger: 'blur'}
-      ],
-      facePhoto: [
-        {required: true, message: '请上传人脸照片', trigger: 'change'}
+        { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
       ]
+    }
+
+    const rules = reactive({})
+
+    const buildRulesFromConfig = () => {
+      const r = {}
+      const apply = (key, label, extra = []) => {
+        const arr = [...extra]
+        if (isRequired(key)) {
+          arr.unshift({ required: true, message: `请输入${label}`, trigger: key === 'gender' || key === 'trainingType' || key === 'jobCategory' ? 'change' : 'blur' })
+        }
+        r[key] = arr
+      }
+      apply('username', '用户名', baseRules.username)
+      apply('password', '密码', baseRules.password)
+      apply('realName', '真实姓名')
+      apply('gender', '性别')
+      apply('idCard', '身份证号码', baseRules.idCard)
+      apply('phone', '手机号', baseRules.phone)
+      apply('workUnit', '工作单位')
+      apply('trainingType', '培训类型')
+      apply('jobCategory', '作业类别')
+      apply('paymentAmount', '缴费额度')
+      r.facePhoto = isRequired('facePhotoUrl') ? [{ required: true, message: '请上传人脸照片', trigger: 'change' }] : []
+      Object.assign(rules, r)
+    }
+
+    const isRequired = (key) => {
+      return !!fieldConfig?.[key]?.required
+    }
+
+    const isEditable = (key) => {
+      return fieldConfig?.[key]?.editable !== false
+    }
+
+    const loadConfig = async () => {
+      try {
+        const [cfgResp, jobsResp, trainingResp] = await Promise.all([
+          api.get('/registration-config'),
+          api.get('/categories/jobs'),
+          api.get('/categories/roles')
+        ])
+        if (cfgResp.data.success) {
+          const cfgJson = cfgResp.data.data.fieldsConfigJson
+          const obj = JSON.parse(cfgJson || '{}')
+          ;['username','password','realName','gender','idCard','phone','workUnit','trainingType','jobCategory','paymentAmount','facePhotoUrl']
+            .forEach(k => {
+              fieldConfig[k] = { required: !!obj?.[k]?.required, editable: obj?.[k]?.editable !== false }
+            })
+        }
+        if (jobsResp.data.success) {
+          jobOptions.value = (jobsResp.data.data || []).filter(it => it.isActive).map(it => ({ label: it.name, value: it.id }))
+        }
+        if (trainingResp.data.success) {
+          trainingOptions.value = (trainingResp.data.data || []).filter(it => it.isActive).map(it => ({ label: it.name, value: it.code }))
+        }
+        buildRulesFromConfig()
+        await nextTick()
+        registerForm.value && registerForm.value.clearValidate()
+      } catch (e) {
+        buildRulesFromConfig()
+        await nextTick()
+        registerForm.value && registerForm.value.clearValidate()
+      }
     }
 
     const handleFileChange = (file) => {
@@ -229,6 +289,8 @@ export default {
       }
     }
 
+    onMounted(loadConfig)
+
     return {
       registerForm,
       formData,
@@ -236,7 +298,11 @@ export default {
       loading,
       previewUrl,
       handleFileChange,
-      handleRegister
+      handleRegister,
+      isRequired,
+      isEditable,
+      jobOptions,
+      trainingOptions
     }
   }
 }

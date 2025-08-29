@@ -1,9 +1,12 @@
 package com.training.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+
 import javax.validation.constraints.*;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserRegistrationDto {
     @NotBlank(message = "用户名不能为空")
     @Size(min = 3, max = 20, message = "用户名长度必须在3-20个字符之间")
@@ -21,8 +24,8 @@ public class UserRegistrationDto {
     private String gender;
 
     @NotBlank(message = "身份证号码不能为空")
-    @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$", 
-             message = "身份证号码格式不正确")
+    @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$",
+            message = "身份证号码格式不正确")
     private String idCard;
 
     @NotBlank(message = "手机号不能为空")
@@ -35,10 +38,10 @@ public class UserRegistrationDto {
     @NotBlank(message = "培训类型不能为空")
     private String trainingType;
 
-    @NotBlank(message = "作业类别不能为空")
-    private String jobCategory;
+    @NotNull(message = "作业类别不能为空")
+    private Long jobCategoryId;
 
     @NotNull(message = "缴费额度不能为空")
     @DecimalMin(value = "0.0", message = "缴费额度不能为负数")
     private Double paymentAmount;
-} 
+}

@@ -25,7 +25,7 @@ public class ExamPaperDto {
     private Integer shortAnswerScore;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    private List<String> visibleRoles;
+    private List<Long> visibleCategoryIds;
     private List<ExamPaperQuestionDto> questions;
     private List<ExamPaperAutoRuleDto> autoRules;
 } 

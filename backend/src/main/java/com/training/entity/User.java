@@ -1,6 +1,7 @@
 package com.training.entity;
 
 import lombok.Data;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -36,8 +37,9 @@ public class User {
     @Column(nullable = false)
     private String trainingType;
 
-    @Column(nullable = false)
-    private String jobCategory;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "job_category_id")
+    private JobCategory jobCategory;
 
     @Column(nullable = false)
     private String facePhotoUrl;
@@ -45,15 +47,21 @@ public class User {
     @Column(nullable = false)
     private Double paymentAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "visibility_category_id")
+    private VisibilityCategory role;
 
     @Column(nullable = false)
     private LocalDateTime createTime;
 
     @Column(nullable = false)
     private LocalDateTime updateTime;
+
+    @Column(nullable = false)
+    private boolean canLearn = true;
+
+    @Column(nullable = false)
+    private boolean canExam = true;
 
     @PrePersist
     protected void onCreate() {
@@ -65,11 +73,4 @@ public class User {
     protected void onUpdate() {
         updateTime = LocalDateTime.now();
     }
-
-    public enum UserRole {
-        SUPER_ADMIN,    // 超级管理员
-        ADMIN,          // 管理员
-        EXPLOSIVE_USER, // 易制爆人员
-        BLAST_USER      // 爆破三大员
-    }
-} 
+}

@@ -1,6 +1,7 @@
 package com.training.controller;
 
 import com.training.dto.ApiResponse;
+import com.training.dto.QuestionBankDto;
 import com.training.dto.UserQuestionBankDto;
 import com.training.entity.QuestionBank;
 import com.training.entity.User;
@@ -100,21 +101,20 @@ public class QuestionBankController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<QuestionBank>> createQuestionBank(@RequestBody QuestionBank questionBank) {
+    public ResponseEntity<ApiResponse<QuestionBank>> createQuestionBank(@RequestBody QuestionBankDto questionBankDto) {
         try {
-            QuestionBank savedQuestionBank = questionBankService.createQuestionBank(questionBank);
-            return ResponseEntity.ok(ApiResponse.success("创建题库成功", savedQuestionBank));
+            QuestionBank saved = questionBankService.createOrUpdateQuestionBank(null, questionBankDto);
+            return ResponseEntity.ok(ApiResponse.success("创建题库成功", saved));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<QuestionBank>> updateQuestionBank(@PathVariable Long id, @RequestBody QuestionBank questionBank) {
+    public ResponseEntity<ApiResponse<QuestionBank>> updateQuestionBank(@PathVariable Long id, @RequestBody QuestionBankDto questionBankDto) {
         try {
-            questionBank.setId(id);
-            QuestionBank updatedQuestionBank = questionBankService.updateQuestionBank(questionBank);
-            return ResponseEntity.ok(ApiResponse.success("更新题库成功", updatedQuestionBank));
+            QuestionBank updated = questionBankService.createOrUpdateQuestionBank(id, questionBankDto);
+            return ResponseEntity.ok(ApiResponse.success("更新题库成功", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -157,7 +157,6 @@ public class QuestionBankController {
         try {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("用户不存在"));
-
             List<UserQuestionBankDto> userQuestionBanks = questionBankService.getUserQuestionBankDtos(user);
             return ResponseEntity.ok(ApiResponse.success("获取用户题库成功", userQuestionBanks));
         } catch (Exception e) {

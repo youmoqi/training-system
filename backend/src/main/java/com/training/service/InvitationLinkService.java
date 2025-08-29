@@ -34,7 +34,7 @@ public class InvitationLinkService {
     public Page<InvitationLink> findInvitationLinksWithPagination(Pageable pageable, String keyword) {
         if (keyword != null && !keyword.trim().isEmpty()) {
             return invitationLinkRepository.findByTitleContainingOrDescriptionContaining(
-                keyword, keyword, pageable);
+                    keyword, keyword, pageable);
         } else {
             return invitationLinkRepository.findAll(pageable);
         }
@@ -84,16 +84,16 @@ public class InvitationLinkService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-        if (user.getRole() != User.UserRole.BLAST_USER) {
+        if (user.getRole() == null || !user.getRole().getName().startsWith("爆破三大员")) {
             throw new RuntimeException("只有'爆破三大员'角色的用户才能使用邀请链接");
         }
 
         if (link.getCourses() == null || link.getCourses().isEmpty()) {
             throw new RuntimeException("此邀请链接未关联任何课程");
         }
-        
+
         for (Course course : link.getCourses()) {
             courseService.enrollCourseWithInvitation(user, course);
         }
     }
-} 
+}

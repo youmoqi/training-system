@@ -25,10 +25,8 @@ public class QuestionBank {
     @Column(nullable = false)
     private Boolean isOnline;
 
-    @ElementCollection
-    @CollectionTable(name = "question_bank_visible_roles", joinColumns = @JoinColumn(name = "question_bank_id"))
-    @Column(name = "role")
-    private List<String> visibleRoles;
+    @OneToMany(mappedBy = "questionBank", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<QuestionBankVisibleRole> visibleRoles;
 
     @Column(nullable = false)
     private LocalDateTime createTime;

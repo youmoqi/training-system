@@ -1,17 +1,17 @@
 package com.training.dto;
 
 import lombok.Data;
-import java.time.LocalDateTime;
+
 import java.util.List;
 
 @Data
-public class QuestionBankDto {
+public class CourseDto {
     private Long id;
     private String title;
     private String description;
+    private String videoUrl;
     private Double price;
     private Boolean isOnline;
+    private String coverImageUrl;
     private List<Long> visibleCategoryIds;
-    private LocalDateTime createTime;
-    private LocalDateTime updateTime;
-}
+} 

@@ -100,7 +100,7 @@ export default {
     const router = useRouter()
 
     const currentUser = computed(() => store.getters.currentUser)
-    const userRole = computed(() => store.getters.userRole)
+    const userRole = computed(() => store.getters.userRole?.code)
 
     const handleCommand = (command) => {
       if (command === 'logout') {

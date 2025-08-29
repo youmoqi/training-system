@@ -1,6 +1,7 @@
 package com.training.controller;
 
 import com.training.dto.ApiResponse;
+import com.training.dto.CourseDto;
 import com.training.dto.MyCourseDto;
 import com.training.dto.UserCourseListDto;
 import com.training.entity.Course;
@@ -100,9 +101,9 @@ public class CourseController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Course>> createCourse(@RequestBody Course course) {
+    public ResponseEntity<ApiResponse<Course>> createCourse(@RequestBody CourseDto courseDto) {
         try {
-            Course savedCourse = courseService.createCourse(course);
+            Course savedCourse = courseService.createOrUpdateCourse(null, courseDto);
             return ResponseEntity.ok(ApiResponse.success("创建课程成功", savedCourse));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -110,10 +111,9 @@ public class CourseController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Course>> updateCourse(@PathVariable Long id, @RequestBody Course course) {
+    public ResponseEntity<ApiResponse<Course>> updateCourse(@PathVariable Long id, @RequestBody CourseDto courseDto) {
         try {
-            course.setId(id);
-            Course updatedCourse = courseService.updateCourse(course);
+            Course updatedCourse = courseService.createOrUpdateCourse(id, courseDto);
             return ResponseEntity.ok(ApiResponse.success("更新课程成功", updatedCourse));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
