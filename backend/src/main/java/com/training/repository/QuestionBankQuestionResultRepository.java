@@ -1,6 +1,6 @@
 package com.training.repository;
 
-import com.training.entity.QuestionBankQuestionResult;
+import com.training.entity.Exam.QuestionBankQuestionResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

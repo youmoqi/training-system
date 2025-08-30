@@ -42,5 +42,5 @@ public class UserCourse {
     private LocalDateTime completeTime;
 
     @Column
-    private Integer watchProgress; // 观看进度百分比
+    private Integer watchProgress;
 }

@@ -9,6 +9,12 @@
           </el-icon>
           添加用户
         </el-button>
+        <el-button type="success" @click="showExportDialog">
+          <el-icon>
+            <Download/>
+          </el-icon>
+          导出用户数据
+        </el-button>
       </div>
     </div>
 
@@ -141,13 +147,44 @@
         <el-button type="primary" :loading="savingPermission" @click="savePermissions">保存</el-button>
       </template>
     </el-dialog>
+    <!-- 导出对话框 -->
+    <el-dialog v-model="showExportDialogVisible" title="导出用户数据" width="520px">
+      <el-form :model="exportForm" label-width="110px">
+        <el-form-item label="时间范围">
+          <el-date-picker
+            v-model="exportForm.dateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            style="width: 350px"
+          />
+        </el-form-item>
+        <el-form-item label="角色类型">
+          <el-select v-model="exportForm.roleId" placeholder="选择角色" style="width: 260px" clearable>
+            <el-option v-for="role in roleCategories" :key="role.value" :label="role.label" :value="role.value"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="学习状态">
+          <el-select v-model="exportForm.learningStatus" placeholder="选择学习状态" style="width: 260px" clearable>
+            <el-option label="已完成" value="2"/>
+            <el-option label="进行中" value="1"/>
+            <el-option label="未开始" value="0"/>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showExportDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="exporting" @click="exportUserData">导出</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {ref, onMounted} from 'vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-import {Plus, Search} from '@element-plus/icons-vue'
+import {Plus, Search, Download} from '@element-plus/icons-vue'
 import api from '@/api'
 import {getCategoryTagType} from "@/utils/examCategory";
 
@@ -156,7 +193,8 @@ export default {
   methods: {getCategoryTagType},
   components: {
     Plus,
-    Search
+    Search,
+    Download
   },
   setup() {
     const users = ref([])
@@ -173,6 +211,14 @@ export default {
     const permissionForm = ref(null)
     const jobOptions = ref([])
     const roleCategories = ref([])
+
+    const showExportDialogVisible = ref(false)
+    const exportForm = ref({
+      dateRange: null,
+      roleId: null,
+      learningStatus: null
+    })
+    const exporting = ref(false)
 
     const loadJobCategories = async () => {
       try {
@@ -250,6 +296,62 @@ export default {
 
     const showCreateDialog = () => {
       ElMessage.info('添加用户功能待实现')
+    }
+
+    const showExportDialog = () => {
+      exportForm.value = {
+        dateRange: null,
+        roleId: null,
+        learningStatus: null
+      }
+      showExportDialogVisible.value = true
+    }
+
+    const exportUserData = async () => {
+      exporting.value = true
+      try {
+        const params = {}
+
+        if (exportForm.value.dateRange && exportForm.value.dateRange.length === 2) {
+          params.startTime = exportForm.value.dateRange[0]
+          params.endTime = exportForm.value.dateRange[1]
+        }
+
+        if (exportForm.value.roleId) {
+          params.roleId = exportForm.value.roleId
+        }
+
+        if (exportForm.value.learningStatus) {
+          params.learningStatus = exportForm.value.learningStatus
+        }
+
+        // 使用blob方式下载文件
+        const response = await api.get('/users/export', {
+          params,
+          responseType: 'blob'
+        })
+
+        // 创建下载链接
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+
+        // 设置文件名
+        const currentDate = new Date().toISOString().split('T')[0]
+        link.setAttribute('download', `用户数据导出_${currentDate}.xlsx`)
+
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        showExportDialogVisible.value = false
+        ElMessage.success('导出成功')
+      } catch (error) {
+        console.error('导出失败', error)
+        ElMessage.error('导出失败')
+      } finally {
+        exporting.value = false
+      }
     }
 
     const viewUser = (user) => {
@@ -340,7 +442,12 @@ export default {
       handleSearch,
       handleSizeChange,
       handleCurrentChange,
-      showCreateDialog
+      showCreateDialog,
+      showExportDialog,
+      showExportDialogVisible,
+      exportForm,
+      exporting,
+      exportUserData
     }
   }
 }

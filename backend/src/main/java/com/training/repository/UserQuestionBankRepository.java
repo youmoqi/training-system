@@ -2,7 +2,7 @@ package com.training.repository;
 
 import com.training.entity.UserQuestionBank;
 import com.training.entity.User;
-import com.training.entity.QuestionBank;
+import com.training.entity.Exam.QuestionBank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -6,11 +6,9 @@ import com.training.entity.UserCourse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,49 +25,37 @@ public interface UserCourseRepository extends JpaRepository<UserCourse, Long> {
     Optional<UserCourse> findByUserIdAndCourseId(Long userId, Long courseId);
 
     // 按用户名或真实姓名搜索
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE u.username LIKE %:keyword% OR u.realName LIKE %:keyword%")
-    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContaining(
-            @Param("keyword") String keyword, Pageable pageable);
+    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContaining(String userName, String userRealName, Pageable pageable);
 
     // 按用户名或真实姓名和课程ID搜索
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE (u.username LIKE %:keyword% OR u.realName LIKE %:keyword%) AND uc.course.id = :courseId")
-    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndCourseId(
-            @Param("keyword") String keyword, @Param("courseId") Long courseId, Pageable pageable);
+    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndCourseId(String userName, String userRealName, Long courseId, Pageable pageable);
 
     // 按用户名或真实姓名和完成状态搜索
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE (u.username LIKE %:keyword% OR u.realName LIKE %:keyword%) AND uc.isCompleted = :isCompleted")
-    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndIsCompleted(
-            @Param("keyword") String keyword, @Param("isCompleted") Boolean isCompleted, Pageable pageable);
+    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndIsCompleted(String userName, String userRealName, Boolean isCompleted, Pageable pageable);
 
     // 按用户名或真实姓名、课程ID和完成状态搜索
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE (u.username LIKE %:keyword% OR u.realName LIKE %:keyword%) AND uc.course.id = :courseId AND uc.isCompleted = :isCompleted")
-    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndCourseIdAndIsCompleted(
-            @Param("keyword") String keyword, @Param("courseId") Long courseId, @Param("isCompleted") Boolean isCompleted, Pageable pageable);
+    Page<UserCourse> findByUserUsernameContainingOrUserRealNameContainingAndCourseIdAndIsCompleted(String userName, String userRealName, Long courseId, Boolean isCompleted, Pageable pageable);
 
     // 添加JOIN FETCH的查询方法
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.course.id = :courseId")
-    Page<UserCourse> findByCourseId(@Param("courseId") Long courseId, Pageable pageable);
+    Page<UserCourse> findByCourseId(Long courseId, Pageable pageable);
 
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.isCompleted = :isCompleted")
-    Page<UserCourse> findByIsCompleted(@Param("isCompleted") Boolean isCompleted, Pageable pageable);
+    // 查询用户的所有课程
+    List<UserCourse> findByUserId(Long userId);
 
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.course.id = :courseId AND uc.isCompleted = :isCompleted")
-    Page<UserCourse> findByCourseIdAndIsCompleted(@Param("courseId") Long courseId, @Param("isCompleted") Boolean isCompleted, Pageable pageable);
+    // 统计用户的课程数量
+    long countByUserId(Long userId);
 
-    // 添加JOIN FETCH的findAll方法
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c")
-    Page<UserCourse> findAllWithJoins(Pageable pageable);
+    // 统计用户已完成/未完成的课程数量
+    long countByUserIdAndIsCompleted(Long userId, Boolean isCompleted);
 
-    // 添加JOIN FETCH的findByUser方法
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.user = :user")
-    Page<UserCourse> findByUserWithJoins(@Param("user") User user, Pageable pageable);
+    Page<UserCourse> findByIsCompleted(Boolean isCompleted, Pageable pageable);
 
-    // 添加JOIN FETCH的findByUser方法（返回List）
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.user = :user")
-    List<UserCourse> findByUserWithJoins(@Param("user") User user);
+    Page<UserCourse> findByCourseIdAndIsCompleted(Long courseId, Boolean isCompleted, Pageable pageable);
 
-    // 根据课程ID查找用户课程（返回List）
-    @Query("SELECT uc FROM UserCourse uc JOIN uc.user u JOIN uc.course c WHERE uc.course.id = :courseId")
-    List<UserCourse> findByCourseId(@Param("courseId") Long courseId);
+    Page<UserCourse> findByUser(User user, Pageable pageable);
+
+    List<UserCourse> findByUser(@Param("user") User user);
+
+    List<UserCourse> findByCourseId(Long courseId);
 
 }

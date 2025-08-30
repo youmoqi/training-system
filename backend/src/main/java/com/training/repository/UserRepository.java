@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,4 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 分页查询方法
     Page<User> findByUsernameContainingOrRealNameContainingOrPhoneContaining(
         String username, String realName, String phone, Pageable pageable);
+        
+    // 按角色ID查询用户
+    List<User> findByRoleId(Long roleId);
 }

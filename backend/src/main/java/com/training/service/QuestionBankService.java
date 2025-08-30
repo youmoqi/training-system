@@ -3,6 +3,8 @@ package com.training.service;
 import com.training.dto.QuestionBankDto;
 import com.training.entity.*;
 import com.training.dto.UserQuestionBankDto;
+import com.training.entity.Exam.QuestionBank;
+import com.training.entity.Exam.QuestionBankResult;
 import com.training.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -136,7 +138,7 @@ public class QuestionBankService {
         questionBankRepository.deleteById(id);
     }
 
-    public boolean purchaseQuestionBank(User user, QuestionBank questionBank) {
+    public void purchaseQuestionBank(User user, QuestionBank questionBank) {
         // 检查用户是否已经购买过这个题库
         if (userQuestionBankRepository.existsByUserAndQuestionBank(user, questionBank)) {
             throw new RuntimeException("您已经购买过这个题库");
@@ -157,7 +159,6 @@ public class QuestionBankService {
         userQuestionBank.setQuestionBank(questionBank);
         userQuestionBankRepository.save(userQuestionBank);
 
-        return true;
     }
 
     public List<UserQuestionBankDto> getUserQuestionBankDtos(User user) {
@@ -197,7 +198,8 @@ public class QuestionBankService {
             dto.setScore(maxScore);
             // 判断是否完成（只要有练习记录就认为完成）
             dto.setIsCompleted(true);
-            QuestionBankResult firstResult = results.get(results.size() - 1); // 获取最早的记录
+            // 获取最早的记录
+            QuestionBankResult firstResult = results.get(results.size() - 1);
             dto.setCompleteTime(firstResult.getSubmitTime());
         } else {
             dto.setScore(null);

@@ -63,7 +63,7 @@
               {{ currentUser?.trainingType }}
             </el-descriptions-item>
             <el-descriptions-item label="作业类别">
-              {{ currentUser?.jobCategory }}
+              {{ currentUser?.jobCategory.name }}
             </el-descriptions-item>
             <el-descriptions-item label="注册时间">
               {{ formatDate(currentUser?.createTime) }}
@@ -80,7 +80,7 @@
           </template>
 
           <el-table :data="userCourses" style="width: 100%">
-            <el-table-column prop="course.title" label="课程名称"/>
+            <el-table-column prop="courseTitle" label="课程名称"/>
             <el-table-column prop="enrollTime" label="选课时间">
               <template #default="scope">
                 {{ formatDate(scope.row.enrollTime) }}

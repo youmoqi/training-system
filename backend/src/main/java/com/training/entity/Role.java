@@ -15,11 +15,12 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // EXPLOSIVE_FIRST, ENGINEER_CONTINUE, etc.
     @Column(nullable = false, unique = true, length = 50)
-    private String code; // EXPLOSIVE_FIRST, ENGINEER_CONTINUE, etc.
+    private String code;
 
     @Column(nullable = false, length = 100)
-    private String name; // 显示名称
+    private String name;
 
     @Column(nullable = false)
     private Boolean isActive = true;

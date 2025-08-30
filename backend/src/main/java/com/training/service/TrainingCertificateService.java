@@ -52,7 +52,7 @@ public class TrainingCertificateService {
         Optional<User> userOpt = userRepository.findById(userId);
         Optional<Course> courseOpt = courseRepository.findById(courseId);
 
-        if (!userOpt.isPresent() || !courseOpt.isPresent()) {
+        if (userOpt.isEmpty() || courseOpt.isEmpty()) {
             throw new RuntimeException("用户或课程不存在");
         }
 
@@ -61,7 +61,7 @@ public class TrainingCertificateService {
 
         // 检查用户是否已完成该课程
         Optional<UserCourse> userCourseOpt = userCourseRepository.findByUserIdAndCourseId(userId, courseId);
-        if (!userCourseOpt.isPresent() || !userCourseOpt.get().getIsCompleted()) {
+        if (userCourseOpt.isEmpty() || !userCourseOpt.get().getIsCompleted()) {
             throw new RuntimeException("用户未完成该课程，无法生成证书");
         }
 
@@ -119,7 +119,7 @@ public class TrainingCertificateService {
 
     // 根据用户角色和是否收费查询
     public List<TrainingCertificateDto> getCertificatesByRoleAndPayment(Long categoryId, Boolean isPaid) {
-        List<TrainingCertificate> certificates = certificateRepository.findByUserRoleAndIsPaid(categoryId, isPaid);
+        List<TrainingCertificate> certificates = certificateRepository.findByUserRoleIdAndIsPaid(categoryId, isPaid);
         return certificates.stream().map(this::convertToDto).collect(Collectors.toList());
     }
 
@@ -178,7 +178,7 @@ public class TrainingCertificateService {
     // 生成单个证书PDF
     public byte[] generateCertificatePdf(Long certificateId) {
         Optional<TrainingCertificate> certificateOpt = certificateRepository.findById(certificateId);
-        if (!certificateOpt.isPresent()) {
+        if (certificateOpt.isEmpty()) {
             throw new RuntimeException("证书不存在");
         }
         TrainingCertificateDto dto = convertToDto(certificateOpt.get());

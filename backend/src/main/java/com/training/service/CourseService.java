@@ -40,26 +40,25 @@ public class CourseService {
         if (user == null) {
             return new ArrayList<>();
         }
-        return userCourseRepository.findByUserWithJoins(user).stream()
+        return userCourseRepository.findByUser(user).stream()
                 .map(UserCourse::getCourse)
                 .collect(Collectors.toList());
     }
 
-    // 管理员分页查询课程（不包含过滤逻辑）
+    // 管理员分页查询课程
     public Page<Course> findCoursesForAdmin(Pageable pageable, String keyword) {
         if (keyword != null && !keyword.trim().isEmpty()) {
-            return courseRepository.findByTitleContainingOrDescriptionContaining(
-                    keyword, keyword, pageable);
+            return courseRepository.findByTitleContainingOrDescriptionContaining(keyword, keyword, pageable);
         } else {
             return courseRepository.findAll(pageable);
         }
     }
 
-    // 学员获取我的课程（已选课程）- 返回DTO
+    // 学员获取我的课程（已选课程）
     public Page<MyCourseDto> findMyCoursesDto(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        Page<UserCourse> userCourses = userCourseRepository.findByUserWithJoins(user, pageable);
+        Page<UserCourse> userCourses = userCourseRepository.findByUser(user, pageable);
         return userCourses.map(this::convertToMyCourseDto);
     }
 
@@ -145,7 +144,7 @@ public class CourseService {
     }
 
     public List<UserCourseListDto> getUserCoursesDto(User user) {
-        List<UserCourse> userCourses = userCourseRepository.findByUserWithJoins(user);
+        List<UserCourse> userCourses = userCourseRepository.findByUser(user);
         return userCourses.stream()
                 .map(this::convertToUserCourseListDto)
                 .collect(Collectors.toList());

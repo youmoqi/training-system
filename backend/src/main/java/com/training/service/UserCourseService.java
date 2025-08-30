@@ -2,20 +2,15 @@ package com.training.service;
 
 import com.training.dto.UserCourseDto;
 import com.training.entity.UserCourse;
-import com.training.entity.User;
-import com.training.entity.Course;
 import com.training.repository.UserCourseRepository;
-import com.training.repository.UserRepository;
-import com.training.repository.CourseRepository;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+/**
+ * @author YIZ
+ */
 @Service
 public class UserCourseService {
 
@@ -43,19 +38,15 @@ public class UserCourseService {
             // 按关键词搜索
             if (courseId != null) {
                 if (isCompleted != null) {
-                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndCourseIdAndIsCompleted(
-                            searchKeyword.trim(), courseId, isCompleted, pageable);
+                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndCourseIdAndIsCompleted(searchKeyword.trim(), searchKeyword.trim(), courseId, isCompleted, pageable);
                 } else {
-                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndCourseId(
-                            searchKeyword.trim(), courseId, pageable);
+                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndCourseId(searchKeyword.trim(), searchKeyword.trim(), courseId, pageable);
                 }
             } else {
                 if (isCompleted != null) {
-                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndIsCompleted(
-                            searchKeyword.trim(), isCompleted, pageable);
+                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContainingAndIsCompleted(searchKeyword.trim(), searchKeyword.trim(),isCompleted, pageable);
                 } else {
-                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContaining(
-                            searchKeyword.trim(), pageable);
+                    userCourses = userCourseRepository.findByUserUsernameContainingOrUserRealNameContaining(searchKeyword.trim(), searchKeyword.trim(), pageable);
                 }
             }
         } else {
@@ -70,13 +61,12 @@ public class UserCourseService {
                 if (isCompleted != null) {
                     userCourses = userCourseRepository.findByIsCompleted(isCompleted, pageable);
                 } else {
-                    userCourses = userCourseRepository.findAllWithJoins(pageable);
+                    userCourses = userCourseRepository.findAll(pageable);
                 }
             }
         }
 
-        Page<UserCourseDto> result = userCourses.map(this::convertToDto);
-        return result;
+        return userCourses.map(this::convertToDto);
     }
 
     /**

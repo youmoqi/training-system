@@ -49,24 +49,24 @@ const routes = [
                 component: () => import('../views/student/QuestionBank/QuestionBankPractice.vue')
             },
             {
-                path: 'exam-papers',
-                name: 'ExamPapers',
-                component: () => import('../views/student/Exam/ExamPapers.vue')
+                path: 'exams',
+                name: 'Exams',
+                component: () => import('../views/student/Exam/Exams.vue')
             },
             {
-                path: 'exam-papers/:id',
-                name: 'ExamPaperDetail',
-                component: () => import('../views/student/Exam/ExamPaperDetail.vue')
+                path: 'exams/:id',
+                name: 'ExamDetail',
+                component: () => import('../views/student/Exam/ExamDetail.vue')
             },
             {
-                path: 'exam-papers/:id/exam',
-                name: 'ExamPaperExam',
-                component: () => import('../views/student/Exam/ExamPaperExam.vue')
+                path: 'exams/:id/exam',
+                name: 'ExamExam',
+                component: () => import('../views/student/Exam/ExamExam.vue')
             },
             {
-                path: 'exam-papers/:id/results/:resultId',
-                name: 'ExamPaperResult',
-                component: () => import('../views/student/Exam/ExamPaperResult.vue')
+                path: 'exams/:id/results/:resultId',
+                name: 'ExamResult',
+                component: () => import('../views/student/Exam/ExamResult.vue')
             },
             {
                 path: 'profile',
@@ -80,13 +80,13 @@ const routes = [
             },
             {
                 path: 'exam-paper-history',
-                name: 'ExamPaperHistory',
-                component: () => import('../views/student/Exam/ExamPaperHistory.vue')
+                name: 'ExamHistory',
+                component: () => import('../views/student/Exam/ExamHistory.vue')
             },
             {
-                path: 'exam-papers/:examPaperId/results/:resultId',
-                name: 'ExamPaperResult',
-                component: () => import('../views/student/Exam/ExamPaperResult.vue')
+                path: 'exams/:examId/results/:resultId',
+                name: 'ExamResult',
+                component: () => import('../views/student/Exam/ExamResult.vue')
             },
             {
                 path: 'question-bank-history',
@@ -126,24 +126,24 @@ const routes = [
                 component: () => import('../views/admin/QuestionBank/QuestionManagement.vue')
             },
             {
-                path: 'exam-papers',
-                name: 'AdminExamPapers',
-                component: () => import('../views/admin/Exam/ExamPaperManagement.vue')
+                path: 'exams',
+                name: 'AdminExams',
+                component: () => import('../views/admin/Exam/ExamManagement.vue')
             },
             {
-                path: 'exam-papers/:id/auto-generate',
-                name: 'AdminExamPaperAutoGenerate',
-                component: () => import('../views/admin/Exam/ExamPaperAutoGenerate.vue')
+                path: 'exams/:id/auto-generate',
+                name: 'AdminExamAutoGenerate',
+                component: () => import('../views/admin/Exam/ExamAutoGenerate.vue')
             },
             {
-                path: 'exam-papers/:id/questions',
-                name: 'AdminExamPaperQuestions',
-                component: () => import('../views/admin/Exam/ExamPaperQuestionsManagement.vue')
+                path: 'exams/:id/questions',
+                name: 'AdminExamQuestions',
+                component: () => import('../views/admin/Exam/ExamQuestionsManagement.vue')
             },
             {
-                path: 'exam-papers/:id',
-                name: 'AdminExamPaperDetail',
-                component: () => import('../views/admin/Exam/ExamPaperDetail.vue')
+                path: 'exams/:id',
+                name: 'AdminExamDetail',
+                component: () => import('../views/admin/Exam/ExamDetail.vue')
             },
             {
                 path: 'statistics',

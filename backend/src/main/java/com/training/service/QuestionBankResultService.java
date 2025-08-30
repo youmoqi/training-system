@@ -2,7 +2,8 @@ package com.training.service;
 
 import com.training.dto.ApiResponse;
 import com.training.dto.QuestionBankResultDto;
-import com.training.entity.*;
+import com.training.entity.Exam.QuestionBankResult;
+import com.training.entity.Exam.QuestionOption;
 import com.training.repository.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author YIZ
+ */
 @Service
 @Transactional
 public class QuestionBankResultService {
@@ -72,16 +76,21 @@ public class QuestionBankResultService {
         }
 
         // 计算练习次数 - 获取该用户对该题库的练习次数
-        List<QuestionBankResult> allResults = questionBankResultRepository.findByUserIdAndQuestionBankIdOrderBySubmitTimeAsc(
-                questionBankResult.getUser().getId(), questionBankResult.getQuestionBank().getId());
-        
+        List<QuestionBankResult> allResults = null;
+        if (questionBankResult.getUser() != null && questionBankResult.getQuestionBank() != null) {
+            allResults = questionBankResultRepository.findByUserIdAndQuestionBankIdOrderBySubmitTimeAsc(
+                    questionBankResult.getUser().getId(), questionBankResult.getQuestionBank().getId());
+        }
+
         // 找到当前结果在列表中的位置（从1开始）
         int attemptNumber = 1;
-        for (QuestionBankResult result : allResults) {
-            if (result.getId().equals(questionBankResult.getId())) {
-                break;
+        if (allResults != null) {
+            for (QuestionBankResult result : allResults) {
+                if (result.getId().equals(questionBankResult.getId())) {
+                    break;
+                }
+                attemptNumber++;
             }
-            attemptNumber++;
         }
         dto.setAttemptNumber(attemptNumber);
 
@@ -99,7 +108,7 @@ public class QuestionBankResultService {
                         qrDto.setScore(qr.getScore());
                         qrDto.setMaxScore(qr.getMaxScore());
                         qrDto.setExplanation(qr.getExplanation());
-                        
+
                         // 设置选项
                         if (qr.getQuestion().getOptions() != null && !qr.getQuestion().getOptions().isEmpty()) {
                             List<String> options = qr.getQuestion().getOptions().stream()
@@ -107,7 +116,7 @@ public class QuestionBankResultService {
                                     .collect(Collectors.toList());
                             qrDto.setOptions(options);
                         }
-                        
+
                         return qrDto;
                     })
                     .collect(Collectors.toList());

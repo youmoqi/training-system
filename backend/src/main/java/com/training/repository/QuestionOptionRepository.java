@@ -1,9 +1,8 @@
 package com.training.repository;
 
-import com.training.entity.QuestionOption;
+import com.training.entity.Exam.QuestionOption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +16,5 @@ public interface QuestionOptionRepository extends JpaRepository<QuestionOption, 
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM QuestionOption q WHERE q.question.id = :questionId")
     void deleteAllByQuestionId(@Param("questionId") Long questionId);
 }

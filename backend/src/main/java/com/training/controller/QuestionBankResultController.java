@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author YIZ
+ */
 @RestController
 @RequestMapping("/api/question-bank-results")
 @CrossOrigin(origins = "*")
@@ -19,7 +22,7 @@ public class QuestionBankResultController {
     private QuestionBankResultService questionBankResultService;
 
     // 获取用户题库练习历史
-    @GetMapping("/history/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<Page<QuestionBankResultDto>>> getUserQuestionBankHistory(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,
@@ -44,4 +47,4 @@ public class QuestionBankResultController {
             return ResponseEntity.badRequest().body(ApiResponse.error("获取练习结果详情失败: " + e.getMessage()));
         }
     }
-} 
+}

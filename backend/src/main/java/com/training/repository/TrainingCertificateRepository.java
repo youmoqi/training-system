@@ -3,8 +3,6 @@ package com.training.repository;
 import com.training.entity.TrainingCertificate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -32,6 +30,5 @@ public interface TrainingCertificateRepository extends JpaRepository<TrainingCer
     Optional<TrainingCertificate> findByCertificateNumber(String certificateNumber);
 
     // 根据用户角色和是否收费查询
-    @Query("SELECT tc FROM TrainingCertificate tc WHERE tc.user.role.id = :categoryId AND tc.isPaid = :isPaid")
-    List<TrainingCertificate> findByUserRoleAndIsPaid(@Param("categoryId") Long categoryId, @Param("isPaid") Boolean isPaid);
+    List<TrainingCertificate> findByUserRoleIdAndIsPaid(Long categoryId, Boolean isPaid);
 }

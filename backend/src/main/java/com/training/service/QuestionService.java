@@ -5,6 +5,7 @@ import com.training.dto.QuestionImportDto;
 import com.training.dto.QuestionBankResultDto;
 import com.training.dto.QuestionAnswerDto;
 import com.training.entity.*;
+import com.training.entity.Exam.*;
 import com.training.repository.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import java.io.IOException;
 
+/**
+ * @author YIZ
+ */
 @Service
 @Transactional
 public class QuestionService {
@@ -40,9 +44,6 @@ public class QuestionService {
 
     @Autowired
     private QuestionBankQuestionResultRepository questionBankQuestionResultRepository;
-
-    @Autowired
-    private UserQuestionBankRepository userQuestionBankRepository;
 
     @Autowired
     private WordDocumentService wordDocumentService;
@@ -248,12 +249,12 @@ public class QuestionService {
 
         // 解析Word文档
         List<QuestionDto> questions = wordDocumentService.parseQuestionsFromWord(file);
-        
+
         // 设置题库ID
         for (QuestionDto question : questions) {
             question.setQuestionBankId(questionBankId);
         }
-        
+
         return questions;
     }
 
@@ -274,11 +275,11 @@ public class QuestionService {
      */
     public byte[] exportQuestionsToWord(Long questionBankId) throws IOException {
         List<QuestionDto> questions = exportQuestions(questionBankId);
-        
+
         // 获取题库标题
         QuestionBank questionBank = questionBankRepository.findById(questionBankId)
                 .orElseThrow(() -> new RuntimeException("题库不存在"));
-        
+
         return wordDocumentService.generateWordDocument(questions, questionBank.getTitle());
     }
 
@@ -310,7 +311,7 @@ public class QuestionService {
 
             boolean isCorrect = false;
             List<String> userAnswers = new ArrayList<>();
-            List<String> correctAnswersList = new ArrayList<>();
+            List<String> correctAnswersList;
 
             // 获取正确答案
             if ("MULTIPLE_CHOICE".equals(question.getType())) {
@@ -470,7 +471,7 @@ public class QuestionService {
                 dto.setAnswers(Arrays.asList(answerStr.split(",")));
             } else {
                 // 单选题、判断题、填空题、简答题：单个答案
-                dto.setAnswers(Arrays.asList(answerStr));
+                dto.setAnswers(List.of(answerStr));
             }
         }
         return dto;

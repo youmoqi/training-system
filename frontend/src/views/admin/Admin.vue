@@ -19,7 +19,7 @@
           </div>
         </div>
       </el-header>
-      
+
       <el-container class="main-container">
         <el-aside width="200px" class="sidebar">
           <el-menu
@@ -35,7 +35,7 @@
               <el-icon><Document /></el-icon>
               <span>题库管理</span>
             </el-menu-item>
-            <el-menu-item index="/admin/exam-papers">
+            <el-menu-item index="/admin/exams">
               <el-icon><Edit /></el-icon>
               <span>试卷管理</span>
             </el-menu-item>
@@ -61,7 +61,7 @@
             </el-menu-item>
           </el-menu>
         </el-aside>
-        
+
         <el-main class="main-content">
           <router-view />
         </el-main>
@@ -90,9 +90,9 @@ export default {
   setup() {
     const store = useStore()
     const router = useRouter()
-    
+
     const currentUser = computed(() => store.getters.currentUser)
-    
+
     const handleCommand = (command) => {
       if (command === 'logout') {
         store.dispatch('logout')
@@ -100,7 +100,7 @@ export default {
         router.push('/login')
       }
     }
-    
+
     return {
       currentUser,
       handleCommand
@@ -200,20 +200,20 @@ export default {
   .header-content h2 {
     font-size: var(--font-size-lg);
   }
-  
+
   .sidebar {
     width: 60px !important;
   }
-  
+
   .sidebar-menu .el-menu-item span {
     display: none;
   }
-  
+
   .sidebar-menu .el-menu-item {
     text-align: center;
     padding: var(--spacing-sm);
   }
-  
+
   .sidebar-menu .el-menu-item .el-icon {
     margin-right: 0;
   }
@@ -251,4 +251,4 @@ export default {
   color: white;
   font-weight: 600;
 }
-</style> 
+</style>

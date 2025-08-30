@@ -124,7 +124,7 @@ export default {
           isPassed: statusFilter.value === '' ? null : statusFilter.value === 'true'
         }
 
-        const response = await api.get(`/question-bank-results/history/${userId}`, {params})
+        const response = await api.get(`/question-bank-results/user/${userId}`, {params})
         if (response.data.success) {
           examHistories.value = response.data.data.content
           total.value = response.data.data.totalElements

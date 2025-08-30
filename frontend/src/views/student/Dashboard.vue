@@ -50,11 +50,11 @@
               </el-icon>
               <span>练习记录</span>
             </el-menu-item>
-            <el-menu-item index="/dashboard/exam-papers">
+            <el-menu-item index="/dashboard/exams">
               <el-icon>
                 <EditPen/>
               </el-icon>
-              <span>试卷考试</span>
+              <span>我的考试</span>
             </el-menu-item>
             <el-menu-item index="/dashboard/exam-paper-history">
               <el-icon>

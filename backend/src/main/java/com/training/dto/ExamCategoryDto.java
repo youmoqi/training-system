@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author YIZ
+ */
 @Data
 public class ExamCategoryDto {
     private Long id;
@@ -17,4 +20,4 @@ public class ExamCategoryDto {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private List<ExamCategoryDto> subCategories;
-} 
+}

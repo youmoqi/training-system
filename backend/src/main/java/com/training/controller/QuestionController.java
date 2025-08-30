@@ -5,7 +5,7 @@ import com.training.dto.QuestionDto;
 import com.training.dto.QuestionImportDto;
 import com.training.dto.QuestionBankResultDto;
 import com.training.dto.QuestionAnswerDto;
-import com.training.entity.Question;
+import com.training.entity.Exam.Question;
 import com.training.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +19,9 @@ import java.io.IOException;
 
 import java.util.List;
 
+/**
+ * @author YIZ
+ */
 @RestController
 @RequestMapping("/api/questions")
 @CrossOrigin(origins = "*")
@@ -161,7 +164,7 @@ public class QuestionController {
     public ResponseEntity<byte[]> exportQuestionsToWord(@PathVariable Long questionBankId) {
         try {
             byte[] wordDocument = questionService.exportQuestionsToWord(questionBankId);
-            
+
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"questions.docx\"")
                     .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -178,7 +181,7 @@ public class QuestionController {
     public ResponseEntity<byte[]> downloadWordTemplate() {
         try {
             byte[] template = com.training.util.WordTemplateGenerator.generateTemplate();
-            
+
             return ResponseEntity.ok()
                     .header("Content-Disposition", "attachment; filename=\"question_template.docx\"")
                     .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")

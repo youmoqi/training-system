@@ -3,7 +3,7 @@ package com.training.controller;
 import com.training.dto.ApiResponse;
 import com.training.dto.QuestionBankDto;
 import com.training.dto.UserQuestionBankDto;
-import com.training.entity.QuestionBank;
+import com.training.entity.Exam.QuestionBank;
 import com.training.entity.User;
 import com.training.service.QuestionBankService;
 import com.training.service.UserService;

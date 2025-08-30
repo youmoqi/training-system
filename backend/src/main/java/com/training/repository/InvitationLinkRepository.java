@@ -15,7 +15,5 @@ import java.util.Optional;
 public interface InvitationLinkRepository extends JpaRepository<InvitationLink, Long> {
     Optional<InvitationLink> findByLinkCode(String linkCode);
 
-    // 分页查询方法
-    Page<InvitationLink> findByTitleContainingOrDescriptionContaining(
-        String title, String description, Pageable pageable);
+    Page<InvitationLink> findByTitleContainingOrDescriptionContaining(String title, String description, Pageable pageable);
 }

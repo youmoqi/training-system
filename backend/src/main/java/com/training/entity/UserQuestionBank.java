@@ -1,5 +1,6 @@
 package com.training.entity;
 
+import com.training.entity.Exam.QuestionBank;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 
