@@ -73,7 +73,7 @@
                 {{ formatDateTime(scope.row.createTime) }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="360" fixed="right">
+            <el-table-column label="操作" width="450" fixed="right">
               <template #default="scope">
                 <el-button size="small" @click="viewExam(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="manageQuestions(scope.row)">
@@ -81,6 +81,9 @@
                 </el-button>
                 <el-button size="small" type="success" @click="autoGenerate(scope.row)">
                   自动组卷
+                </el-button>
+                <el-button size="small" type="info" @click="manualSelection(scope.row)">
+                  手动抽题
                 </el-button>
                 <el-button size="small" type="warning" @click="editExam(scope.row)">
                   编辑
@@ -573,6 +576,10 @@ export default {
       }
     };
 
+    const manualSelection = (exam) => {
+      router.push(`/admin/exams/${exam.id}/manual-selection`)
+    }
+    
     return {
       exams,
       loading,
@@ -589,6 +596,7 @@ export default {
       viewExam,
       manageQuestions,
       autoGenerate,
+      manualSelection,
       searchKeyword,
       statusFilter,
       currentPage,

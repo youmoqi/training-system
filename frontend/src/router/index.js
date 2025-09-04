@@ -141,6 +141,11 @@ const routes = [
                 component: () => import('../views/admin/Exam/ExamQuestionsManagement.vue')
             },
             {
+                path: 'exams/:id/manual-selection',
+                name: 'AdminExamManualSelection',
+                component: () => import('../views/admin/Exam/ManualQuestionSelection.vue')
+            },
+            {
                 path: 'exams/:id',
                 name: 'AdminExamDetail',
                 component: () => import('../views/admin/Exam/ExamDetail.vue')
