@@ -18,11 +18,14 @@ import com.training.dto.ApiResponse;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.io.ByteArrayInputStream;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import javax.persistence.PersistenceContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
@@ -130,6 +133,85 @@ public class ExamResultService {
             return ApiResponse.error("获取考试历史失败: " + e.getMessage());
         }
     }
+
+    // 获取所有用户的考试历史记录（管理端使用）
+    public ApiResponse<Page<ExamResultDto>> getAllUsersExamHistory(Pageable pageable, String examKeyword, String userKeyword, Boolean isPassed) {
+        try {
+            // 首先创建一个自定义查询
+            StringBuilder queryBuilder = new StringBuilder("SELECT er FROM ExamResult er JOIN er.user u JOIN er.exam e WHERE 1=1");
+            StringBuilder countQueryBuilder = new StringBuilder("SELECT COUNT(er) FROM ExamResult er JOIN er.user u JOIN er.exam e WHERE 1=1");
+            List<Object> params = new ArrayList<>();
+            int paramIndex = 1;
+
+            // 添加试卷关键词筛选
+            if (examKeyword != null && !examKeyword.trim().isEmpty()) {
+                queryBuilder.append(" AND e.title LIKE :examKeyword");
+                countQueryBuilder.append(" AND e.title LIKE :examKeyword");
+                params.add("%" + examKeyword.trim() + "%");
+            }
+
+            // 添加用户关键词筛选（用户名或真实姓名）
+            if (userKeyword != null && !userKeyword.trim().isEmpty()) {
+                queryBuilder.append(" AND (u.username LIKE :userKeyword OR u.realName LIKE :userKeyword)");
+                countQueryBuilder.append(" AND (u.username LIKE :userKeyword OR u.realName LIKE :userKeyword)");
+                params.add("%" + userKeyword.trim() + "%");
+            }
+
+            // 添加通过状态筛选
+            if (isPassed != null) {
+                queryBuilder.append(" AND er.isPassed = :isPassed");
+                countQueryBuilder.append(" AND er.isPassed = :isPassed");
+                params.add(isPassed);
+            }
+
+            // 添加排序
+            queryBuilder.append(" ORDER BY er.examTime DESC");
+
+            // 执行查询
+            javax.persistence.Query query = entityManager.createQuery(queryBuilder.toString(), ExamResult.class);
+            javax.persistence.Query countQuery = entityManager.createQuery(countQueryBuilder.toString(), Long.class);
+
+            // 设置参数
+            int paramPosition = 0;
+            if (examKeyword != null && !examKeyword.trim().isEmpty()) {
+                query.setParameter("examKeyword", params.get(paramPosition));
+                countQuery.setParameter("examKeyword", params.get(paramPosition));
+                paramPosition++;
+            }
+            if (userKeyword != null && !userKeyword.trim().isEmpty()) {
+                query.setParameter("userKeyword", params.get(paramPosition));
+                countQuery.setParameter("userKeyword", params.get(paramPosition));
+                paramPosition++;
+            }
+            if (isPassed != null) {
+                query.setParameter("isPassed", params.get(paramPosition));
+                countQuery.setParameter("isPassed", params.get(paramPosition));
+            }
+
+            // 设置分页
+            query.setFirstResult((int) pageable.getOffset());
+            query.setMaxResults(pageable.getPageSize());
+
+            List<ExamResult> results = query.getResultList();
+            long total = (long) countQuery.getSingleResult();
+
+            // 转换为DTO
+            List<ExamResultDto> dtos = results.stream()
+                    .map(this::convertToHistoryDto)
+                    .collect(Collectors.toList());
+
+            // 创建分页结果
+            Page<ExamResultDto> pageResult = new org.springframework.data.domain.PageImpl<>(dtos, pageable, total);
+
+            return ApiResponse.success(pageResult);
+        } catch (Exception e) {
+            return ApiResponse.error("获取所有用户考试历史失败: " + e.getMessage());
+        }
+    }
+
+    // 为了支持自定义查询，需要注入EntityManager
+    @PersistenceContext
+    private javax.persistence.EntityManager entityManager;
 
     // 转换历史记录DTO
     private ExamResultDto convertToHistoryDto(ExamResult result) {

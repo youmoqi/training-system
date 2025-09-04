@@ -39,6 +39,10 @@
               <el-icon><Edit /></el-icon>
               <span>试卷管理</span>
             </el-menu-item>
+            <el-menu-item index="/admin/exam-history">
+              <el-icon><Document /></el-icon>
+              <span>历史试卷管理</span>
+            </el-menu-item>
             <el-menu-item index="/admin/statistics">
               <el-icon><PieChart /></el-icon>
               <span>统计分析</span>

@@ -56,6 +56,18 @@ public class ExamResultController {
         return ResponseEntity.ok(examResultService.getUserExamHistory(userId, pageable, keyword, isPassed));
     }
 
+    // 获取所有用户的考试历史（管理端）
+    @GetMapping("/all-users-history")
+    public ResponseEntity<ApiResponse<Page<ExamResultDto>>> getAllUsersExamHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String examKeyword,
+            @RequestParam(required = false) String userKeyword,
+            @RequestParam(required = false) Boolean isPassed) {
+        Pageable pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(examResultService.getAllUsersExamHistory(pageable, examKeyword, userKeyword, isPassed));
+    }
+
     @GetMapping("/export-exam-data")
     public ResponseEntity<InputStreamResource> exportExamData(
             @RequestParam String startDate,

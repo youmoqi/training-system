@@ -169,6 +169,16 @@ const routes = [
                 path: 'certificates',
                 name: 'AdminCertificates',
                 component: () => import('../views/admin/TrainingCertificateManagement.vue')
+            },
+            {
+                path: 'exam-history',
+                name: 'AdminExamHistory',
+                component: () => import('../views/admin/Exam/ExamHistoryManagement.vue')
+            },
+            {
+                path: 'exam-results/:resultId',
+                name: 'AdminExamResult',
+                component: () => import('../views/admin/Exam/ExamResult.vue')
             }
         ]
     }
