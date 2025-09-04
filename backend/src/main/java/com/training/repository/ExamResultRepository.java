@@ -4,8 +4,10 @@ import com.training.entity.Exam.ExamResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -30,4 +32,10 @@ public interface ExamResultRepository extends JpaRepository<ExamResult, Long> {
 
     List<ExamResult> findByUserIdAndExamIdOrderByExamTimeAsc(Long userId, Long examId);
 
+    @Query("SELECT er FROM ExamResult er " +
+            "JOIN FETCH er.user u " +
+            "JOIN FETCH er.exam e " +
+            "WHERE er.examTime BETWEEN :startDate AND :endDate " +
+            "AND u.role.id IN :roleIds")
+    List<ExamResult> findExamResultsByDateRangeAndRoleIds(LocalDateTime startDate, LocalDateTime endDate, List<Long> roleIds);
 }

@@ -9,6 +9,7 @@
           </el-icon>
           创建试卷
         </el-button>
+        <el-button @click="showExportDialog">导出Word</el-button>
       </div>
     </div>
 
@@ -178,7 +179,7 @@
             </el-col>
             <el-col :span="12">
               <el-form-item label="最大考试次数" prop="maxAttempts">
-                <el-input-number v-model="examForm.maxAttempts" :min="1" :max="10"/>
+                <el-input-number v-model="examForm.maxAttempts" :min="1"/>
               </el-form-item>
             </el-col>
           </el-row>
@@ -237,6 +238,53 @@
         </div>
       </template>
     </el-dialog>
+
+    <!-- 导出弹窗 -->
+    <el-dialog
+        title="导出数据"
+        v-model="exportDialogVisible"
+        width="40%"
+        class="dialog-container"
+        :style="{ maxHeight: '80vh', overflow: 'auto' }"
+    >
+      <div class="dialog-body">
+        <el-form :model="exportForm">
+          <el-form-item label="选择时间范围">
+            <el-date-picker
+                v-model="exportForm.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :disabled-date="disabledDate"
+                value-format="YYYY-MM-DD HH:mm:ss"
+            />
+          </el-form-item>
+          <el-form-item label="选择角色" prop="visibleRoleIds">
+            <el-select
+                v-model="exportForm.exportRoleIds"
+                multiple
+                placeholder="请选择可见角色分类"
+                style="width: 100%"
+            >
+              <el-option
+                  v-for="role in roleCategories"
+                  :key="role.id"
+                  :label="role.name"
+                  :value="role.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="exportDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleExport">确认导出</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -268,6 +316,14 @@ export default {
     const pageSize = ref(20)
     const total = ref(0)
     const roleCategories = ref([])
+    const exportDialogVisible = ref(false)
+
+    const exportForm = reactive({
+      dateRange: [],
+      exportRoleIds: [],
+    })
+
+    const disabledDate = (time) => time.getTime() > Date.now()
 
     const examForm = reactive({
       id: null,
@@ -455,6 +511,68 @@ export default {
       }
     }
 
+    // 显示导出弹窗
+    const showExportDialog = async () => {
+      exportDialogVisible.value = true;
+    }
+
+    const formatDateTimeForQuery = (d) => {
+      // 日期对象转为 "yyyy-MM-dd HH:mm:ss" 格式
+      const pad = n => (n < 10 ? '0' + n : '' + n);
+      const dt = (d instanceof Date) ? d : new Date(d);
+      return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+    };
+
+
+    // 由ID映射名称（用于文件名）
+    const resolveRoleNames = (ids) => {
+      const dict = new Map(roleCategories.value.map(r => [r.id, r.name]));
+      return ids.map(id => dict.get(id) ?? id);
+    };
+
+    const handleExport = async () => {
+      try {
+        if (!exportForm.dateRange || exportForm.dateRange.length !== 2 || !exportForm.exportRoleIds?.length) {
+          ElMessage.error('请选择完整的时间范围和角色');
+          return;
+        }
+
+        const startDate = formatDateTimeForQuery(exportForm.dateRange[0]);
+        const endDate = formatDateTimeForQuery(exportForm.dateRange[1]);
+
+        const roleNames = resolveRoleNames(exportForm.exportRoleIds).join('、');
+        const fileName = `考试数据_${startDate.split(' ')[0]}至${endDate.split(' ')[0]}_${roleNames || '已选角色'}.xlsx`;
+
+        const params = new URLSearchParams();
+        params.append('startDate', startDate);
+        params.append('endDate', endDate);
+        exportForm.exportRoleIds.forEach(id => params.append('exportRoleIds', id));
+
+        const url = '/exam-results/export-exam-data';
+
+        const resp = await api.get(url, {
+          params,
+          paramsSerializer: p => p.toString(),
+          responseType: 'blob',
+        });
+
+        const blob = new Blob([resp.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+        ElMessage.success('导出开始下载');
+      } catch (e) {
+        ElMessage.error('导出失败，请重试');
+      } finally {
+        exportDialogVisible.value = false;
+      }
+    };
+
     return {
       exams,
       loading,
@@ -481,7 +599,13 @@ export default {
       handleCurrentChange,
       formatDateTime,
       getCategoryName,
-      getCategoryTagType
+      getCategoryTagType,
+      showExportDialog,
+      exportDialogVisible,
+      exportForm,
+      handleExport,
+      roleCategories,
+      disabledDate
     }
   }
 }

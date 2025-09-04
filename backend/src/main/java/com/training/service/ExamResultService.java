@@ -16,8 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.training.dto.ApiResponse;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.io.ByteArrayInputStream;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @Service
 @Transactional
@@ -28,7 +35,6 @@ public class ExamResultService {
 
     @Autowired
     private ExamQuestionResultRepository examQuestionResultRepository;
-
     // 根据结果ID获取考试结果
     public ExamResultDto getExamResultById(Long resultId) {
         ExamResult examResult = examResultRepository.findById(resultId)
@@ -154,5 +160,117 @@ public class ExamResultService {
         }
         dto.setId(result.getId());
         return dto;
+    }
+
+public ByteArrayInputStream exportExamDataToExcel(LocalDateTime startDate, LocalDateTime endDate, List<Long> roleIds) {
+    List<ExamResult> results = examResultRepository.findExamResultsByDateRangeAndRoleIds(startDate, endDate, roleIds);
+
+    // 创建工作簿
+    Workbook workbook = new XSSFWorkbook();
+    Sheet sheet = workbook.createSheet("Exam Results");
+
+    // 创建标题字体样式
+    Font headerFont = workbook.createFont();
+    headerFont.setBold(true);               // 设置加粗
+    headerFont.setFontHeightInPoints((short) 12);  // 设置标题字体大小
+
+    // 创建单元格样式
+    CellStyle headerStyle = workbook.createCellStyle();
+    headerStyle.setFont(headerFont);
+    headerStyle.setBorderBottom(BorderStyle.THIN);
+    headerStyle.setBorderTop(BorderStyle.THIN);
+    headerStyle.setBorderLeft(BorderStyle.THIN);
+    headerStyle.setBorderRight(BorderStyle.THIN);
+    headerStyle.setAlignment(HorizontalAlignment.CENTER);  // 水平居中
+    headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);  // 垂直居中
+
+    // 创建数据单元格样式
+    CellStyle dataStyle = workbook.createCellStyle();
+    dataStyle.setBorderBottom(BorderStyle.THIN);
+    dataStyle.setBorderTop(BorderStyle.THIN);
+    dataStyle.setBorderLeft(BorderStyle.THIN);
+    dataStyle.setBorderRight(BorderStyle.THIN);
+    dataStyle.setAlignment(HorizontalAlignment.CENTER);  // 水平居中
+    dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);  // 垂直居中
+
+    // 创建表头
+    Row headerRow = sheet.createRow(0);
+    headerRow.createCell(0).setCellValue("学员用户名");
+    headerRow.createCell(1).setCellValue("试卷标题");
+    headerRow.createCell(2).setCellValue("得分");
+    headerRow.createCell(3).setCellValue("正确题数");
+    headerRow.createCell(4).setCellValue("总题数");
+    headerRow.createCell(5).setCellValue("考试时间");
+
+    // 设置表头样式
+    for (int i = 0; i < 6; i++) {
+        headerRow.getCell(i).setCellStyle(headerStyle);
+    }
+
+    // 填充数据
+    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    int rowNum = 1;
+    for (ExamResult r : results) {
+        Row row = sheet.createRow(rowNum++);
+        row.createCell(0).setCellValue(r.getUser().getUsername());
+        row.createCell(1).setCellValue(r.getExam().getTitle());
+        row.createCell(2).setCellValue(r.getScore());
+        row.createCell(3).setCellValue(r.getCorrectAnswers());
+        row.createCell(4).setCellValue(r.getTotalQuestions());
+        String examTimeStr = r.getExamTime() != null ? r.getExamTime().format(dateFormatter) : "";
+        row.createCell(5).setCellValue(examTimeStr);
+
+        // 设置数据单元格样式
+        for (int i = 0; i < 6; i++) {
+            row.getCell(i).setCellStyle(dataStyle);
+        }
+    }
+
+    // 根据每列的最长内容计算列宽（包括标题和数据）
+    for (int i = 0; i < 6; i++) {
+        int maxLength = 0;
+
+        // 计算标题的长度
+        String header = sheet.getRow(0).getCell(i).toString();
+        maxLength = Math.max(maxLength, getStringWidth(header));
+
+        // 查找每列最长的字符串长度
+        for (int rowIndex = 1; rowIndex < results.size() + 1; rowIndex++) {  // 包括表头
+            Row row = sheet.getRow(rowIndex);
+
+            if (row != null && row.getCell(i) != null) {
+                String cellValue = row.getCell(i).toString();
+                maxLength = Math.max(maxLength, getStringWidth(cellValue));
+            }
+        }
+
+        // 设置列宽：根据最大长度来设置列宽，适当增加一些宽度
+        sheet.setColumnWidth(i, (maxLength + 2) * 256); // 256是字符宽度单位，可以根据实际数据调整
+    }
+
+    // 将 Excel 数据写入 ByteArrayOutputStream
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+        workbook.write(out);
+        return new ByteArrayInputStream(out.toByteArray());
+    } catch (IOException e) {
+        e.printStackTrace();
+        throw new RuntimeException("Error writing Excel data", e);
+    }
+}
+
+    // 计算字符串的宽度（考虑中文字符）
+    private int getStringWidth(String str) {
+        int length = 0;
+        if (str != null) {
+            for (int i = 0; i < str.length(); i++) {
+                char c = str.charAt(i);
+                if (Character.toString(c).getBytes().length > 1) {
+                    length += 2;  // 中文字符宽度
+                } else {
+                    length += 1;  // 英文字符宽度
+                }
+            }
+        }
+        return length;
     }
 }
