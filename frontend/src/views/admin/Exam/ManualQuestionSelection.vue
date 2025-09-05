@@ -149,10 +149,7 @@
       <div v-if="previewQuestion" class="question-preview">
         <div class="question-header">
           <el-tag :type="getQuestionTypeTag(previewQuestion.questionType)" size="large">
-            {{ getQuestionTypeName(previewQuestion.questionType) }}
-          </el-tag>
-          <el-tag :type="getDifficultyTag(previewQuestion.difficulty)" size="large">
-            {{ getDifficultyName(previewQuestion.difficulty) }}
+            {{ getQuestionTypeName(previewQuestion.type) }}
           </el-tag>
         </div>
 
@@ -161,7 +158,7 @@
             <el-icon><Document/></el-icon>
             题目内容
           </h4>
-          <div class="content-box">{{ previewQuestion.questionContent }}</div>
+          <div class="content-box">{{ previewQuestion.content }}</div>
         </div>
 
         <div v-if="previewQuestion.options && previewQuestion.options.length > 0" class="question-options-section">
